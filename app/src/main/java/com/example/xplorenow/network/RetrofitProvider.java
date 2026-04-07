@@ -36,5 +36,15 @@ public final class RetrofitProvider {
                 .addInterceptor(logging)
                 .build();
     }
+
+    public static OkHttpClient buildAuthedClient(AuthInterceptor authInterceptor) {
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+
+        return new OkHttpClient.Builder()
+                .addInterceptor(authInterceptor)
+                .addInterceptor(logging)
+                .build();
+    }
 }
 
