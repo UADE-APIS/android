@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/auth_nav_graph"
+    app:startDestination="@id/requestOtpFragment">
+
+    <fragment
+        android:id="@+id/requestOtpFragment"
+        android:name="com.example.xplorenow.auth.RequestOtpFragment"
+        android:label="Registro"
+        tools:layout="@layout/fragment_request_otp">
+
+        <action
+            android:id="@+id/action_requestOtp_to_verifyOtp"
+            app:destination="@id/verifyOtpFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/verifyOtpFragment"
+        android:name="com.example.xplorenow.auth.VerifyOtpFragment"
+        android:label="Verificación"
+        tools:layout="@layout/fragment_verify_otp">
+
+        <argument
+            android:name="email"
+            app:argType="string"
+            android:defaultValue="" />
+
+        <action
+            android:id="@+id/action_verifyOtp_to_register"
+            app:destination="@id/registerFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerFragment"
+        android:name="com.example.xplorenow.auth.RegisterFragment"
+        android:label="Crear cuenta"
+        tools:layout="@layout/fragment_register">
+
+        <argument
+            android:name="email"
+            app:argType="string"
+            android:defaultValue="" />
+
+        <!--
+            La acción hacia home se agrega cuando esté lista la feature de home:
+            <action
+                android:id="@+id/action_register_to_home"
+                app:destination="@id/home_nav_graph"
+                app:popUpTo="@id/auth_nav_graph"
+                app:popUpToInclusive="true" />
+        -->
+    </fragment>
+
+</navigation>
