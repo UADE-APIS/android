@@ -32,7 +32,7 @@ public class Activity implements Serializable {
     @SerializedName("is_active")
     private boolean isActive;
     
-    private List<String> images;
+    private List<ActivityImage> images;
     
     @SerializedName("available_slots")
     private int availableSlots;
@@ -56,7 +56,7 @@ public class Activity implements Serializable {
     public String getAssignedGuide() { return assignedGuide; }
     public boolean isFeatured() { return isFeatured; }
     public boolean isActive() { return isActive; }
-    public List<String> getImages() { return images; }
+    public List<ActivityImage> getImages() { return images; }
     public int getAvailableSlots() { return availableSlots; }
     public int getReservedSlots() { return reservedSlots; }
 }

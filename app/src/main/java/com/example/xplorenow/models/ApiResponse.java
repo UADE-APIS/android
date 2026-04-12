@@ -14,8 +14,14 @@ public class ApiResponse<T> {
         return (data != null) ? data.results : null;
     }
 
+    public Pagination getPagination() {
+        return (data != null) ? data.pagination : null;
+    }
+
     private static class DataWrapper<T> {
         @SerializedName("results")
         private T results;
+        @SerializedName("pagination")
+        private Pagination pagination;
     }
 }

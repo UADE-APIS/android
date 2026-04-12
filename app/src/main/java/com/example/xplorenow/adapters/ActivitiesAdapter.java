@@ -31,6 +31,17 @@ public class ActivitiesAdapter extends RecyclerView.Adapter<ActivitiesAdapter.Ac
         notifyDataSetChanged();
     }
 
+    public void addActivities(List<Activity> newActivities) {
+        int startPosition = this.activities.size();
+        this.activities.addAll(newActivities);
+        notifyItemRangeInserted(startPosition, newActivities.size());
+    }
+
+    public void clear() {
+        this.activities.clear();
+        notifyDataSetChanged();
+    }
+
     @NonNull
     @Override
     public ActivityViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -65,11 +76,13 @@ public class ActivitiesAdapter extends RecyclerView.Adapter<ActivitiesAdapter.Ac
             binding.tvPrice.setText("$" + activity.getPrice());
             binding.tvSlots.setText("Cupos disponibles: " + activity.getAvailableSlots());
 
-            // Cargar imagen con Glide (si existe)
             if (activity.getImages() != null && !activity.getImages().isEmpty()) {
                 Glide.with(itemView.getContext())
-                        .load(activity.getImages().get(0))
+                        .load(activity.getImages().get(0).getImageUrl())
+                        .placeholder(android.R.drawable.ic_menu_gallery)
                         .into(binding.ivActivityImage);
+            } else {
+                binding.ivActivityImage.setImageResource(android.R.drawable.ic_menu_gallery);
             }
 
             itemView.setOnClickListener(v -> listener.onActivityClick(activity));
