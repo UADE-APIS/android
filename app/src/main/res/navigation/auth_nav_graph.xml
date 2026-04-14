@@ -3,7 +3,22 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/auth_nav_graph"
-    app:startDestination="@id/loginEmailFragment">
+    app:startDestination="@id/authStartFragment">
+
+    <fragment
+        android:id="@+id/authStartFragment"
+        android:name="com.example.xplorenow.auth.AuthStartFragment"
+        android:label="AuthStart"
+        tools:layout="@layout/fragment_auth_start">
+
+        <action
+            android:id="@+id/action_authStart_to_loginEmail"
+            app:destination="@id/loginEmailFragment" />
+
+        <action
+            android:id="@+id/action_authStart_to_requestOtp"
+            app:destination="@id/requestOtpFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/loginEmailFragment"
