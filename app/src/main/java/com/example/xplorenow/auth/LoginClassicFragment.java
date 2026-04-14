@@ -94,8 +94,12 @@ public class LoginClassicFragment extends Fragment {
                         AuthTokensResponse tokens = response.body().data;
                         SessionStore.getInstance(requireContext())
                                 .saveTokens(tokens.access, tokens.refresh)
-                                .subscribe(() -> Navigation.findNavController(rootView).navigate(R.id.action_loginClassic_to_home),
-                                        throwable -> tvError.setText("Error guardando sesión."));
+                                .subscribe(() -> rootView.post(() -> {
+                                            if (!isAdded()) return;
+                                            Navigation.findNavController(rootView).navigate(R.id.action_loginClassic_to_home);
+                                        }),
+                                        throwable -> rootView.post(() ->
+                                                tvError.setText("Error guardando sesión.")));
                     }
 
                     @Override

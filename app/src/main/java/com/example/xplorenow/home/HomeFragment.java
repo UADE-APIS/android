@@ -42,7 +42,7 @@ public class HomeFragment extends Fragment {
         tvError = view.findViewById(R.id.tvError);
         Button btnLogout = view.findViewById(R.id.btnLogout);
 
-        tvInfo.setText("Home (sesión activa)");
+        tvInfo.setText("Hola mundo");
 
         btnLogout.setOnClickListener(v -> doLogout(view));
     }
@@ -53,9 +53,10 @@ public class HomeFragment extends Fragment {
         SessionStore store = SessionStore.getInstance(requireContext());
         store.getRefreshToken().subscribe(refresh -> {
             if (refresh == null || refresh.trim().isEmpty()) {
-                store.clear().subscribe(() ->
-                        Navigation.findNavController(rootView).navigate(R.id.loginEmailFragment)
-                );
+                store.clear().subscribe(() -> rootView.post(() -> {
+                    if (!isAdded()) return;
+                    Navigation.findNavController(rootView).navigate(R.id.action_home_to_authStart);
+                }));
                 return;
             }
 
@@ -66,20 +67,22 @@ public class HomeFragment extends Fragment {
             api.logout(new LogoutRequest(refresh)).enqueue(new Callback<WrappedResponse<Void>>() {
                 @Override
                 public void onResponse(@NonNull Call<WrappedResponse<Void>> call, @NonNull Response<WrappedResponse<Void>> response) {
-                    store.clear().subscribe(() ->
-                            Navigation.findNavController(rootView).navigate(R.id.loginEmailFragment)
-                    );
+                    store.clear().subscribe(() -> rootView.post(() -> {
+                        if (!isAdded()) return;
+                        Navigation.findNavController(rootView).navigate(R.id.action_home_to_authStart);
+                    }));
                 }
 
                 @Override
                 public void onFailure(@NonNull Call<WrappedResponse<Void>> call, @NonNull Throwable t) {
                     // Even if backend logout fails, clear local session.
-                    store.clear().subscribe(() ->
-                            Navigation.findNavController(rootView).navigate(R.id.loginEmailFragment)
-                    );
+                    store.clear().subscribe(() -> rootView.post(() -> {
+                        if (!isAdded()) return;
+                        Navigation.findNavController(rootView).navigate(R.id.action_home_to_authStart);
+                    }));
                 }
             });
-        }, throwable -> tvError.setText("No se pudo leer la sesión."));
+        }, throwable -> rootView.post(() -> tvError.setText("No se pudo leer la sesión.")));
     }
 }
 
