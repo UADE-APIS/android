@@ -13,6 +13,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import com.example.xplorenow.R;
 import com.example.xplorenow.data.model.ApiResponse;
@@ -83,14 +84,14 @@ public class RegisterFragment extends Fragment {
                 return;
             }
 
-            checkUsernameAndRegister(email, password, confirmPassword,
+            checkUsernameAndRegister(view, email, password, confirmPassword,
                     username, firstName, lastName,
                     progressBar, btnCrearCuenta, tvError);
         });
     }
 
     // primero verificamos que el nombre de usuario no esté en uso
-    private void checkUsernameAndRegister(String email, String password, String confirmPassword,
+    private void checkUsernameAndRegister(View rootView, String email, String password, String confirmPassword,
                                           String username, String firstName, String lastName,
                                           ProgressBar progressBar, Button btnCrearCuenta,
                                           TextView tvError) {
@@ -114,7 +115,7 @@ public class RegisterFragment extends Fragment {
 
                         if (response.isSuccessful()) {
                             // nombre disponible, pasamos a crear la cuenta
-                            register(email, password, confirmPassword,
+                            register(rootView, email, password, confirmPassword,
                                     username, firstName, lastName,
                                     progressBar, btnCrearCuenta, tvError);
                         } else {
@@ -137,7 +138,7 @@ public class RegisterFragment extends Fragment {
     }
 
     // con el username libre, mandamos todos los datos al backend
-    private void register(String email, String password, String confirmPassword,
+    private void register(View rootView, String email, String password, String confirmPassword,
                           String username, String firstName, String lastName,
                           ProgressBar progressBar, Button btnCrearCuenta, TextView tvError) {
 
@@ -154,11 +155,8 @@ public class RegisterFragment extends Fragment {
                 btnCrearCuenta.setEnabled(true);
 
                 if (response.isSuccessful()) {
-                    tvError.setTextColor(
-                            requireContext().getColor(android.R.color.holo_green_dark));
-                    tvError.setText("Account created successfully!");
-                    tvError.setVisibility(View.VISIBLE);
                     Log.d(TAG, "Registration successful: " + email);
+                    Navigation.findNavController(rootView).navigate(R.id.action_register_to_home);
                 } else {
                     // mostramos el mensaje específico que devuelve el backend
                     showError(tvError, parseErrorMessage(response));

@@ -42,9 +42,11 @@ public class LoginEmailFragment extends Fragment {
         SessionStore.getInstance(requireContext())
                 .isLoggedIn()
                 .subscribe(isLoggedIn -> {
-                    if (isLoggedIn) {
+                    if (!isLoggedIn) return;
+                    view.post(() -> {
+                        if (!isAdded()) return;
                         Navigation.findNavController(view).navigate(R.id.action_loginEmail_to_home);
-                    }
+                    });
                 }, throwable -> {
                     // ignore; user will login manually
                 });

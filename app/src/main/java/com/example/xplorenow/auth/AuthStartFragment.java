@@ -27,18 +27,20 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class LoginClassicFragment extends Fragment {
+public class AuthStartFragment extends Fragment {
+
     private EditText etEmail;
     private EditText etPassword;
     private TextView tvError;
     private ProgressBar progress;
-
     private ApiService api;
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_login_classic, container, false);
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_auth_start, container, false);
     }
 
     @Override
@@ -54,14 +56,19 @@ public class LoginClassicFragment extends Fragment {
                 .getRetrofit(RetrofitProvider.buildDefaultClient())
                 .create(ApiService.class);
 
-        String initialEmail = "";
-        if (getArguments() != null) {
-            initialEmail = getArguments().getString("email", "");
-        }
-        etEmail.setText(initialEmail);
+        SessionStore.getInstance(requireContext())
+                .isLoggedIn()
+                .subscribe(isLoggedIn -> {
+                    if (!isLoggedIn) return;
+                    view.post(() -> {
+                        if (!isAdded()) return;
+                        Navigation.findNavController(view).navigate(R.id.action_authStart_to_home);
+                    });
+                }, throwable -> { /* ignore */ });
 
-        Button btnLogin = view.findViewById(R.id.btnLogin);
-        btnLogin.setOnClickListener(v -> doLogin(view));
+        view.findViewById(R.id.btnIngresar).setOnClickListener(v -> doLogin(view));
+        view.findViewById(R.id.btnRegister).setOnClickListener(v ->
+                Navigation.findNavController(view).navigate(R.id.action_authStart_to_requestOtp));
     }
 
     private void doLogin(View rootView) {
@@ -71,47 +78,44 @@ public class LoginClassicFragment extends Fragment {
         String password = etPassword.getText().toString();
 
         if (!isValidEmail(email)) {
-            tvError.setText("Email inválido.");
+            tvError.setText("Correo inválido.");
             return;
         }
         if (TextUtils.isEmpty(password)) {
-            tvError.setText("La contraseña es requerida.");
+            tvError.setText("La contraseña es obligatoria.");
             return;
         }
 
-        setLoading(true);
+        progress.setVisibility(View.VISIBLE);
 
         api.loginClassic(new LoginClassicRequest(email, password))
                 .enqueue(new Callback<WrappedResponse<AuthTokensResponse>>() {
                     @Override
-                    public void onResponse(@NonNull Call<WrappedResponse<AuthTokensResponse>> call, @NonNull Response<WrappedResponse<AuthTokensResponse>> response) {
-                        setLoading(false);
+                    public void onResponse(@NonNull Call<WrappedResponse<AuthTokensResponse>> call,
+                                           @NonNull Response<WrappedResponse<AuthTokensResponse>> response) {
+                        progress.setVisibility(View.GONE);
                         if (!response.isSuccessful() || response.body() == null || response.body().data == null) {
                             tvError.setText("No se pudo iniciar sesión (" + response.code() + ").");
                             return;
                         }
-
                         AuthTokensResponse tokens = response.body().data;
                         SessionStore.getInstance(requireContext())
                                 .saveTokens(tokens.access, tokens.refresh)
                                 .subscribe(() -> rootView.post(() -> {
                                             if (!isAdded()) return;
-                                            Navigation.findNavController(rootView).navigate(R.id.action_loginClassic_to_home);
+                                            Navigation.findNavController(rootView).navigate(R.id.action_authStart_to_home);
                                         }),
                                         throwable -> rootView.post(() ->
                                                 tvError.setText("Error guardando sesión.")));
                     }
 
                     @Override
-                    public void onFailure(@NonNull Call<WrappedResponse<AuthTokensResponse>> call, @NonNull Throwable t) {
-                        setLoading(false);
+                    public void onFailure(@NonNull Call<WrappedResponse<AuthTokensResponse>> call,
+                                          @NonNull Throwable t) {
+                        progress.setVisibility(View.GONE);
                         tvError.setText("Error de red: " + t.getMessage());
                     }
                 });
-    }
-
-    private void setLoading(boolean loading) {
-        progress.setVisibility(loading ? View.VISIBLE : View.GONE);
     }
 
     private boolean isValidEmail(String email) {
@@ -121,4 +125,3 @@ public class LoginClassicFragment extends Fragment {
         return at > 0 && dot > at + 1 && dot < email.length() - 1;
     }
 }
-
