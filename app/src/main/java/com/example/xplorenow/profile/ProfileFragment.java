@@ -5,18 +5,24 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavOptions;
+import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.xplorenow.R;
 import com.example.xplorenow.data.model.User;
 import com.example.xplorenow.data.network.ApiService;
 import com.example.xplorenow.data.network.dto.MeResponseData;
+import com.example.xplorenow.data.network.dto.UpdateProfileRequest;
 import com.example.xplorenow.data.network.dto.WrappedResponse;
+import com.example.xplorenow.data.session.TokenManager;
 
 import javax.inject.Inject;
 
@@ -33,7 +39,16 @@ public class ProfileFragment extends Fragment {
     @Inject
     ApiService apiService;
 
+    @Inject
+    TokenManager tokenManager;
+
     private TextView tvName, tvEmail, tvUsername;
+
+    private EditText etFirstName, etLastName, etUsername;
+
+    private Button btnSave, btnEditProfile;
+
+    private View editContainer;
 
     public ProfileFragment() {}
 
@@ -48,12 +63,37 @@ public class ProfileFragment extends Fragment {
         tvEmail = view.findViewById(R.id.tvEmail);
         tvUsername = view.findViewById(R.id.tvUsername);
 
+        etFirstName = view.findViewById(R.id.etFirstName);
+        etLastName = view.findViewById(R.id.etLastName);
+        etUsername = view.findViewById(R.id.etUsername);
+
+        btnSave = view.findViewById(R.id.btnSave);
+        btnEditProfile = view.findViewById(R.id.btnEditProfile);
+        Button btnGoToChangePassword = view.findViewById(R.id.btnGoToChangePassword);
+
+        editContainer = view.findViewById(R.id.editContainer);
+
+        view.findViewById(R.id.btnBack).setOnClickListener(v ->
+                NavHostFragment.findNavController(this).navigateUp());
+
+        btnEditProfile.setOnClickListener(v ->
+                toggleEditMode(editContainer.getVisibility() != View.VISIBLE));
+
+        btnGoToChangePassword.setOnClickListener(v ->
+                NavHostFragment.findNavController(this)
+                        .navigate(R.id.action_profileFragment_to_changePasswordFragment));
+
+        setupSaveButton();
+
         loadProfile();
 
         return view;
     }
 
     private void loadProfile() {
+        tvName.setText("-");
+        tvEmail.setText("-");
+        tvUsername.setText("-");
 
         apiService.getMe().enqueue(new Callback<WrappedResponse<MeResponseData>>() {
             @Override
@@ -61,6 +101,11 @@ public class ProfileFragment extends Fragment {
                                    Response<WrappedResponse<MeResponseData>> response) {
 
                 Log.d(TAG, "HTTP CODE: " + response.code());
+
+                if (response.code() == 401) {
+                    handleUnauthorized();
+                    return;
+                }
 
                 if (response.isSuccessful() && response.body() != null) {
 
@@ -81,6 +126,10 @@ public class ProfileFragment extends Fragment {
                         tvEmail.setText(user.getEmail() != null ? user.getEmail() : "-");
                         tvUsername.setText(user.getUsername() != null ? user.getUsername() : "-");
 
+                        etFirstName.setText(firstName);
+                        etLastName.setText(lastName);
+                        etUsername.setText(user.getUsername() != null ? user.getUsername() : "");
+
                     } catch (Exception e) {
                         Log.e(TAG, "PARSE ERROR", e);
                         Toast.makeText(getContext(), "Error parseando usuario", Toast.LENGTH_SHORT).show();
@@ -98,5 +147,77 @@ public class ProfileFragment extends Fragment {
                 Toast.makeText(getContext(), "Error de conexión", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void setupSaveButton() {
+
+        btnSave.setOnClickListener(v -> {
+
+            String firstName = etFirstName.getText().toString().trim();
+            String lastName = etLastName.getText().toString().trim();
+            String username = etUsername.getText().toString().trim();
+
+            UpdateProfileRequest request = new UpdateProfileRequest(firstName, lastName, username);
+
+            apiService.updateProfile(request).enqueue(new Callback<WrappedResponse<MeResponseData>>() {
+                @Override
+                public void onResponse(Call<WrappedResponse<MeResponseData>> call,
+                                       Response<WrappedResponse<MeResponseData>> response) {
+
+                    Log.d(TAG, "PATCH CODE: " + response.code());
+
+                    if (response.code() == 401) {
+                        handleUnauthorized();
+                        return;
+                    }
+
+                    if (response.isSuccessful() && response.body() != null) {
+
+                        try {
+                            User updatedUser = response.body().getData().getUser();
+
+                            String fullName = (updatedUser.getFirstName() + " " + updatedUser.getLastName()).trim();
+
+                            tvName.setText(fullName.isEmpty() ? "-" : fullName);
+                            tvEmail.setText(updatedUser.getEmail() != null ? updatedUser.getEmail() : "-");
+                            tvUsername.setText(updatedUser.getUsername() != null ? updatedUser.getUsername() : "-");
+
+                            Toast.makeText(getContext(), "Perfil actualizado", Toast.LENGTH_SHORT).show();
+                            toggleEditMode(false);
+
+                        } catch (Exception e) {
+                            Log.e(TAG, "PATCH PARSE ERROR", e);
+                        }
+
+                    } else {
+                        Log.e(TAG, "PATCH ERROR BODY: " + response.errorBody());
+                        Toast.makeText(getContext(), "Error al actualizar perfil", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<WrappedResponse<MeResponseData>> call, Throwable t) {
+                    Log.e(TAG, "PATCH NETWORK ERROR", t);
+                    Toast.makeText(getContext(), "Error de conexión", Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+    }
+
+    private void toggleEditMode(boolean editing) {
+        editContainer.setVisibility(editing ? View.VISIBLE : View.GONE);
+        btnEditProfile.setText(editing ? R.string.profile_cancel_edit : R.string.profile_edit);
+    }
+
+    private void handleUnauthorized() {
+        tokenManager.clear();
+        if (!isAdded()) {
+            return;
+        }
+        Toast.makeText(getContext(), "Sesión vencida. Iniciá sesión de nuevo.", Toast.LENGTH_SHORT).show();
+        NavOptions options = new NavOptions.Builder()
+                .setPopUpTo(R.id.homeFragment, true)
+                .build();
+        NavHostFragment.findNavController(this).navigate(R.id.authStartFragment, null, options);
     }
 }

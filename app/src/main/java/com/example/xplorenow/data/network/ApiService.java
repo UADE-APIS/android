@@ -69,7 +69,7 @@ public interface ApiService {
     Call<WrappedResponse<MeResponseData>> getMe();
 
     @PATCH("api/auth/update-profile/")
-    Call<WrappedResponse<User>> updateProfile(@Body UpdateProfileRequest request);
+    Call<WrappedResponse<MeResponseData>> updateProfile(@Body UpdateProfileRequest request);
 
     @POST("api/auth/change-password/")
     Call<WrappedResponse<Void>> changePassword(@Body ChangePasswordRequest request);
