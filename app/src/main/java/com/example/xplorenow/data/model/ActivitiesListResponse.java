@@ -1,0 +1,35 @@
+package com.example.xplorenow.data.model;
+
+import com.google.gson.annotations.SerializedName;
+
+import java.util.List;
+
+/**
+ * Listado paginado de actividades: {@code { "message", "data": { "results", "pagination" } }}.
+ */
+public class ActivitiesListResponse {
+
+    private String message;
+
+    @SerializedName("data")
+    private DataBlock data;
+
+    public String getMessage() {
+        return message;
+    }
+
+    public List<Activity> getResults() {
+        return data != null ? data.results : null;
+    }
+
+    public Pagination getPagination() {
+        return data != null ? data.pagination : null;
+    }
+
+    private static class DataBlock {
+        @SerializedName("results")
+        private List<Activity> results;
+        @SerializedName("pagination")
+        private Pagination pagination;
+    }
+}

@@ -19,17 +19,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.xplorenow.R;
 import com.example.xplorenow.adapters.ActivitiesAdapter;
-import com.example.xplorenow.data.session.SessionStore;
+import com.example.xplorenow.data.model.ActivitiesListResponse;
+import com.example.xplorenow.data.model.Activity;
+import com.example.xplorenow.data.model.Pagination;
+import com.example.xplorenow.data.network.ApiService;
+import com.example.xplorenow.data.network.dto.LogoutRequest;
+import com.example.xplorenow.data.network.dto.WrappedResponse;
+import com.example.xplorenow.data.session.TokenManager;
 import com.example.xplorenow.databinding.DialogFiltersBinding;
-import com.example.xplorenow.models.Activity;
-import com.example.xplorenow.models.ApiResponse;
-import com.example.xplorenow.models.Pagination;
-import com.example.xplorenow.network.ApiService;
-import com.example.xplorenow.network.AuthInterceptor;
-import com.example.xplorenow.network.RetrofitClient;
-import com.example.xplorenow.network.RetrofitProvider;
-import com.example.xplorenow.network.dto.LogoutRequest;
-import com.example.xplorenow.network.dto.WrappedResponse;
 import com.google.android.material.appbar.MaterialToolbar;
 
 import java.util.ArrayList;
@@ -37,11 +34,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+@AndroidEntryPoint
 public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivityClickListener {
+
+    @Inject
+    ApiService apiService;
+    @Inject
+    TokenManager tokenManager;
 
     private MaterialToolbar toolbar;
     private TextView tvError;
@@ -179,15 +185,15 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
         queryParams.put("page", String.valueOf(page));
         queryParams.put("page_size", String.valueOf(pageSize));
 
-        RetrofitClient.getApiService().getActivities(queryParams).enqueue(new Callback<ApiResponse<List<Activity>>>() {
+        apiService.getActivities(queryParams).enqueue(new Callback<ActivitiesListResponse>() {
             @Override
-            public void onResponse(@NonNull Call<ApiResponse<List<Activity>>> call, @NonNull Response<ApiResponse<List<Activity>>> response) {
+            public void onResponse(@NonNull Call<ActivitiesListResponse> call, @NonNull Response<ActivitiesListResponse> response) {
                 isLoading = false;
                 progressBar.setVisibility(View.GONE);
                 if (!isAdded()) return;
 
                 if (response.isSuccessful() && response.body() != null) {
-                    List<Activity> activities = response.body().getData();
+                    List<Activity> activities = response.body().getResults();
                     Pagination pagination = response.body().getPagination();
 
                     if (pagination != null) {
@@ -207,7 +213,7 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
             }
 
             @Override
-            public void onFailure(@NonNull Call<ApiResponse<List<Activity>>> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<ActivitiesListResponse> call, @NonNull Throwable t) {
                 isLoading = false;
                 progressBar.setVisibility(View.GONE);
                 if (!isAdded()) return;
@@ -226,41 +232,32 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
         tvError.setVisibility(View.GONE);
         tvError.setText("");
 
-        SessionStore store = SessionStore.getInstance(requireContext());
-        store.getRefreshToken().subscribe(refresh -> {
-            if (refresh == null || refresh.trim().isEmpty()) {
-                store.clear().subscribe(() -> rootView.post(() -> {
+        String refresh = tokenManager.getRefreshToken();
+        if (refresh == null || refresh.trim().isEmpty()) {
+            tokenManager.clear();
+            if (!isAdded()) return;
+            Navigation.findNavController(rootView).navigate(R.id.action_home_to_authStart);
+            return;
+        }
+
+        apiService.logout(new LogoutRequest(refresh)).enqueue(new Callback<WrappedResponse<Void>>() {
+            @Override
+            public void onResponse(@NonNull Call<WrappedResponse<Void>> call, @NonNull Response<WrappedResponse<Void>> response) {
+                tokenManager.clear();
+                rootView.post(() -> {
                     if (!isAdded()) return;
                     Navigation.findNavController(rootView).navigate(R.id.action_home_to_authStart);
-                }));
-                return;
+                });
             }
 
-            ApiService api = RetrofitProvider
-                    .getRetrofit(RetrofitProvider.buildAuthedClient(new AuthInterceptor(requireContext())))
-                    .create(ApiService.class);
-
-            api.logout(new LogoutRequest(refresh)).enqueue(new Callback<WrappedResponse<Void>>() {
-                @Override
-                public void onResponse(@NonNull Call<WrappedResponse<Void>> call, @NonNull Response<WrappedResponse<Void>> response) {
-                    store.clear().subscribe(() -> rootView.post(() -> {
-                        if (!isAdded()) return;
-                        Navigation.findNavController(rootView).navigate(R.id.action_home_to_authStart);
-                    }));
-                }
-
-                @Override
-                public void onFailure(@NonNull Call<WrappedResponse<Void>> call, @NonNull Throwable t) {
-                    store.clear().subscribe(() -> rootView.post(() -> {
-                        if (!isAdded()) return;
-                        Navigation.findNavController(rootView).navigate(R.id.action_home_to_authStart);
-                    }));
-                }
-            });
-        }, throwable -> rootView.post(() -> {
-            if (!isAdded()) return;
-            tvError.setText("No se pudo leer la sesión.");
-            tvError.setVisibility(View.VISIBLE);
-        }));
+            @Override
+            public void onFailure(@NonNull Call<WrappedResponse<Void>> call, @NonNull Throwable t) {
+                tokenManager.clear();
+                rootView.post(() -> {
+                    if (!isAdded()) return;
+                    Navigation.findNavController(rootView).navigate(R.id.action_home_to_authStart);
+                });
+            }
+        });
     }
 }

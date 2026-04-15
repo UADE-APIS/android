@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.xplorenow.databinding.ItemActivityBinding;
-import com.example.xplorenow.models.Activity;
+import com.example.xplorenow.data.model.Activity;
 
 import java.util.ArrayList;
 import java.util.List;

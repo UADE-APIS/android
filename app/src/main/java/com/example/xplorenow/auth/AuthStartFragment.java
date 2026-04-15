@@ -16,24 +16,31 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.example.xplorenow.R;
-import com.example.xplorenow.data.session.SessionStore;
-import com.example.xplorenow.network.ApiService;
-import com.example.xplorenow.network.RetrofitProvider;
-import com.example.xplorenow.network.dto.LoginClassicRequest;
-import com.example.xplorenow.network.dto.WrappedResponse;
-import com.example.xplorenow.network.dto.auth.AuthTokensResponse;
+import com.example.xplorenow.data.network.ApiService;
+import com.example.xplorenow.data.network.dto.LoginClassicRequest;
+import com.example.xplorenow.data.network.dto.WrappedResponse;
+import com.example.xplorenow.data.network.dto.auth.AuthTokensResponse;
+import com.example.xplorenow.data.session.TokenManager;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+@AndroidEntryPoint
 public class AuthStartFragment extends Fragment {
+
+    @Inject
+    ApiService api;
+    @Inject
+    TokenManager tokenManager;
 
     private EditText etEmail;
     private EditText etPassword;
     private TextView tvError;
     private ProgressBar progress;
-    private ApiService api;
 
     @Nullable
     @Override
@@ -52,19 +59,12 @@ public class AuthStartFragment extends Fragment {
         tvError = view.findViewById(R.id.tvError);
         progress = view.findViewById(R.id.progress);
 
-        api = RetrofitProvider
-                .getRetrofit(RetrofitProvider.buildDefaultClient())
-                .create(ApiService.class);
-
-        SessionStore.getInstance(requireContext())
-                .isLoggedIn()
-                .subscribe(isLoggedIn -> {
-                    if (!isLoggedIn) return;
-                    view.post(() -> {
-                        if (!isAdded()) return;
-                        Navigation.findNavController(view).navigate(R.id.action_authStart_to_home);
-                    });
-                }, throwable -> { /* ignore */ });
+        if (tokenManager.isLoggedIn()) {
+            view.post(() -> {
+                if (!isAdded()) return;
+                Navigation.findNavController(view).navigate(R.id.action_authStart_to_home);
+            });
+        }
 
         view.findViewById(R.id.btnIngresar).setOnClickListener(v -> doLogin(view));
         view.findViewById(R.id.btnRegister).setOnClickListener(v ->
@@ -99,14 +99,11 @@ public class AuthStartFragment extends Fragment {
                             return;
                         }
                         AuthTokensResponse tokens = response.body().data;
-                        SessionStore.getInstance(requireContext())
-                                .saveTokens(tokens.access, tokens.refresh)
-                                .subscribe(() -> rootView.post(() -> {
-                                            if (!isAdded()) return;
-                                            Navigation.findNavController(rootView).navigate(R.id.action_authStart_to_home);
-                                        }),
-                                        throwable -> rootView.post(() ->
-                                                tvError.setText("Error guardando sesión.")));
+                        tokenManager.saveTokens(tokens.access, tokens.refresh);
+                        rootView.post(() -> {
+                            if (!isAdded()) return;
+                            Navigation.findNavController(rootView).navigate(R.id.action_authStart_to_home);
+                        });
                     }
 
                     @Override

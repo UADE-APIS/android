@@ -21,9 +21,12 @@ import com.example.xplorenow.data.model.CheckUsernameRequest;
 import com.example.xplorenow.data.model.RegisterData;
 import com.example.xplorenow.data.model.RegisterRequest;
 import com.example.xplorenow.data.network.ApiService;
-import com.example.xplorenow.data.network.RetrofitClient;
 
 import org.json.JSONObject;
+
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
 
 import java.io.IOException;
 
@@ -31,9 +34,13 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+@AndroidEntryPoint
 public class RegisterFragment extends Fragment {
 
     private static final String TAG = "RegisterFragment";
+
+    @Inject
+    ApiService apiService;
 
     @Nullable
     @Override
@@ -99,8 +106,6 @@ public class RegisterFragment extends Fragment {
         btnCrearCuenta.setEnabled(false);
         tvError.setVisibility(View.GONE);
 
-        ApiService apiService = RetrofitClient.getInstance().create(ApiService.class);
-
         apiService.checkUsername(new CheckUsernameRequest(username))
                 .enqueue(new Callback<ApiResponse<Void>>() {
                     @Override
@@ -141,8 +146,6 @@ public class RegisterFragment extends Fragment {
     private void register(View rootView, String email, String password, String confirmPassword,
                           String username, String firstName, String lastName,
                           ProgressBar progressBar, Button btnCrearCuenta, TextView tvError) {
-
-        ApiService apiService = RetrofitClient.getInstance().create(ApiService.class);
 
         RegisterRequest request = new RegisterRequest(
                 email, password, confirmPassword, username, firstName, lastName);
