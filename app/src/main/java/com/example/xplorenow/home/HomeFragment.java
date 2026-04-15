@@ -21,15 +21,15 @@ import com.example.xplorenow.R;
 import com.example.xplorenow.adapters.ActivitiesAdapter;
 import com.example.xplorenow.data.session.SessionStore;
 import com.example.xplorenow.databinding.DialogFiltersBinding;
-import com.example.xplorenow.models.Activity;
-import com.example.xplorenow.models.ApiResponse;
-import com.example.xplorenow.models.Pagination;
-import com.example.xplorenow.network.ApiService;
-import com.example.xplorenow.network.AuthInterceptor;
-import com.example.xplorenow.network.RetrofitClient;
-import com.example.xplorenow.network.RetrofitProvider;
-import com.example.xplorenow.network.dto.LogoutRequest;
-import com.example.xplorenow.network.dto.WrappedResponse;
+import com.example.xplorenow.data.model.ActivitiesListResponse;
+import com.example.xplorenow.data.model.Activity;
+import com.example.xplorenow.data.model.Pagination;
+import com.example.xplorenow.data.network.ApiService;
+import com.example.xplorenow.data.network.AuthInterceptor;
+import com.example.xplorenow.data.network.RetrofitClient;
+import com.example.xplorenow.data.network.RetrofitProvider;
+import com.example.xplorenow.data.network.dto.LogoutRequest;
+import com.example.xplorenow.data.network.dto.WrappedResponse;
 import com.google.android.material.appbar.MaterialToolbar;
 
 import java.util.ArrayList;
@@ -179,15 +179,15 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
         queryParams.put("page", String.valueOf(page));
         queryParams.put("page_size", String.valueOf(pageSize));
 
-        RetrofitClient.getApiService().getActivities(queryParams).enqueue(new Callback<ApiResponse<List<Activity>>>() {
+        RetrofitClient.getApiService().getActivities(queryParams).enqueue(new Callback<ActivitiesListResponse>() {
             @Override
-            public void onResponse(@NonNull Call<ApiResponse<List<Activity>>> call, @NonNull Response<ApiResponse<List<Activity>>> response) {
+            public void onResponse(@NonNull Call<ActivitiesListResponse> call, @NonNull Response<ActivitiesListResponse> response) {
                 isLoading = false;
                 progressBar.setVisibility(View.GONE);
                 if (!isAdded()) return;
 
                 if (response.isSuccessful() && response.body() != null) {
-                    List<Activity> activities = response.body().getData();
+                    List<Activity> activities = response.body().getResults();
                     Pagination pagination = response.body().getPagination();
 
                     if (pagination != null) {
@@ -207,7 +207,7 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
             }
 
             @Override
-            public void onFailure(@NonNull Call<ApiResponse<List<Activity>>> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<ActivitiesListResponse> call, @NonNull Throwable t) {
                 isLoading = false;
                 progressBar.setVisibility(View.GONE);
                 if (!isAdded()) return;

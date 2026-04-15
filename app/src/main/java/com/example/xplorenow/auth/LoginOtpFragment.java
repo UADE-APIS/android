@@ -17,12 +17,12 @@ import androidx.navigation.Navigation;
 
 import com.example.xplorenow.R;
 import com.example.xplorenow.data.session.SessionStore;
-import com.example.xplorenow.network.ApiService;
-import com.example.xplorenow.network.RetrofitProvider;
-import com.example.xplorenow.network.dto.LoginOtpRequest;
-import com.example.xplorenow.network.dto.RequestOtpRequest;
-import com.example.xplorenow.network.dto.WrappedResponse;
-import com.example.xplorenow.network.dto.auth.AuthTokensResponse;
+import com.example.xplorenow.data.network.ApiService;
+import com.example.xplorenow.data.network.RetrofitProvider;
+import com.example.xplorenow.data.network.dto.LoginOtpRequest;
+import com.example.xplorenow.data.network.dto.RequestOtpRequest;
+import com.example.xplorenow.data.network.dto.WrappedResponse;
+import com.example.xplorenow.data.network.dto.auth.AuthTokensResponse;
 
 import retrofit2.Call;
 import retrofit2.Callback;

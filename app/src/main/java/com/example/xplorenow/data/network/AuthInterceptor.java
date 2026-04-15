@@ -1,4 +1,4 @@
-package com.example.xplorenow.network;
+package com.example.xplorenow.data.network;
 
 import android.content.Context;
 
@@ -37,4 +37,3 @@ public class AuthInterceptor implements Interceptor {
         return chain.proceed(authed);
     }
 }
-
