@@ -16,25 +16,32 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.example.xplorenow.R;
-import com.example.xplorenow.di.TokenManagerAccessor;
 import com.example.xplorenow.data.network.ApiService;
-import com.example.xplorenow.data.network.RetrofitProvider;
 import com.example.xplorenow.data.network.dto.LoginOtpRequest;
 import com.example.xplorenow.data.network.dto.RequestOtpRequest;
 import com.example.xplorenow.data.network.dto.WrappedResponse;
 import com.example.xplorenow.data.network.dto.auth.AuthTokensResponse;
+import com.example.xplorenow.data.session.TokenManager;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+@AndroidEntryPoint
 public class LoginOtpFragment extends Fragment {
+
+    @Inject
+    ApiService api;
+    @Inject
+    TokenManager tokenManager;
     private TextView tvSubtitle;
     private EditText etCode;
     private TextView tvError;
     private ProgressBar progress;
 
-    private ApiService api;
     private String email;
 
     @Nullable
@@ -51,10 +58,6 @@ public class LoginOtpFragment extends Fragment {
         etCode = view.findViewById(R.id.etCode);
         tvError = view.findViewById(R.id.tvError);
         progress = view.findViewById(R.id.progress);
-
-        api = RetrofitProvider
-                .getRetrofit(RetrofitProvider.buildDefaultClient())
-                .create(ApiService.class);
 
         email = getArguments() != null ? getArguments().getString("email", "") : "";
         tvSubtitle.setText("Enviamos un código a " + email);
@@ -113,7 +116,7 @@ public class LoginOtpFragment extends Fragment {
                             return;
                         }
                         AuthTokensResponse tokens = response.body().data;
-                        TokenManagerAccessor.from(requireContext()).saveTokens(tokens.access, tokens.refresh);
+                        tokenManager.saveTokens(tokens.access, tokens.refresh);
                         rootView.post(() -> {
                             if (!isAdded()) return;
                             Navigation.findNavController(rootView).navigate(R.id.action_loginOtp_to_home);

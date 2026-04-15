@@ -19,15 +19,21 @@ import com.example.xplorenow.R;
 import com.example.xplorenow.data.model.ApiResponse;
 import com.example.xplorenow.data.model.OtpRequest;
 import com.example.xplorenow.data.network.ApiService;
-import com.example.xplorenow.data.network.RetrofitClient;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+@AndroidEntryPoint
 public class RequestOtpFragment extends Fragment {
 
     private static final String TAG = "RequestOtpFragment";
+
+    @Inject
+    ApiService apiService;
 
     @Nullable
     @Override
@@ -68,8 +74,6 @@ public class RequestOtpFragment extends Fragment {
         btnContinuar.setEnabled(false);
         tvError.setVisibility(View.GONE);
 
-        ApiService apiService = RetrofitClient.getInstance().create(ApiService.class);
-
         apiService.checkEmail(new OtpRequest(email)).enqueue(new Callback<ApiResponse<Void>>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse<Void>> call,
@@ -109,8 +113,6 @@ public class RequestOtpFragment extends Fragment {
                             ProgressBar progressBar,
                             Button btnContinuar,
                             TextView tvError) {
-
-        ApiService apiService = RetrofitClient.getInstance().create(ApiService.class);
 
         apiService.requestOtp(new OtpRequest(email)).enqueue(new Callback<ApiResponse<Void>>() {
             @Override

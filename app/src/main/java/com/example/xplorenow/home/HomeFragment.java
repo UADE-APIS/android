@@ -19,18 +19,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.xplorenow.R;
 import com.example.xplorenow.adapters.ActivitiesAdapter;
-import com.example.xplorenow.data.session.TokenManager;
-import com.example.xplorenow.di.TokenManagerAccessor;
-import com.example.xplorenow.databinding.DialogFiltersBinding;
 import com.example.xplorenow.data.model.ActivitiesListResponse;
 import com.example.xplorenow.data.model.Activity;
 import com.example.xplorenow.data.model.Pagination;
 import com.example.xplorenow.data.network.ApiService;
-import com.example.xplorenow.data.network.AuthInterceptor;
-import com.example.xplorenow.data.network.RetrofitClient;
-import com.example.xplorenow.data.network.RetrofitProvider;
 import com.example.xplorenow.data.network.dto.LogoutRequest;
 import com.example.xplorenow.data.network.dto.WrappedResponse;
+import com.example.xplorenow.data.session.TokenManager;
+import com.example.xplorenow.databinding.DialogFiltersBinding;
 import com.google.android.material.appbar.MaterialToolbar;
 
 import java.util.ArrayList;
@@ -38,11 +34,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+@AndroidEntryPoint
 public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivityClickListener {
+
+    @Inject
+    ApiService apiService;
+    @Inject
+    TokenManager tokenManager;
 
     private MaterialToolbar toolbar;
     private TextView tvError;
@@ -180,7 +185,7 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
         queryParams.put("page", String.valueOf(page));
         queryParams.put("page_size", String.valueOf(pageSize));
 
-        RetrofitClient.getApiService().getActivities(queryParams).enqueue(new Callback<ActivitiesListResponse>() {
+        apiService.getActivities(queryParams).enqueue(new Callback<ActivitiesListResponse>() {
             @Override
             public void onResponse(@NonNull Call<ActivitiesListResponse> call, @NonNull Response<ActivitiesListResponse> response) {
                 isLoading = false;
@@ -227,23 +232,18 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
         tvError.setVisibility(View.GONE);
         tvError.setText("");
 
-        TokenManager tokens = TokenManagerAccessor.from(requireContext());
-        String refresh = tokens.getRefreshToken();
+        String refresh = tokenManager.getRefreshToken();
         if (refresh == null || refresh.trim().isEmpty()) {
-            tokens.clear();
+            tokenManager.clear();
             if (!isAdded()) return;
             Navigation.findNavController(rootView).navigate(R.id.action_home_to_authStart);
             return;
         }
 
-        ApiService api = RetrofitProvider
-                .getRetrofit(RetrofitProvider.buildAuthedClient(new AuthInterceptor(requireContext())))
-                .create(ApiService.class);
-
-        api.logout(new LogoutRequest(refresh)).enqueue(new Callback<WrappedResponse<Void>>() {
+        apiService.logout(new LogoutRequest(refresh)).enqueue(new Callback<WrappedResponse<Void>>() {
             @Override
             public void onResponse(@NonNull Call<WrappedResponse<Void>> call, @NonNull Response<WrappedResponse<Void>> response) {
-                tokens.clear();
+                tokenManager.clear();
                 rootView.post(() -> {
                     if (!isAdded()) return;
                     Navigation.findNavController(rootView).navigate(R.id.action_home_to_authStart);
@@ -252,7 +252,7 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
 
             @Override
             public void onFailure(@NonNull Call<WrappedResponse<Void>> call, @NonNull Throwable t) {
-                tokens.clear();
+                tokenManager.clear();
                 rootView.post(() -> {
                     if (!isAdded()) return;
                     Navigation.findNavController(rootView).navigate(R.id.action_home_to_authStart);

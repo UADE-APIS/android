@@ -22,15 +22,21 @@ import com.example.xplorenow.data.model.OtpRequest;
 import com.example.xplorenow.data.model.VerifyOtpData;
 import com.example.xplorenow.data.model.VerifyOtpRequest;
 import com.example.xplorenow.data.network.ApiService;
-import com.example.xplorenow.data.network.RetrofitClient;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+@AndroidEntryPoint
 public class VerifyOtpFragment extends Fragment {
 
     private static final String TAG = "VerifyOtpFragment";
+
+    @Inject
+    ApiService apiService;
     // tiempo de espera entre reenvíos (30 segundos)
     private static final long RESEND_COOLDOWN_MS = 30_000;
 
@@ -112,8 +118,6 @@ public class VerifyOtpFragment extends Fragment {
         btnVerificar.setEnabled(false);
         tvError.setVisibility(View.GONE);
 
-        ApiService apiService = RetrofitClient.getInstance().create(ApiService.class);
-
         apiService.verifyOtp(new VerifyOtpRequest(email, code))
                 .enqueue(new Callback<ApiResponse<VerifyOtpData>>() {
                     @Override
@@ -146,8 +150,6 @@ public class VerifyOtpFragment extends Fragment {
     }
 
     private void resendOtp(String email, TextView btnReenviar, TextView tvError) {
-        ApiService apiService = RetrofitClient.getInstance().create(ApiService.class);
-
         // deshabilitamos de entrada para evitar doble tap
         btnReenviar.setEnabled(false);
         tvError.setVisibility(View.GONE);

@@ -16,24 +16,31 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.example.xplorenow.R;
-import com.example.xplorenow.di.TokenManagerAccessor;
 import com.example.xplorenow.data.network.ApiService;
-import com.example.xplorenow.data.network.RetrofitProvider;
 import com.example.xplorenow.data.network.dto.LoginClassicRequest;
 import com.example.xplorenow.data.network.dto.WrappedResponse;
 import com.example.xplorenow.data.network.dto.auth.AuthTokensResponse;
+import com.example.xplorenow.data.session.TokenManager;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+@AndroidEntryPoint
 public class LoginClassicFragment extends Fragment {
+
+    @Inject
+    ApiService api;
+    @Inject
+    TokenManager tokenManager;
+
     private EditText etEmail;
     private EditText etPassword;
     private TextView tvError;
     private ProgressBar progress;
-
-    private ApiService api;
 
     @Nullable
     @Override
@@ -49,10 +56,6 @@ public class LoginClassicFragment extends Fragment {
         etPassword = view.findViewById(R.id.etPassword);
         tvError = view.findViewById(R.id.tvError);
         progress = view.findViewById(R.id.progress);
-
-        api = RetrofitProvider
-                .getRetrofit(RetrofitProvider.buildDefaultClient())
-                .create(ApiService.class);
 
         String initialEmail = "";
         if (getArguments() != null) {
@@ -92,7 +95,7 @@ public class LoginClassicFragment extends Fragment {
                         }
 
                         AuthTokensResponse tokens = response.body().data;
-                        TokenManagerAccessor.from(requireContext()).saveTokens(tokens.access, tokens.refresh);
+                        tokenManager.saveTokens(tokens.access, tokens.refresh);
                         rootView.post(() -> {
                             if (!isAdded()) return;
                             Navigation.findNavController(rootView).navigate(R.id.action_loginClassic_to_home);
