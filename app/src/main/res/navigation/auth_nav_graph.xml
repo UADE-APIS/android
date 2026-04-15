@@ -135,4 +135,9 @@
             app:popUpToInclusive="true" />
     </fragment>
 
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.xplorenow.profile.ProfileFragment"
+        android:label="Profile" />
+
 </navigation>

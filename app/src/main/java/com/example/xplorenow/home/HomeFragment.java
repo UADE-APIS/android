@@ -77,11 +77,18 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
         rvActivities = view.findViewById(R.id.rvActivities);
 
         toolbar.setSubtitle(getString(R.string.home_subtitle));
+
         toolbar.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.action_logout) {
                 doLogout(view);
                 return true;
             }
+
+            if (item.getItemId() == R.id.action_profile) {
+                Navigation.findNavController(view).navigate(R.id.profileFragment);
+                return true;
+            }
+
             return false;
         });
 
