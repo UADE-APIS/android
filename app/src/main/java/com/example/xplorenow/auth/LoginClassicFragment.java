@@ -16,7 +16,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.example.xplorenow.R;
-import com.example.xplorenow.data.session.SessionStore;
+import com.example.xplorenow.di.TokenManagerAccessor;
 import com.example.xplorenow.data.network.ApiService;
 import com.example.xplorenow.data.network.RetrofitProvider;
 import com.example.xplorenow.data.network.dto.LoginClassicRequest;
@@ -92,14 +92,11 @@ public class LoginClassicFragment extends Fragment {
                         }
 
                         AuthTokensResponse tokens = response.body().data;
-                        SessionStore.getInstance(requireContext())
-                                .saveTokens(tokens.access, tokens.refresh)
-                                .subscribe(() -> rootView.post(() -> {
-                                            if (!isAdded()) return;
-                                            Navigation.findNavController(rootView).navigate(R.id.action_loginClassic_to_home);
-                                        }),
-                                        throwable -> rootView.post(() ->
-                                                tvError.setText("Error guardando sesión.")));
+                        TokenManagerAccessor.from(requireContext()).saveTokens(tokens.access, tokens.refresh);
+                        rootView.post(() -> {
+                            if (!isAdded()) return;
+                            Navigation.findNavController(rootView).navigate(R.id.action_loginClassic_to_home);
+                        });
                     }
 
                     @Override

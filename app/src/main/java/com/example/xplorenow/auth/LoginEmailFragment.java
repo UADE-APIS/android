@@ -16,7 +16,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.example.xplorenow.R;
-import com.example.xplorenow.data.session.SessionStore;
+import com.example.xplorenow.di.TokenManagerAccessor;
 
 public class LoginEmailFragment extends Fragment {
     private EditText etEmail;
@@ -38,18 +38,12 @@ public class LoginEmailFragment extends Fragment {
         Button btnSendOtp = view.findViewById(R.id.btnSendOtp);
         Button btnGoClassic = view.findViewById(R.id.btnGoClassic);
 
-        // Quick session check: if logged in, go to Home.
-        SessionStore.getInstance(requireContext())
-                .isLoggedIn()
-                .subscribe(isLoggedIn -> {
-                    if (!isLoggedIn) return;
-                    view.post(() -> {
-                        if (!isAdded()) return;
-                        Navigation.findNavController(view).navigate(R.id.action_loginEmail_to_home);
-                    });
-                }, throwable -> {
-                    // ignore; user will login manually
-                });
+        if (TokenManagerAccessor.from(requireContext()).isLoggedIn()) {
+            view.post(() -> {
+                if (!isAdded()) return;
+                Navigation.findNavController(view).navigate(R.id.action_loginEmail_to_home);
+            });
+        }
 
         btnSendOtp.setOnClickListener(v -> {
             tvError.setText("");

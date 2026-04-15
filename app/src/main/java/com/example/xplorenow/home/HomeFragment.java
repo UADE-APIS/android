@@ -19,7 +19,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.xplorenow.R;
 import com.example.xplorenow.adapters.ActivitiesAdapter;
-import com.example.xplorenow.data.session.SessionStore;
+import com.example.xplorenow.data.session.TokenManager;
+import com.example.xplorenow.di.TokenManagerAccessor;
 import com.example.xplorenow.databinding.DialogFiltersBinding;
 import com.example.xplorenow.data.model.ActivitiesListResponse;
 import com.example.xplorenow.data.model.Activity;
@@ -226,41 +227,37 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
         tvError.setVisibility(View.GONE);
         tvError.setText("");
 
-        SessionStore store = SessionStore.getInstance(requireContext());
-        store.getRefreshToken().subscribe(refresh -> {
-            if (refresh == null || refresh.trim().isEmpty()) {
-                store.clear().subscribe(() -> rootView.post(() -> {
+        TokenManager tokens = TokenManagerAccessor.from(requireContext());
+        String refresh = tokens.getRefreshToken();
+        if (refresh == null || refresh.trim().isEmpty()) {
+            tokens.clear();
+            if (!isAdded()) return;
+            Navigation.findNavController(rootView).navigate(R.id.action_home_to_authStart);
+            return;
+        }
+
+        ApiService api = RetrofitProvider
+                .getRetrofit(RetrofitProvider.buildAuthedClient(new AuthInterceptor(requireContext())))
+                .create(ApiService.class);
+
+        api.logout(new LogoutRequest(refresh)).enqueue(new Callback<WrappedResponse<Void>>() {
+            @Override
+            public void onResponse(@NonNull Call<WrappedResponse<Void>> call, @NonNull Response<WrappedResponse<Void>> response) {
+                tokens.clear();
+                rootView.post(() -> {
                     if (!isAdded()) return;
                     Navigation.findNavController(rootView).navigate(R.id.action_home_to_authStart);
-                }));
-                return;
+                });
             }
 
-            ApiService api = RetrofitProvider
-                    .getRetrofit(RetrofitProvider.buildAuthedClient(new AuthInterceptor(requireContext())))
-                    .create(ApiService.class);
-
-            api.logout(new LogoutRequest(refresh)).enqueue(new Callback<WrappedResponse<Void>>() {
-                @Override
-                public void onResponse(@NonNull Call<WrappedResponse<Void>> call, @NonNull Response<WrappedResponse<Void>> response) {
-                    store.clear().subscribe(() -> rootView.post(() -> {
-                        if (!isAdded()) return;
-                        Navigation.findNavController(rootView).navigate(R.id.action_home_to_authStart);
-                    }));
-                }
-
-                @Override
-                public void onFailure(@NonNull Call<WrappedResponse<Void>> call, @NonNull Throwable t) {
-                    store.clear().subscribe(() -> rootView.post(() -> {
-                        if (!isAdded()) return;
-                        Navigation.findNavController(rootView).navigate(R.id.action_home_to_authStart);
-                    }));
-                }
-            });
-        }, throwable -> rootView.post(() -> {
-            if (!isAdded()) return;
-            tvError.setText("No se pudo leer la sesión.");
-            tvError.setVisibility(View.VISIBLE);
-        }));
+            @Override
+            public void onFailure(@NonNull Call<WrappedResponse<Void>> call, @NonNull Throwable t) {
+                tokens.clear();
+                rootView.post(() -> {
+                    if (!isAdded()) return;
+                    Navigation.findNavController(rootView).navigate(R.id.action_home_to_authStart);
+                });
+            }
+        });
     }
 }

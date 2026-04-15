@@ -2,7 +2,7 @@ package com.example.xplorenow.data.network;
 
 import android.content.Context;
 
-import com.example.xplorenow.data.session.SessionStore;
+import com.example.xplorenow.di.TokenManagerAccessor;
 
 import java.io.IOException;
 
@@ -21,11 +21,7 @@ public class AuthInterceptor implements Interceptor {
     public Response intercept(Chain chain) throws IOException {
         Request original = chain.request();
 
-        String token = null;
-        try {
-            token = SessionStore.getInstance(appContext).getAccessToken().blockingGet();
-        } catch (Throwable ignored) {
-        }
+        String token = TokenManagerAccessor.from(appContext).getAccessToken();
 
         if (token == null || token.trim().isEmpty()) {
             return chain.proceed(original);

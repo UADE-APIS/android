@@ -16,7 +16,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.example.xplorenow.R;
-import com.example.xplorenow.data.session.SessionStore;
+import com.example.xplorenow.di.TokenManagerAccessor;
 import com.example.xplorenow.data.network.ApiService;
 import com.example.xplorenow.data.network.RetrofitProvider;
 import com.example.xplorenow.data.network.dto.LoginClassicRequest;
@@ -56,15 +56,12 @@ public class AuthStartFragment extends Fragment {
                 .getRetrofit(RetrofitProvider.buildDefaultClient())
                 .create(ApiService.class);
 
-        SessionStore.getInstance(requireContext())
-                .isLoggedIn()
-                .subscribe(isLoggedIn -> {
-                    if (!isLoggedIn) return;
-                    view.post(() -> {
-                        if (!isAdded()) return;
-                        Navigation.findNavController(view).navigate(R.id.action_authStart_to_home);
-                    });
-                }, throwable -> { /* ignore */ });
+        if (TokenManagerAccessor.from(requireContext()).isLoggedIn()) {
+            view.post(() -> {
+                if (!isAdded()) return;
+                Navigation.findNavController(view).navigate(R.id.action_authStart_to_home);
+            });
+        }
 
         view.findViewById(R.id.btnIngresar).setOnClickListener(v -> doLogin(view));
         view.findViewById(R.id.btnRegister).setOnClickListener(v ->
@@ -99,14 +96,11 @@ public class AuthStartFragment extends Fragment {
                             return;
                         }
                         AuthTokensResponse tokens = response.body().data;
-                        SessionStore.getInstance(requireContext())
-                                .saveTokens(tokens.access, tokens.refresh)
-                                .subscribe(() -> rootView.post(() -> {
-                                            if (!isAdded()) return;
-                                            Navigation.findNavController(rootView).navigate(R.id.action_authStart_to_home);
-                                        }),
-                                        throwable -> rootView.post(() ->
-                                                tvError.setText("Error guardando sesión.")));
+                        TokenManagerAccessor.from(requireContext()).saveTokens(tokens.access, tokens.refresh);
+                        rootView.post(() -> {
+                            if (!isAdded()) return;
+                            Navigation.findNavController(rootView).navigate(R.id.action_authStart_to_home);
+                        });
                     }
 
                     @Override
