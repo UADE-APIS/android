@@ -13,7 +13,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -76,12 +78,24 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
         progressBar = view.findViewById(R.id.progressBar);
         rvActivities = view.findViewById(R.id.rvActivities);
 
+        if (!tokenManager.isLoggedIn()) {
+            handleUnauthorized();
+            return;
+        }
+
         toolbar.setSubtitle(getString(R.string.home_subtitle));
+
         toolbar.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.action_logout) {
                 doLogout(view);
                 return true;
             }
+
+            if (item.getItemId() == R.id.action_profile) {
+                Navigation.findNavController(view).navigate(R.id.profileFragment);
+                return true;
+            }
+
             return false;
         });
 
@@ -192,6 +206,11 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
                 progressBar.setVisibility(View.GONE);
                 if (!isAdded()) return;
 
+                if (response.code() == 401) {
+                    handleUnauthorized();
+                    return;
+                }
+
                 if (response.isSuccessful() && response.body() != null) {
                     List<Activity> activities = response.body().getResults();
                     Pagination pagination = response.body().getPagination();
@@ -259,5 +278,17 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
                 });
             }
         });
+    }
+
+    private void handleUnauthorized() {
+        tokenManager.clear();
+        if (!isAdded()) {
+            return;
+        }
+        Toast.makeText(getContext(), "Sesion vencida. Inicia sesion de nuevo.", Toast.LENGTH_SHORT).show();
+        NavOptions options = new NavOptions.Builder()
+                .setPopUpTo(R.id.homeFragment, true)
+                .build();
+        NavHostFragment.findNavController(this).navigate(R.id.authStartFragment, null, options);
     }
 }

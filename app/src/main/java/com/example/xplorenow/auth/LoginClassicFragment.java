@@ -89,12 +89,12 @@ public class LoginClassicFragment extends Fragment {
                     @Override
                     public void onResponse(@NonNull Call<WrappedResponse<AuthTokensResponse>> call, @NonNull Response<WrappedResponse<AuthTokensResponse>> response) {
                         setLoading(false);
-                        if (!response.isSuccessful() || response.body() == null || response.body().data == null) {
+                        if (!response.isSuccessful() || response.body() == null || response.body().getData() == null) {
                             tvError.setText("No se pudo iniciar sesión (" + response.code() + ").");
                             return;
                         }
 
-                        AuthTokensResponse tokens = response.body().data;
+                        AuthTokensResponse tokens = response.body().getData();
                         tokenManager.saveTokens(tokens.access, tokens.refresh);
                         rootView.post(() -> {
                             if (!isAdded()) return;

@@ -6,12 +6,16 @@ import com.example.xplorenow.data.model.CheckUsernameRequest;
 import com.example.xplorenow.data.model.OtpRequest;
 import com.example.xplorenow.data.model.RegisterData;
 import com.example.xplorenow.data.model.RegisterRequest;
+import com.example.xplorenow.data.model.User;
 import com.example.xplorenow.data.model.VerifyOtpData;
 import com.example.xplorenow.data.model.VerifyOtpRequest;
+import com.example.xplorenow.data.network.dto.ChangePasswordRequest;
 import com.example.xplorenow.data.network.dto.LoginClassicRequest;
 import com.example.xplorenow.data.network.dto.LoginOtpRequest;
 import com.example.xplorenow.data.network.dto.LogoutRequest;
+import com.example.xplorenow.data.network.dto.MeResponseData;
 import com.example.xplorenow.data.network.dto.RequestOtpRequest;
+import com.example.xplorenow.data.network.dto.UpdateProfileRequest;
 import com.example.xplorenow.data.network.dto.WrappedResponse;
 import com.example.xplorenow.data.network.dto.auth.AuthTokensResponse;
 
@@ -20,6 +24,7 @@ import java.util.Map;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.QueryMap;
 
@@ -57,4 +62,15 @@ public interface ApiService {
 
     @POST("api/auth/register/")
     Call<ApiResponse<RegisterData>> register(@Body RegisterRequest body);
+
+    // PROFILE
+
+    @GET("api/auth/me/")
+    Call<WrappedResponse<MeResponseData>> getMe();
+
+    @PATCH("api/auth/update-profile/")
+    Call<WrappedResponse<MeResponseData>> updateProfile(@Body UpdateProfileRequest request);
+
+    @POST("api/auth/change-password/")
+    Call<WrappedResponse<Void>> changePassword(@Body ChangePasswordRequest request);
 }

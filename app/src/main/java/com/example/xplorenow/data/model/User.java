@@ -32,4 +32,8 @@ public class User {
     public String getLastName() { return lastName; }
     public boolean isVerified() { return isVerified; }
     public boolean isRegistrationCompleted() { return isRegistrationCompleted; }
+
+    public User getUser() {
+        return this;
+    }
 }
