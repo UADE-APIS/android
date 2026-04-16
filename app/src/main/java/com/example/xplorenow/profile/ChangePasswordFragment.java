@@ -253,7 +253,17 @@ public class ChangePasswordFragment extends Fragment {
                     Toast.makeText(getContext(), R.string.profile_change_password_success, Toast.LENGTH_SHORT).show();
                     NavHostFragment.findNavController(ChangePasswordFragment.this).navigateUp();
                 } else {
-                    Toast.makeText(getContext(), getString(R.string.profile_change_password_error, response.code()), Toast.LENGTH_SHORT).show();
+                    String detail = "";
+                    try {
+                        detail = response.errorBody() != null ? response.errorBody().string() : "";
+                    } catch (Exception ignored) {
+                    }
+                    Log.e(TAG, "CHANGE PASSWORD ERROR BODY: " + detail);
+                    String msg = getString(R.string.profile_change_password_error, response.code());
+                    if (!detail.isEmpty()) {
+                        msg = msg + " " + detail;
+                    }
+                    Toast.makeText(getContext(), msg, Toast.LENGTH_LONG).show();
                 }
             }
 

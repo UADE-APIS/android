@@ -24,6 +24,10 @@ import com.example.xplorenow.data.network.dto.UpdateProfileRequest;
 import com.example.xplorenow.data.network.dto.WrappedResponse;
 import com.example.xplorenow.data.session.TokenManager;
 
+import android.widget.CheckBox;
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.inject.Inject;
 
 import dagger.hilt.android.AndroidEntryPoint;
@@ -50,6 +54,9 @@ public class ProfileFragment extends Fragment {
 
     private View editContainer;
 
+    private CheckBox cbAventura, cbCultura, cbGastronomia, cbNaturaleza, cbRelax;
+    private TextView tvReservadas, tvRealizadas;
+
     public ProfileFragment() {}
 
     @Nullable
@@ -58,6 +65,19 @@ public class ProfileFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
+
+        cbAventura = view.findViewById(R.id.cbAventura);
+        cbCultura = view.findViewById(R.id.cbCultura);
+        cbGastronomia = view.findViewById(R.id.cbGastronomia);
+        cbNaturaleza = view.findViewById(R.id.cbNaturaleza);
+        cbRelax = view.findViewById(R.id.cbRelax);
+
+        tvReservadas = view.findViewById(R.id.tvReservadas);
+        tvRealizadas = view.findViewById(R.id.tvRealizadas);
+
+// MOCK resumen (hasta tener backend)
+        tvReservadas.setText("Reservadas: 3");
+        tvRealizadas.setText("Realizadas: 1");
 
         tvName = view.findViewById(R.id.tvName);
         tvEmail = view.findViewById(R.id.tvEmail);
@@ -157,7 +177,16 @@ public class ProfileFragment extends Fragment {
             String lastName = etLastName.getText().toString().trim();
             String username = etUsername.getText().toString().trim();
 
-            UpdateProfileRequest request = new UpdateProfileRequest(firstName, lastName, username);
+            List<String> preferences = new ArrayList<>();
+
+            if (cbAventura.isChecked()) preferences.add("adventure");
+            if (cbCultura.isChecked()) preferences.add("guided_tour");
+            if (cbGastronomia.isChecked()) preferences.add("gastronomic");
+            if (cbNaturaleza.isChecked()) preferences.add("excursion");
+            if (cbRelax.isChecked()) preferences.add("free_tour");
+
+            UpdateProfileRequest request =
+                    new UpdateProfileRequest(firstName, lastName, username, preferences);
 
             apiService.updateProfile(request).enqueue(new Callback<WrappedResponse<MeResponseData>>() {
                 @Override
@@ -173,31 +202,28 @@ public class ProfileFragment extends Fragment {
 
                     if (response.isSuccessful() && response.body() != null) {
 
-                        try {
-                            User updatedUser = response.body().getData().getUser();
+                        User updatedUser = response.body().getData().getUser();
 
-                            String fullName = (updatedUser.getFirstName() + " " + updatedUser.getLastName()).trim();
+                        String fullName = (updatedUser.getFirstName() + " " + updatedUser.getLastName()).trim();
 
-                            tvName.setText(fullName.isEmpty() ? "-" : fullName);
-                            tvEmail.setText(updatedUser.getEmail() != null ? updatedUser.getEmail() : "-");
-                            tvUsername.setText(updatedUser.getUsername() != null ? updatedUser.getUsername() : "-");
+                        tvName.setText(fullName.isEmpty() ? "-" : fullName);
+                        tvEmail.setText(updatedUser.getEmail() != null ? updatedUser.getEmail() : "-");
+                        tvUsername.setText(updatedUser.getUsername() != null ? updatedUser.getUsername() : "-");
 
-                            Toast.makeText(getContext(), "Perfil actualizado", Toast.LENGTH_SHORT).show();
-                            toggleEditMode(false);
-
-                        } catch (Exception e) {
-                            Log.e(TAG, "PATCH PARSE ERROR", e);
-                        }
+                        Toast.makeText(getContext(), "Perfil actualizado", Toast.LENGTH_SHORT).show();
+                        toggleEditMode(false);
 
                     } else {
-                        Log.e(TAG, "PATCH ERROR BODY: " + response.errorBody());
+                        try {
+                            Log.e(TAG, "PATCH ERROR BODY: " + (response.errorBody() != null ? response.errorBody().string() : "sin body"));
+                        } catch (Exception ignored) {
+                        }
                         Toast.makeText(getContext(), "Error al actualizar perfil", Toast.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<WrappedResponse<MeResponseData>> call, Throwable t) {
-                    Log.e(TAG, "PATCH NETWORK ERROR", t);
                     Toast.makeText(getContext(), "Error de conexión", Toast.LENGTH_SHORT).show();
                 }
             });
