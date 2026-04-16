@@ -2,5 +2,5 @@
     <string name="app_name">XploreNow</string>
     <string name="logout">Cerrar sesión</string>
     <string name="filters">Filtros</string>
-    <string name="home_subtitle">Hola mundo</string>
+    <string name="back">Volver</string>
 </resources>

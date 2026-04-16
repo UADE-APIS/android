@@ -76,7 +76,6 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
         progressBar = view.findViewById(R.id.progressBar);
         rvActivities = view.findViewById(R.id.rvActivities);
 
-        toolbar.setSubtitle(getString(R.string.home_subtitle));
         toolbar.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.action_logout) {
                 doLogout(view);

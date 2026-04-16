@@ -65,8 +65,14 @@ public class RegisterFragment extends Fragment {
         EditText etPassword = view.findViewById(R.id.etPassword);
         EditText etConfirmPassword = view.findViewById(R.id.etConfirmPassword);
         Button btnCrearCuenta = view.findViewById(R.id.btnCrearCuenta);
+        Button btnBack = view.findViewById(R.id.btnBack);
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
         TextView tvError = view.findViewById(R.id.tvError);
+
+        btnBack.setOnClickListener(v -> {
+            if (!isAdded()) return;
+            Navigation.findNavController(view).navigateUp();
+        });
 
         btnCrearCuenta.setOnClickListener(v -> {
             String firstName = etFirstName.getText().toString().trim();
