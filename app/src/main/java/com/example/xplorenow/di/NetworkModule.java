@@ -37,8 +37,12 @@ public final class NetworkModule {
                     if (token == null || token.trim().isEmpty()) {
                         return chain.proceed(original);
                     }
+                    String normalized = token.trim();
+                    if (normalized.regionMatches(true, 0, "Bearer ", 0, 7)) {
+                        normalized = normalized.substring(7).trim();
+                    }
                     Request authed = original.newBuilder()
-                            .header("Authorization", "Bearer " + token)
+                            .header("Authorization", "Bearer " + normalized)
                             .build();
                     return chain.proceed(authed);
                 })

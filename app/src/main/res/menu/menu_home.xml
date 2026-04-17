@@ -5,4 +5,7 @@
         android:id="@+id/action_logout"
         android:title="@string/logout"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_profile"
+        android:title="Perfil" />
 </menu>
