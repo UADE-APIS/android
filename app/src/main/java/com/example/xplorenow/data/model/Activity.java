@@ -40,6 +40,8 @@ public class Activity implements Serializable {
 
     @SerializedName("reserved_slots")
     private int reservedSlots;
+    @SerializedName("availabilities")
+    private List<ActivityAvailability> availabilities;
 
     public int getId() {
         return id;
@@ -112,4 +114,6 @@ public class Activity implements Serializable {
     public int getReservedSlots() {
         return reservedSlots;
     }
+
+    public List<ActivityAvailability> getAvailabilities() { return availabilities; }
 }

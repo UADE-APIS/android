@@ -27,4 +27,23 @@
     <string name="profile_change_password_success">Contraseña actualizada.</string>
     <string name="profile_change_password_error">Error al cambiar contraseña (%1$d).</string>
     <string name="error_connection">Error de conexión.</string>
+    <string name="status_canceled">Cancelada</string>
+    <string name="status_finished">Finalizada</string>
+    <string name="status_confirmed">Confirmada</string>
+    <string name="title_cancel_booking">Cancelar Reserva</string>
+    <string name="msg_cancel_policy">Política: %1$s\n\n¿Confirma la cancelación?</string>
+    <string name="default_cancellation_policy">Sin política específica.</string>
+    <string name="action_confirm">Confirmar</string>
+    <string name="action_back">Volver</string>
+    <string name="error_loading_data">Error al cargar los datos de las reservas.</string>
+    <string name="label_select_date">Seleccionar Fecha</string>
+    <string name="label_quantity">Cantidad de Participantes</string>
+    <string name="action_book_now">Reservar Ahora</string>
+    <string name="text_available_slots">Cupos disponibles: %1$d</string>
+    <string name="error_invalid_activity">Actividad no válida.</string>
+    <string name="error_fill_quantity">Ingrese la cantidad de participantes.</string>
+    <string name="error_invalid_quantity">La cantidad debe ser mayor a 0.</string>
+    <string name="error_insufficient_slots">No hay suficientes cupos disponibles para esta fecha.</string>
+    <string name="error_booking_failed">Ocurrió un error al procesar la reserva.</string>
+    <string name="msg_booking_success">¡Reserva realizada con éxito!</string>
 </resources>

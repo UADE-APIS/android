@@ -1,7 +1,10 @@
 package com.example.xplorenow.data.network;
 
 import com.example.xplorenow.data.model.ActivitiesListResponse;
+import com.example.xplorenow.data.model.Activity;
 import com.example.xplorenow.data.model.ApiResponse;
+import com.example.xplorenow.data.model.Booking;
+import com.example.xplorenow.data.model.BookingRequest;
 import com.example.xplorenow.data.model.CheckUsernameRequest;
 import com.example.xplorenow.data.model.OtpRequest;
 import com.example.xplorenow.data.model.RegisterData;
@@ -19,6 +22,7 @@ import com.example.xplorenow.data.network.dto.UpdateProfileRequest;
 import com.example.xplorenow.data.network.dto.WrappedResponse;
 import com.example.xplorenow.data.network.dto.auth.AuthTokensResponse;
 
+import java.util.List;
 import java.util.Map;
 
 import retrofit2.Call;
@@ -26,6 +30,7 @@ import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.PATCH;
 import retrofit2.http.POST;
+import retrofit2.http.Path;
 import retrofit2.http.QueryMap;
 
 public interface ApiService {
@@ -73,4 +78,18 @@ public interface ApiService {
 
     @POST("api/auth/change-password/")
     Call<WrappedResponse<Void>> changePassword(@Body ChangePasswordRequest request);
+
+    // BOOKING ACTIVITIES
+
+    @GET("api/activities/{id}/")
+    Call<ApiResponse<Activity>> getActivity(@Path("id") int id);
+
+    @POST("api/activities/bookings/create/")
+    Call<ApiResponse<Booking>> createBooking(@Body BookingRequest request);
+
+    @GET("api/activities/bookings/me/")
+    Call<ApiResponse<List<Booking>>> getMyBookings();
+
+    @POST("api/activities/bookings/{id}/cancel/")
+    Call<ApiResponse<Booking>> cancelBooking(@Path("id") int id);
 }
