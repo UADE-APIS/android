@@ -7,7 +7,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -46,17 +45,10 @@ import retrofit2.Response;
 @AndroidEntryPoint
 public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivityClickListener {
 
-    @Inject
-    ApiService apiService;
-    @Inject
-    TokenManager tokenManager;
+    @Inject ApiService apiService;
+    @Inject TokenManager tokenManager;
 
-    private MaterialToolbar toolbar;
-    private TextView tvError;
-    private ProgressBar progressBar;
-    private RecyclerView rvActivities;
     private ActivitiesAdapter adapter;
-
     private int currentPage = 1;
     private int totalPages = 1;
     private boolean isLoading = false;
@@ -73,40 +65,40 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        toolbar = view.findViewById(R.id.toolbar);
-        tvError = view.findViewById(R.id.tvError);
-        progressBar = view.findViewById(R.id.progressBar);
-        rvActivities = view.findViewById(R.id.rvActivities);
+        // REGLA 3: Vistas como variables locales
+        MaterialToolbar toolbar = view.findViewById(R.id.toolbar);
+        TextView tvError = view.findViewById(R.id.tvError);
+        ProgressBar progressBar = view.findViewById(R.id.progressBar);
+        RecyclerView rvActivities = view.findViewById(R.id.rvActivities);
 
         if (!tokenManager.isLoggedIn()) {
-            handleUnauthorized();
+            handleUnauthorized(view);
             return;
         }
 
-        toolbar.setSubtitle(getString(R.string.home_subtitle));
-
-
         toolbar.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.action_logout) {
-                doLogout(view);
+                doLogout(view, tvError);
                 return true;
             }
-
             if (item.getItemId() == R.id.action_profile) {
                 Navigation.findNavController(view).navigate(R.id.profileFragment);
                 return true;
             }
-
+            if (item.getItemId() == R.id.action_my_bookings) {
+                Navigation.findNavController(view).navigate(R.id.action_home_to_myBookings);
+                return true;
+            }
             return false;
         });
 
-        view.findViewById(R.id.fabFilter).setOnClickListener(v -> showFilterDialog());
+        view.findViewById(R.id.fabFilter).setOnClickListener(v -> showFilterDialog(tvError, progressBar));
 
-        setupRecyclerView();
-        fetchActivities(1);
+        setupRecyclerView(rvActivities, progressBar, tvError);
+        fetchActivities(1, progressBar, tvError);
     }
 
-    private void setupRecyclerView() {
+    private void setupRecyclerView(RecyclerView rvActivities, ProgressBar progressBar, TextView tvError) {
         adapter = new ActivitiesAdapter(this);
         LinearLayoutManager layoutManager = new LinearLayoutManager(requireContext());
         rvActivities.setLayoutManager(layoutManager);
@@ -121,16 +113,15 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
                 int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
 
                 if (!isLoading && currentPage < totalPages) {
-                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount
-                            && firstVisibleItemPosition >= 0) {
-                        fetchActivities(currentPage + 1);
+                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount && firstVisibleItemPosition >= 0) {
+                        fetchActivities(currentPage + 1, progressBar, tvError);
                     }
                 }
             }
         });
     }
 
-    private void showFilterDialog() {
+    private void showFilterDialog(TextView tvError, ProgressBar progressBar) {
         DialogFiltersBinding filterBinding = DialogFiltersBinding.inflate(getLayoutInflater());
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
                 .setView(filterBinding.getRoot())
@@ -179,20 +170,20 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
 
             dialog.dismiss();
             tvError.setVisibility(View.GONE);
-            fetchActivities(1);
+            fetchActivities(1, progressBar, tvError);
         });
 
         filterBinding.btnResetFilters.setOnClickListener(v -> {
             currentFilters.clear();
             dialog.dismiss();
             tvError.setVisibility(View.GONE);
-            fetchActivities(1);
+            fetchActivities(1, progressBar, tvError);
         });
 
         dialog.show();
     }
 
-    private void fetchActivities(int page) {
+    private void fetchActivities(int page, ProgressBar progressBar, TextView tvError) {
         isLoading = true;
         progressBar.setVisibility(View.VISIBLE);
 
@@ -208,7 +199,7 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
                 if (!isAdded()) return;
 
                 if (response.code() == 401) {
-                    handleUnauthorized();
+                    if (getView() != null) handleUnauthorized(getView());
                     return;
                 }
 
@@ -245,10 +236,12 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
 
     @Override
     public void onActivityClick(Activity activity) {
-        Toast.makeText(requireContext(), "Click en: " + activity.getTitle(), Toast.LENGTH_SHORT).show();
+        Bundle args = new Bundle();
+        args.putInt("activityId", activity.getId());
+        Navigation.findNavController(requireView()).navigate(R.id.action_home_to_createBooking, args);
     }
 
-    private void doLogout(View rootView) {
+    private void doLogout(View rootView, TextView tvError) {
         tvError.setVisibility(View.GONE);
         tvError.setText("");
 
@@ -281,15 +274,13 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
         });
     }
 
-    private void handleUnauthorized() {
+    private void handleUnauthorized(View view) {
         tokenManager.clear();
-        if (!isAdded()) {
-            return;
-        }
-        Toast.makeText(getContext(), "Sesion vencida. Inicia sesion de nuevo.", Toast.LENGTH_SHORT).show();
+        if (!isAdded()) return;
+
         NavOptions options = new NavOptions.Builder()
-                .setPopUpTo(R.id.homeFragment, true)
+                .setPopUpTo(R.id.nav_graph, true)
                 .build();
-        NavHostFragment.findNavController(this).navigate(R.id.authStartFragment, null, options);
+        Navigation.findNavController(view).navigate(R.id.authStartFragment, null, options);
     }
 }

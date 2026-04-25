@@ -1,14 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
     app:startDestination="@id/auth_nav_graph">
 
     <include app:graph="@navigation/auth_nav_graph" />
 
-    <!--
-        Próximas features:
-        <include app:graph="@navigation/home_nav_graph" />
-    -->
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.xplorenow.home.HomeFragment"
+        android:label="Home"
+        tools:layout="@layout/fragment_home">
+
+        <action
+            android:id="@+id/action_home_to_myBookings"
+            app:destination="@id/myBookingsFragment" />
+
+        <action
+            android:id="@+id/action_home_to_createBooking"
+            app:destination="@id/createBookingFragment" />
+
+        <action
+            android:id="@+id/action_home_to_authStart"
+            app:destination="@id/authStartFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/myBookingsFragment"
+        android:name="com.example.xplorenow.bookings.MyBookingsFragment"
+        android:label="Mis Reservas"
+        tools:layout="@layout/fragment_my_bookings" />
+
+    <fragment
+        android:id="@+id/createBookingFragment"
+        android:name="com.example.xplorenow.bookings.CreateBookingFragment"
+        android:label="Crear Reserva"
+        tools:layout="@layout/fragment_create_booking" />
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.xplorenow.profile.ProfileFragment"
+        android:label="Perfil"
+        tools:layout="@layout/fragment_profile" />
 
 </navigation>
