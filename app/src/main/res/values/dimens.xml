@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Márgenes en dp: escalan con la densidad de pantalla (lo visto en clase). -->
+    <dimen name="screen_padding_horizontal">20dp</dimen>
+    <dimen name="screen_padding_vertical">16dp</dimen>
+    <dimen name="section_spacing">16dp</dimen>
+    <dimen name="title_top_spacing">12dp</dimen>
+</resources>

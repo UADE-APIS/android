@@ -85,6 +85,7 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
 
         toolbar.setSubtitle(getString(R.string.home_subtitle));
 
+
         toolbar.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.action_logout) {
                 doLogout(view);
