@@ -82,7 +82,7 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
                 return true;
             }
             if (item.getItemId() == R.id.action_profile) {
-                Navigation.findNavController(view).navigate(R.id.profileFragment);
+                Navigation.findNavController(view).navigate(R.id.action_home_to_profile);
                 return true;
             }
             if (item.getItemId() == R.id.action_my_bookings) {

@@ -66,9 +66,20 @@ public class AuthStartFragment extends Fragment {
             });
         }
 
+        // BUG-01: mostrar mensaje de éxito si viene del registro
+        if (getArguments() != null && getArguments().getBoolean("register_success", false)) {
+            tvError.setTextColor(requireContext().getColor(android.R.color.holo_green_dark));
+            tvError.setText(R.string.register_success);
+            tvError.setVisibility(android.view.View.VISIBLE);
+        }
+
         view.findViewById(R.id.btnIngresar).setOnClickListener(v -> doLogin(view));
         view.findViewById(R.id.btnRegister).setOnClickListener(v ->
                 Navigation.findNavController(view).navigate(R.id.action_authStart_to_requestOtp));
+
+        // BUG-03: botón para acceder al login por OTP
+        view.findViewById(R.id.btnLoginOtp).setOnClickListener(v ->
+                Navigation.findNavController(view).navigate(R.id.action_authStart_to_loginEmail));
     }
 
     private void doLogin(View rootView) {

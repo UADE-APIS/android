@@ -23,7 +23,14 @@
 
         <action
             android:id="@+id/action_home_to_authStart"
-            app:destination="@id/authStartFragment" />
+            app:destination="@id/authStartFragment"
+            app:popUpTo="@id/homeFragment"
+            app:popUpToInclusive="true" />
+
+        <!-- BUG-05: action correcta para navegar al perfil -->
+        <action
+            android:id="@+id/action_home_to_profile"
+            app:destination="@id/profileFragment" />
     </fragment>
 
     <fragment
@@ -38,10 +45,23 @@
         android:label="Crear Reserva"
         tools:layout="@layout/fragment_create_booking" />
 
+    <!-- BUG-05: profileFragment ahora vive SOLO acá -->
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.example.xplorenow.profile.ProfileFragment"
         android:label="Perfil"
-        tools:layout="@layout/fragment_profile" />
+        tools:layout="@layout/fragment_profile">
+
+        <action
+            android:id="@+id/action_profileFragment_to_changePasswordFragment"
+            app:destination="@id/changePasswordFragment" />
+    </fragment>
+
+    <!-- BUG-05: changePasswordFragment movido desde auth_nav_graph a acá -->
+    <fragment
+        android:id="@+id/changePasswordFragment"
+        android:name="com.example.xplorenow.profile.ChangePasswordFragment"
+        android:label="Cambiar contraseña"
+        tools:layout="@layout/fragment_change_password" />
 
 </navigation>
