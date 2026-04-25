@@ -46,4 +46,6 @@
     <string name="error_insufficient_slots">No hay suficientes cupos disponibles para esta fecha.</string>
     <string name="error_booking_failed">Ocurrió un error al procesar la reserva.</string>
     <string name="msg_booking_success">¡Reserva realizada con éxito!</string>
+    <string name="register_success">Cuenta creada exitosamente. Iniciá sesión.</string>
+    <string name="login_otp_option">Ingresar con código OTP</string>
 </resources>
