@@ -1,6 +1,7 @@
 package com.example.xplorenow.history;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,6 +44,8 @@ import retrofit2.Response;
 
 @AndroidEntryPoint
 public class HistoryFragment extends Fragment {
+
+    private static final String TAG = "HistoryFragment";
 
     @Inject ApiService apiService;
 
@@ -130,6 +133,7 @@ public class HistoryFragment extends Fragment {
                 } else {
                     tvError.setText(getString(R.string.error_http, response.code()));
                     tvError.setVisibility(View.VISIBLE);
+                    Log.e(TAG, "Error HTTP: " + response.code());
                 }
             }
 
@@ -138,8 +142,9 @@ public class HistoryFragment extends Fragment {
                 isLoading = false;
                 progressBar.setVisibility(View.GONE);
                 if (!isAdded()) return;
-                tvError.setText(R.string.error_connection);
+                tvError.setText(getString(R.string.error_connection));
                 tvError.setVisibility(View.VISIBLE);
+                Log.e(TAG, "onFailure: " + t.getMessage());
             }
         });
     }
