@@ -42,7 +42,20 @@ public class TokenManager {
         return t != null && !t.trim().isEmpty();
     }
 
+    private static final String KEY_BIOMETRIC = "biometric_enabled";
+
+    public boolean isBiometricEnabled() {
+        return prefs.getBoolean(KEY_BIOMETRIC, false);
+    }
+
+    public void setBiometricEnabled(boolean enabled) {
+        prefs.edit().putBoolean(KEY_BIOMETRIC, enabled).apply();
+    }
+
     public void clear() {
-        prefs.edit().remove(KEY_ACCESS).remove(KEY_REFRESH).apply();
+        prefs.edit()
+                .remove(KEY_ACCESS)
+                .remove(KEY_REFRESH)
+                .apply();
     }
 }

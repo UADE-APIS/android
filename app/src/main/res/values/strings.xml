@@ -48,4 +48,11 @@
     <string name="msg_booking_success">¡Reserva realizada con éxito!</string>
     <string name="register_success">Cuenta creada exitosamente. Iniciá sesión.</string>
     <string name="login_otp_option">Ingresar con código OTP</string>
+    <!-- Biometría -->
+    <string name="biometric_prompt_title">Autenticación biométrica</string>
+    <string name="biometric_prompt_subtitle">Usá tu huella o rostro para ingresar</string>
+    <string name="biometric_prompt_cancel">Cancelar</string>
+    <string name="biometric_enable_title">Acceso biométrico</string>
+    <string name="biometric_enable_message">¿Querés activar el ingreso con huella o rostro para la próxima vez?</string>
+    <string name="biometric_unavailable">Tu dispositivo no soporta autenticación biométrica</string>
 </resources>
