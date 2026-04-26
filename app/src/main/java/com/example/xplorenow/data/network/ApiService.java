@@ -6,9 +6,12 @@ import com.example.xplorenow.data.model.ApiResponse;
 import com.example.xplorenow.data.model.Booking;
 import com.example.xplorenow.data.model.BookingRequest;
 import com.example.xplorenow.data.model.CheckUsernameRequest;
+import com.example.xplorenow.data.model.HistoryListResponse;
 import com.example.xplorenow.data.model.OtpRequest;
 import com.example.xplorenow.data.model.RegisterData;
 import com.example.xplorenow.data.model.RegisterRequest;
+import com.example.xplorenow.data.model.Review;
+import com.example.xplorenow.data.model.ReviewRequest;
 import com.example.xplorenow.data.model.User;
 import com.example.xplorenow.data.model.VerifyOtpData;
 import com.example.xplorenow.data.model.VerifyOtpRequest;
@@ -92,4 +95,12 @@ public interface ApiService {
 
     @POST("api/activities/bookings/{id}/cancel/")
     Call<ApiResponse<Booking>> cancelBooking(@Path("id") int id);
+
+    // HISTORY
+
+    @GET("api/activities/history/")
+    Call<HistoryListResponse> getHistory(@QueryMap Map<String, String> query);
+
+    @POST("api/activities/history/{booking_id}/review/")
+    Call<ApiResponse<Review>> createReview(@Path("booking_id") int bookingId, @Body ReviewRequest body);
 }

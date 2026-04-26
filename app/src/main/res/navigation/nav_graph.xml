@@ -32,10 +32,9 @@
             android:id="@+id/action_home_to_profile"
             app:destination="@id/profileFragment" />
 
-        <!-- DETALLE: desde home se puede navegar al detalle de una actividad -->
         <action
-            android:id="@+id/action_home_to_activityDetail"
-            app:destination="@id/activityDetailFragment" />
+            android:id="@+id/action_home_to_history"
+            app:destination="@id/historyFragment" />
     </fragment>
 
     <fragment
@@ -75,22 +74,10 @@
         android:label="Cambiar contraseña"
         tools:layout="@layout/fragment_change_password" />
 
-    <!-- DETALLE DE ACTIVIDAD -->
     <fragment
-        android:id="@+id/activityDetailFragment"
-        android:name="com.example.xplorenow.detail.ActivityDetailFragment"
-        android:label="Detalle"
-        tools:layout="@layout/fragment_activity_detail">
-
-        <argument
-            android:name="activityId"
-            app:argType="integer"
-            android:defaultValue="-1" />
-
-        <!-- Desde el detalle se puede reservar -->
-        <action
-            android:id="@+id/action_activityDetailFragment_to_createBookingFragment"
-            app:destination="@id/createBookingFragment" />
-    </fragment>
+        android:id="@+id/historyFragment"
+        android:name="com.example.xplorenow.history.HistoryFragment"
+        android:label="Mi Historial"
+        tools:layout="@layout/fragment_history" />
 
 </navigation>
