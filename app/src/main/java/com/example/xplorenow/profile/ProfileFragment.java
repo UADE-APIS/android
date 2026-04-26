@@ -150,6 +150,15 @@ public class ProfileFragment extends Fragment {
                         etLastName.setText(lastName);
                         etUsername.setText(user.getUsername() != null ? user.getUsername() : "");
 
+                        List<String> prefs = user.getPreferredCategories();
+                        if (prefs != null) {
+                            cbAventura.setChecked(prefs.contains("adventure"));
+                            cbCultura.setChecked(prefs.contains("guided_tour"));
+                            cbGastronomia.setChecked(prefs.contains("gastronomic"));
+                            cbNaturaleza.setChecked(prefs.contains("excursion"));
+                            cbRelax.setChecked(prefs.contains("free_tour"));
+                        }
+
                     } catch (Exception e) {
                         Log.e(TAG, "PARSE ERROR", e);
                         Toast.makeText(getContext(), "Error parseando usuario", Toast.LENGTH_SHORT).show();
