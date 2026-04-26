@@ -51,7 +51,13 @@
         android:id="@+id/createBookingFragment"
         android:name="com.example.xplorenow.bookings.CreateBookingFragment"
         android:label="Crear Reserva"
-        tools:layout="@layout/fragment_create_booking" />
+        tools:layout="@layout/fragment_create_booking">
+
+        <argument
+            android:name="activityId"
+            app:argType="integer"
+            android:defaultValue="-1" />
+    </fragment>
 
     <!-- BUG-05: profileFragment ahora vive SOLO acá -->
     <fragment
