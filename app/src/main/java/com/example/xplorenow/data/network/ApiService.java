@@ -71,8 +71,6 @@ public interface ApiService {
     @POST("api/auth/register/")
     Call<ApiResponse<RegisterData>> register(@Body RegisterRequest body);
 
-    // PROFILE
-
     @GET("api/auth/me/")
     Call<WrappedResponse<MeResponseData>> getMe();
 
@@ -81,8 +79,6 @@ public interface ApiService {
 
     @POST("api/auth/change-password/")
     Call<WrappedResponse<Void>> changePassword(@Body ChangePasswordRequest request);
-
-    // BOOKING ACTIVITIES
 
     @GET("api/activities/{id}/")
     Call<ApiResponse<Activity>> getActivity(@Path("id") int id);
@@ -96,15 +92,11 @@ public interface ApiService {
     @POST("api/activities/bookings/{id}/cancel/")
     Call<ApiResponse<Booking>> cancelBooking(@Path("id") int id);
 
-    // HISTORY
-
     @GET("api/activities/history/")
     Call<HistoryListResponse> getHistory(@QueryMap Map<String, String> query);
 
     @POST("api/activities/history/{booking_id}/review/")
     Call<ApiResponse<Review>> createReview(@Path("booking_id") int bookingId, @Body ReviewRequest body);
-
-    // FAVORITES
 
     @POST("api/activities/{id}/favorite/")
     Call<WrappedResponse<Void>> toggleFavorite(@Path("id") int id);
