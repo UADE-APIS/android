@@ -31,6 +31,10 @@
         <action
             android:id="@+id/action_home_to_profile"
             app:destination="@id/profileFragment" />
+
+        <action
+            android:id="@+id/action_home_to_history"
+            app:destination="@id/historyFragment" />
     </fragment>
 
     <fragment
@@ -63,5 +67,11 @@
         android:name="com.example.xplorenow.profile.ChangePasswordFragment"
         android:label="Cambiar contraseña"
         tools:layout="@layout/fragment_change_password" />
+
+    <fragment
+        android:id="@+id/historyFragment"
+        android:name="com.example.xplorenow.history.HistoryFragment"
+        android:label="Mi Historial"
+        tools:layout="@layout/fragment_history" />
 
 </navigation>

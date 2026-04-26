@@ -9,6 +9,11 @@
         android:title="Mis Reservas"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_history"
+        android:title="@string/action_history"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_logout"
         android:title="@string/logout"
         app:showAsAction="never" />

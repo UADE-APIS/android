@@ -89,6 +89,10 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
                 Navigation.findNavController(view).navigate(R.id.action_home_to_myBookings);
                 return true;
             }
+            if (item.getItemId() == R.id.action_history) {
+                Navigation.findNavController(view).navigate(R.id.action_home_to_history);
+                return true;
+            }
             return false;
         });
 
