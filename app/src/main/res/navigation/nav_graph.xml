@@ -35,6 +35,10 @@
         <action
             android:id="@+id/action_home_to_history"
             app:destination="@id/historyFragment" />
+
+        <action
+            android:id="@+id/action_home_to_favorites"
+            app:destination="@id/favoritesFragment" />
     </fragment>
 
     <fragment
@@ -79,5 +83,11 @@
         android:name="com.example.xplorenow.history.HistoryFragment"
         android:label="Mi Historial"
         tools:layout="@layout/fragment_history" />
+
+    <fragment
+        android:id="@+id/favoritesFragment"
+        android:name="com.example.xplorenow.favorites.FavoritesFragment"
+        android:label="Mis Favoritos"
+        tools:layout="@layout/fragment_favorites" />
 
 </navigation>

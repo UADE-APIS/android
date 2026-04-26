@@ -77,4 +77,7 @@
     <string name="history_review_comment_hint">Comentario (opcional)</string>
     <string name="history_review_submit">Enviar calificación</string>
     <string name="history_review_fill_ratings">Debés calificar tanto la actividad como el guía</string>
+    <string name="action_favorites">Mis Favoritos</string>
+    <string name="favorites_title">Mis Favoritos</string>
+    <string name="favorite_toggle">Favorito</string>
 </resources>

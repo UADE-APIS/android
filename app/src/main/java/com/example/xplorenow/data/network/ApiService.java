@@ -103,4 +103,12 @@ public interface ApiService {
 
     @POST("api/activities/history/{booking_id}/review/")
     Call<ApiResponse<Review>> createReview(@Path("booking_id") int bookingId, @Body ReviewRequest body);
+
+    // FAVORITES
+
+    @POST("api/activities/{id}/favorite/")
+    Call<WrappedResponse<Void>> toggleFavorite(@Path("id") int id);
+
+    @GET("api/activities/favorites/")
+    Call<ActivitiesListResponse> getMyFavorites(@QueryMap Map<String, String> query);
 }

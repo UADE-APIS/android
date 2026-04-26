@@ -33,6 +33,9 @@ public class Activity implements Serializable {
     @SerializedName("is_active")
     private boolean isActive;
 
+    @SerializedName("is_favorited")
+    private boolean isFavorited;
+
     private List<ActivityImage> images;
 
     @SerializedName("available_slots")
@@ -116,4 +119,8 @@ public class Activity implements Serializable {
     }
 
     public List<ActivityAvailability> getAvailabilities() { return availabilities; }
+
+    public boolean isFavorited() { return isFavorited; }
+
+    public void setFavorited(boolean favorited) { isFavorited = favorited; }
 }
