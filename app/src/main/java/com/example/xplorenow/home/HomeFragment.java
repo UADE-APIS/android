@@ -89,6 +89,14 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
                 Navigation.findNavController(view).navigate(R.id.action_home_to_myBookings);
                 return true;
             }
+            if (item.getItemId() == R.id.action_history) {
+                Navigation.findNavController(view).navigate(R.id.action_home_to_history);
+                return true;
+            }
+            if (item.getItemId() == R.id.action_favorites) {
+                Navigation.findNavController(view).navigate(R.id.action_home_to_favorites);
+                return true;
+            }
             return false;
         });
 
@@ -100,6 +108,7 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
 
     private void setupRecyclerView(RecyclerView rvActivities, ProgressBar progressBar, TextView tvError) {
         adapter = new ActivitiesAdapter(this);
+        adapter.setOnFavoriteClickListener(activity -> toggleFavorite(activity, tvError));
         LinearLayoutManager layoutManager = new LinearLayoutManager(requireContext());
         rvActivities.setLayoutManager(layoutManager);
         rvActivities.setAdapter(adapter);
@@ -270,6 +279,29 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
                     if (!isAdded()) return;
                     Navigation.findNavController(rootView).navigate(R.id.action_home_to_authStart);
                 });
+            }
+        });
+    }
+
+    private void toggleFavorite(Activity activity, TextView tvError) {
+        apiService.toggleFavorite(activity.getId()).enqueue(new Callback<WrappedResponse<Void>>() {
+            @Override
+            public void onResponse(@NonNull Call<WrappedResponse<Void>> call, @NonNull Response<WrappedResponse<Void>> response) {
+                if (!isAdded()) return;
+                if (response.isSuccessful()) {
+                    activity.setFavorited(!activity.isFavorited());
+                    adapter.notifyDataSetChanged();
+                } else {
+                    tvError.setText(getString(R.string.error_http, response.code()));
+                    tvError.setVisibility(View.VISIBLE);
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<WrappedResponse<Void>> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                tvError.setText(R.string.error_connection);
+                tvError.setVisibility(View.VISIBLE);
             }
         });
     }
