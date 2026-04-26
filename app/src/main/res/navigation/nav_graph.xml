@@ -31,6 +31,11 @@
         <action
             android:id="@+id/action_home_to_profile"
             app:destination="@id/profileFragment" />
+
+        <!-- DETALLE: desde home se puede navegar al detalle de una actividad -->
+        <action
+            android:id="@+id/action_home_to_activityDetail"
+            app:destination="@id/activityDetailFragment" />
     </fragment>
 
     <fragment
@@ -43,7 +48,13 @@
         android:id="@+id/createBookingFragment"
         android:name="com.example.xplorenow.bookings.CreateBookingFragment"
         android:label="Crear Reserva"
-        tools:layout="@layout/fragment_create_booking" />
+        tools:layout="@layout/fragment_create_booking">
+
+        <argument
+            android:name="activityId"
+            app:argType="integer"
+            android:defaultValue="-1" />
+    </fragment>
 
     <!-- BUG-05: profileFragment ahora vive SOLO acá -->
     <fragment
@@ -63,5 +74,23 @@
         android:name="com.example.xplorenow.profile.ChangePasswordFragment"
         android:label="Cambiar contraseña"
         tools:layout="@layout/fragment_change_password" />
+
+    <!-- DETALLE DE ACTIVIDAD -->
+    <fragment
+        android:id="@+id/activityDetailFragment"
+        android:name="com.example.xplorenow.detail.ActivityDetailFragment"
+        android:label="Detalle"
+        tools:layout="@layout/fragment_activity_detail">
+
+        <argument
+            android:name="activityId"
+            app:argType="integer"
+            android:defaultValue="-1" />
+
+        <!-- Desde el detalle se puede reservar -->
+        <action
+            android:id="@+id/action_activityDetailFragment_to_createBookingFragment"
+            app:destination="@id/createBookingFragment" />
+    </fragment>
 
 </navigation>

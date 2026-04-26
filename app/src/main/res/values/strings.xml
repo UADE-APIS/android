@@ -55,4 +55,19 @@
     <string name="biometric_enable_title">Acceso biométrico</string>
     <string name="biometric_enable_message">¿Querés activar el ingreso con huella o rostro para la próxima vez?</string>
     <string name="biometric_unavailable">Tu dispositivo no soporta autenticación biométrica</string>
+    <!-- Detalle de actividad -->
+    <string name="detail_description">Descripción</string>
+    <string name="detail_gallery">Galería</string>
+    <string name="detail_includes">Qué incluye</string>
+    <string name="detail_meeting_point">Punto de encuentro</string>
+    <string name="detail_guide">Guía asignado</string>
+    <string name="detail_language">Idioma</string>
+    <string name="detail_cancellation">Política de cancelación</string>
+    <string name="detail_available_dates">Fechas disponibles</string>
+    <string name="btn_reservar">Reservar</string>
+    <string name="detail_price_format">$%s</string>
+    <string name="detail_duration_format">%d min</string>
+    <string name="detail_availability_row">%s — %d cupos disponibles</string>
+    <string name="detail_main_image_desc">Imagen principal de la actividad</string>
+    <string name="detail_gallery_image_desc">Imagen de galería</string>
 </resources>

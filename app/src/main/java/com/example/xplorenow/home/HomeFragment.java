@@ -238,7 +238,7 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
     public void onActivityClick(Activity activity) {
         Bundle args = new Bundle();
         args.putInt("activityId", activity.getId());
-        Navigation.findNavController(requireView()).navigate(R.id.action_home_to_createBooking, args);
+        Navigation.findNavController(requireView()).navigate(R.id.action_home_to_activityDetail, args);
     }
 
     private void doLogout(View rootView, TextView tvError) {
