@@ -43,6 +43,10 @@
         <action
             android:id="@+id/action_home_to_news"
             app:destination="@id/newsFragment" />
+
+        <action
+            android:id="@+id/action_home_to_activityDetail"
+            app:destination="@id/activityDetailFragment" />
     </fragment>
 
     <fragment
@@ -81,6 +85,22 @@
         android:name="com.example.xplorenow.profile.ChangePasswordFragment"
         android:label="Cambiar contraseña"
         tools:layout="@layout/fragment_change_password" />
+
+    <fragment
+        android:id="@+id/activityDetailFragment"
+        android:name="com.example.xplorenow.detail.ActivityDetailFragment"
+        android:label="Detalle de Actividad"
+        tools:layout="@layout/fragment_activity_detail">
+
+        <argument
+            android:name="activityId"
+            app:argType="integer"
+            android:defaultValue="-1" />
+
+        <action
+            android:id="@+id/action_activityDetailFragment_to_createBookingFragment"
+            app:destination="@id/createBookingFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/historyFragment"
