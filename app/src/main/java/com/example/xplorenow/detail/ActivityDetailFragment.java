@@ -187,10 +187,14 @@ public class ActivityDetailFragment extends Fragment {
                     mapView.getOverlays().add(marker);
 
                     btnComoLlegar.setOnClickListener(v -> {
-                        Uri geoUri = Uri.parse("geo:" + lat + "," + lng + "?q=" + lat + "," + lng);
-                        Intent intent = new Intent(Intent.ACTION_VIEW, geoUri);
-                        if (intent.resolveActivity(requireActivity().getPackageManager()) != null) {
-                            startActivity(intent);
+                        Uri navUri = Uri.parse("google.navigation:q=" + lat + "," + lng);
+                        Intent navIntent = new Intent(Intent.ACTION_VIEW, navUri);
+                        navIntent.setPackage("com.google.android.apps.maps");
+                        if (navIntent.resolveActivity(requireActivity().getPackageManager()) != null) {
+                            startActivity(navIntent);
+                        } else {
+                            Uri webUri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=" + lat + "," + lng);
+                            startActivity(new Intent(Intent.ACTION_VIEW, webUri));
                         }
                     });
                 }
