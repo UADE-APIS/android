@@ -99,4 +99,5 @@
     <string name="detail_price_format">$%1$s</string>
     <string name="detail_duration_format">%1$d min</string>
     <string name="detail_availability_row">%1$s — %2$d cupos disponibles</string>
+    <string name="detail_como_llegar">Cómo llegar</string>
 </resources>
