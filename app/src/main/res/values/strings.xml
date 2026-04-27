@@ -80,4 +80,23 @@
     <string name="action_favorites">Mis Favoritos</string>
     <string name="favorites_title">Mis Favoritos</string>
     <string name="favorite_toggle">Favorito</string>
+    <string name="action_news">Noticias</string>
+    <string name="news_title">Noticias</string>
+    <string name="news_detail_title">Detalle de Noticia</string>
+    <string name="news_related_activity">Actividad relacionada: %1$s</string>
+    <string name="news_not_found">Noticia no encontrada</string>
+    <string name="detail_main_image_desc">Imagen principal de la actividad</string>
+    <string name="detail_gallery_image_desc">Imagen de galería</string>
+    <string name="detail_description">Descripción</string>
+    <string name="detail_gallery">Galería</string>
+    <string name="detail_includes">Qué incluye</string>
+    <string name="detail_meeting_point">Punto de encuentro</string>
+    <string name="detail_guide">Guía asignado</string>
+    <string name="detail_language">Idioma</string>
+    <string name="detail_cancellation">Política de cancelación</string>
+    <string name="detail_available_dates">Fechas disponibles</string>
+    <string name="btn_reservar">Reservar</string>
+    <string name="detail_price_format">$%1$s</string>
+    <string name="detail_duration_format">%1$d min</string>
+    <string name="detail_availability_row">%1$s — %2$d cupos disponibles</string>
 </resources>

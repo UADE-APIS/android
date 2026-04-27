@@ -39,6 +39,14 @@
         <action
             android:id="@+id/action_home_to_favorites"
             app:destination="@id/favoritesFragment" />
+
+        <action
+            android:id="@+id/action_home_to_news"
+            app:destination="@id/newsFragment" />
+
+        <action
+            android:id="@+id/action_home_to_activityDetail"
+            app:destination="@id/activityDetailFragment" />
     </fragment>
 
     <fragment
@@ -79,6 +87,22 @@
         tools:layout="@layout/fragment_change_password" />
 
     <fragment
+        android:id="@+id/activityDetailFragment"
+        android:name="com.example.xplorenow.detail.ActivityDetailFragment"
+        android:label="Detalle de Actividad"
+        tools:layout="@layout/fragment_activity_detail">
+
+        <argument
+            android:name="activityId"
+            app:argType="integer"
+            android:defaultValue="-1" />
+
+        <action
+            android:id="@+id/action_activityDetailFragment_to_createBookingFragment"
+            app:destination="@id/createBookingFragment" />
+    </fragment>
+
+    <fragment
         android:id="@+id/historyFragment"
         android:name="com.example.xplorenow.history.HistoryFragment"
         android:label="Mi Historial"
@@ -89,5 +113,28 @@
         android:name="com.example.xplorenow.favorites.FavoritesFragment"
         android:label="Mis Favoritos"
         tools:layout="@layout/fragment_favorites" />
+
+    <fragment
+        android:id="@+id/newsFragment"
+        android:name="com.example.xplorenow.news.NewsFragment"
+        android:label="Noticias"
+        tools:layout="@layout/fragment_news">
+
+        <action
+            android:id="@+id/action_news_to_newsDetail"
+            app:destination="@id/newsDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/newsDetailFragment"
+        android:name="com.example.xplorenow.news.NewsDetailFragment"
+        android:label="Detalle de Noticia"
+        tools:layout="@layout/fragment_news_detail">
+
+        <argument
+            android:name="newsId"
+            app:argType="integer"
+            android:defaultValue="-1" />
+    </fragment>
 
 </navigation>

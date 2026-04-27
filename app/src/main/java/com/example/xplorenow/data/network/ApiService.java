@@ -7,6 +7,8 @@ import com.example.xplorenow.data.model.Booking;
 import com.example.xplorenow.data.model.BookingRequest;
 import com.example.xplorenow.data.model.CheckUsernameRequest;
 import com.example.xplorenow.data.model.HistoryListResponse;
+import com.example.xplorenow.data.model.News;
+import com.example.xplorenow.data.model.NewsListResponse;
 import com.example.xplorenow.data.model.OtpRequest;
 import com.example.xplorenow.data.model.RegisterData;
 import com.example.xplorenow.data.model.RegisterRequest;
@@ -103,4 +105,10 @@ public interface ApiService {
 
     @GET("api/activities/favorites/")
     Call<ActivitiesListResponse> getMyFavorites(@QueryMap Map<String, String> query);
+
+    @GET("api/activities/news/")
+    Call<NewsListResponse> getNews(@QueryMap Map<String, String> query);
+
+    @GET("api/activities/news/{id}/")
+    Call<ApiResponse<News>> getNewsDetail(@Path("id") int id);
 }
