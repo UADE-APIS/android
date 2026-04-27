@@ -27,6 +27,12 @@ public class Activity implements Serializable {
     @SerializedName("assigned_guide")
     private String assignedGuide;
 
+    @SerializedName("latitude")
+    private Double latitude;
+
+    @SerializedName("longitude")
+    private Double longitude;
+
     @SerializedName("is_featured")
     private boolean isFeatured;
 
@@ -119,6 +125,10 @@ public class Activity implements Serializable {
     }
 
     public List<ActivityAvailability> getAvailabilities() { return availabilities; }
+
+    public Double getLatitude() { return latitude; }
+
+    public Double getLongitude() { return longitude; }
 
     public boolean isFavorited() { return isFavorited; }
 

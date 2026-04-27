@@ -162,6 +162,22 @@
                 android:layout_marginTop="4dp"
                 android:textSize="14sp" />
 
+            <!-- Mapa punto de encuentro -->
+            <org.osmdroid.views.MapView
+                android:id="@+id/mapView"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_marginTop="12dp"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/btnComoLlegar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/detail_como_llegar"
+                android:visibility="gone" />
+
             <!-- Guía asignado -->
             <TextView
                 android:layout_width="match_parent"

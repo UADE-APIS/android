@@ -1,5 +1,7 @@
 package com.example.xplorenow.detail;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,6 +27,12 @@ import com.example.xplorenow.data.model.Activity;
 import com.example.xplorenow.data.model.ActivityAvailability;
 import com.example.xplorenow.data.model.ApiResponse;
 import com.example.xplorenow.data.network.ApiService;
+
+import org.osmdroid.config.Configuration;
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.Marker;
 
 import java.util.List;
 
@@ -76,6 +84,13 @@ public class ActivityDetailFragment extends Fragment {
         TextView tvAvailableDatesLabel = view.findViewById(R.id.tvAvailableDatesLabel);
         LinearLayout layoutAvailabilities = view.findViewById(R.id.layoutAvailabilities);
         Button btnReservar = view.findViewById(R.id.btnReservar);
+
+        MapView mapView = view.findViewById(R.id.mapView);
+        Button btnComoLlegar = view.findViewById(R.id.btnComoLlegar);
+
+        Configuration.getInstance().setUserAgentValue(requireContext().getPackageName());
+        mapView.setTileSource(TileSourceFactory.MAPNIK);
+        mapView.setMultiTouchControls(true);
 
         int activityId = getArguments() != null ? getArguments().getInt("activityId", -1) : -1;
 
@@ -152,6 +167,36 @@ public class ActivityDetailFragment extends Fragment {
                                 avail.getDate(), avail.getAvailableSlots()));
                         layoutAvailabilities.addView(tvAvail);
                     }
+                }
+
+                if (activity.getLatitude() != null && activity.getLongitude() != null) {
+                    double lat = activity.getLatitude();
+                    double lng = activity.getLongitude();
+
+                    mapView.setVisibility(View.VISIBLE);
+                    btnComoLlegar.setVisibility(View.VISIBLE);
+
+                    GeoPoint point = new GeoPoint(lat, lng);
+                    mapView.getController().setZoom(15.0);
+                    mapView.getController().setCenter(point);
+
+                    Marker marker = new Marker(mapView);
+                    marker.setPosition(point);
+                    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+                    marker.setTitle(activity.getMeetingPoint());
+                    mapView.getOverlays().add(marker);
+
+                    btnComoLlegar.setOnClickListener(v -> {
+                        Uri navUri = Uri.parse("google.navigation:q=" + lat + "," + lng);
+                        Intent navIntent = new Intent(Intent.ACTION_VIEW, navUri);
+                        navIntent.setPackage("com.google.android.apps.maps");
+                        if (navIntent.resolveActivity(requireActivity().getPackageManager()) != null) {
+                            startActivity(navIntent);
+                        } else {
+                            Uri webUri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=" + lat + "," + lng);
+                            startActivity(new Intent(Intent.ACTION_VIEW, webUri));
+                        }
+                    });
                 }
 
                 // Mostrar contenido y habilitar botón reservar
