@@ -43,6 +43,9 @@ public interface ApiService {
     @GET("api/activities/")
     Call<ActivitiesListResponse> getActivities(@QueryMap Map<String, String> query);
 
+    @GET("api/activities/recommended/")
+    Call<ActivitiesListResponse> getRecommendedActivities(@QueryMap Map<String, String> query);
+
     @POST("api/auth/login/")
     Call<WrappedResponse<AuthTokensResponse>> loginClassic(@Body LoginClassicRequest body);
 

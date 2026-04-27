@@ -3,6 +3,8 @@
     <string name="logout">Cerrar sesión</string>
     <string name="filters">Filtros</string>
     <string name="home_subtitle">Hola mundo</string>
+    <string name="home_recommended">Recomendadas para vos</string>
+    <string name="home_all_activities">Todas las actividades</string>
     <string name="back">Volver</string>
     <string name="profile_edit">Editar perfil</string>
     <string name="profile_cancel_edit">Cancelar edición</string>
