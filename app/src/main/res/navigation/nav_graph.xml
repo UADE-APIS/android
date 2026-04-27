@@ -39,6 +39,10 @@
         <action
             android:id="@+id/action_home_to_favorites"
             app:destination="@id/favoritesFragment" />
+
+        <action
+            android:id="@+id/action_home_to_news"
+            app:destination="@id/newsFragment" />
     </fragment>
 
     <fragment
@@ -89,5 +93,28 @@
         android:name="com.example.xplorenow.favorites.FavoritesFragment"
         android:label="Mis Favoritos"
         tools:layout="@layout/fragment_favorites" />
+
+    <fragment
+        android:id="@+id/newsFragment"
+        android:name="com.example.xplorenow.news.NewsFragment"
+        android:label="Noticias"
+        tools:layout="@layout/fragment_news">
+
+        <action
+            android:id="@+id/action_news_to_newsDetail"
+            app:destination="@id/newsDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/newsDetailFragment"
+        android:name="com.example.xplorenow.news.NewsDetailFragment"
+        android:label="Detalle de Noticia"
+        tools:layout="@layout/fragment_news_detail">
+
+        <argument
+            android:name="newsId"
+            app:argType="integer"
+            android:defaultValue="-1" />
+    </fragment>
 
 </navigation>
