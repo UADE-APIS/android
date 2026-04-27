@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.xplorenow.R;
 import com.example.xplorenow.adapters.ActivitiesAdapter;
+import com.example.xplorenow.adapters.RecommendedActivitiesAdapter;
 import com.example.xplorenow.data.model.ActivitiesListResponse;
 import com.example.xplorenow.data.model.Activity;
 import com.example.xplorenow.data.model.Pagination;
@@ -70,6 +71,8 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
         TextView tvError = view.findViewById(R.id.tvError);
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
         RecyclerView rvActivities = view.findViewById(R.id.rvActivities);
+        RecyclerView rvRecommended = view.findViewById(R.id.rvRecommended);
+        TextView tvRecommendedLabel = view.findViewById(R.id.tvRecommendedLabel);
 
         if (!tokenManager.isLoggedIn()) {
             handleUnauthorized(view);
@@ -96,6 +99,11 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
 
         setupRecyclerView(rvActivities, progressBar, tvError);
         fetchActivities(1, progressBar, tvError);
+
+        RecommendedActivitiesAdapter recommendedAdapter = new RecommendedActivitiesAdapter(this);
+        rvRecommended.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
+        rvRecommended.setAdapter(recommendedAdapter);
+        fetchRecommendedActivities(recommendedAdapter, rvRecommended, tvRecommendedLabel, tvError);
     }
 
     private void setupRecyclerView(RecyclerView rvActivities, ProgressBar progressBar, TextView tvError) {
@@ -230,6 +238,34 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
                 if (!isAdded()) return;
                 tvError.setText("Error de red: " + t.getMessage());
                 tvError.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    private void fetchRecommendedActivities(RecommendedActivitiesAdapter adapter, RecyclerView rv, TextView tvLabel, TextView tvError) {
+        apiService.getRecommendedActivities(new HashMap<>()).enqueue(new Callback<ActivitiesListResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ActivitiesListResponse> call, @NonNull Response<ActivitiesListResponse> response) {
+                if (!isAdded()) return;
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Activity> activities = response.body().getResults();
+                    if (activities != null && !activities.isEmpty()) {
+                        adapter.setActivities(activities);
+                        rv.setVisibility(View.VISIBLE);
+                        tvLabel.setVisibility(View.VISIBLE);
+                    } else {
+                        rv.setVisibility(View.GONE);
+                        tvLabel.setVisibility(View.GONE);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ActivitiesListResponse> call, @NonNull Throwable t) {
+                // If it fails we just hide the recommended section
+                if (!isAdded()) return;
+                rv.setVisibility(View.GONE);
+                tvLabel.setVisibility(View.GONE);
             }
         });
     }
