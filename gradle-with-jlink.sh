@@ -16,3 +16,4 @@ fi
 export PATH="$JAVA_HOME/bin:$PATH"
 cd "$ROOT"
 exec ./gradlew "$@"
+

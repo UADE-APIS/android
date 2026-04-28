@@ -6,9 +6,14 @@ import com.example.xplorenow.data.model.ApiResponse;
 import com.example.xplorenow.data.model.Booking;
 import com.example.xplorenow.data.model.BookingRequest;
 import com.example.xplorenow.data.model.CheckUsernameRequest;
+import com.example.xplorenow.data.model.HistoryListResponse;
+import com.example.xplorenow.data.model.News;
+import com.example.xplorenow.data.model.NewsListResponse;
 import com.example.xplorenow.data.model.OtpRequest;
 import com.example.xplorenow.data.model.RegisterData;
 import com.example.xplorenow.data.model.RegisterRequest;
+import com.example.xplorenow.data.model.Review;
+import com.example.xplorenow.data.model.ReviewRequest;
 import com.example.xplorenow.data.model.User;
 import com.example.xplorenow.data.model.VerifyOtpData;
 import com.example.xplorenow.data.model.VerifyOtpRequest;
@@ -37,6 +42,9 @@ public interface ApiService {
 
     @GET("api/activities/")
     Call<ActivitiesListResponse> getActivities(@QueryMap Map<String, String> query);
+
+    @GET("api/activities/recommended/")
+    Call<ActivitiesListResponse> getRecommendedActivities(@QueryMap Map<String, String> query);
 
     @POST("api/auth/login/")
     Call<WrappedResponse<AuthTokensResponse>> loginClassic(@Body LoginClassicRequest body);
@@ -68,8 +76,6 @@ public interface ApiService {
     @POST("api/auth/register/")
     Call<ApiResponse<RegisterData>> register(@Body RegisterRequest body);
 
-    // PROFILE
-
     @GET("api/auth/me/")
     Call<WrappedResponse<MeResponseData>> getMe();
 
@@ -78,8 +84,6 @@ public interface ApiService {
 
     @POST("api/auth/change-password/")
     Call<WrappedResponse<Void>> changePassword(@Body ChangePasswordRequest request);
-
-    // BOOKING ACTIVITIES
 
     @GET("api/activities/{id}/")
     Call<ApiResponse<Activity>> getActivity(@Path("id") int id);
@@ -92,4 +96,22 @@ public interface ApiService {
 
     @POST("api/activities/bookings/{id}/cancel/")
     Call<ApiResponse<Booking>> cancelBooking(@Path("id") int id);
+
+    @GET("api/activities/history/")
+    Call<HistoryListResponse> getHistory(@QueryMap Map<String, String> query);
+
+    @POST("api/activities/history/{booking_id}/review/")
+    Call<ApiResponse<Review>> createReview(@Path("booking_id") int bookingId, @Body ReviewRequest body);
+
+    @POST("api/activities/{id}/favorite/")
+    Call<WrappedResponse<Void>> toggleFavorite(@Path("id") int id);
+
+    @GET("api/activities/favorites/")
+    Call<ActivitiesListResponse> getMyFavorites(@QueryMap Map<String, String> query);
+
+    @GET("api/activities/news/")
+    Call<NewsListResponse> getNews(@QueryMap Map<String, String> query);
+
+    @GET("api/activities/news/{id}/")
+    Call<ApiResponse<News>> getNewsDetail(@Path("id") int id);
 }

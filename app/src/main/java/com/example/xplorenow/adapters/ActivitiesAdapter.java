@@ -17,13 +17,22 @@ public class ActivitiesAdapter extends RecyclerView.Adapter<ActivitiesAdapter.Ac
 
     private List<Activity> activities = new ArrayList<>();
     private final OnActivityClickListener listener;
+    private OnFavoriteClickListener favoriteListener;
 
     public interface OnActivityClickListener {
         void onActivityClick(Activity activity);
     }
 
+    public interface OnFavoriteClickListener {
+        void onFavoriteClick(Activity activity);
+    }
+
     public ActivitiesAdapter(OnActivityClickListener listener) {
         this.listener = listener;
+    }
+
+    public void setOnFavoriteClickListener(OnFavoriteClickListener favoriteListener) {
+        this.favoriteListener = favoriteListener;
     }
 
     public void setActivities(List<Activity> activities) {
@@ -84,6 +93,18 @@ public class ActivitiesAdapter extends RecyclerView.Adapter<ActivitiesAdapter.Ac
             } else {
                 binding.ivActivityImage.setImageResource(android.R.drawable.ic_menu_gallery);
             }
+
+            binding.ivFavorite.setImageResource(
+                    activity.isFavorited()
+                            ? android.R.drawable.btn_star_big_on
+                            : android.R.drawable.btn_star_big_off
+            );
+
+            binding.ivFavorite.setOnClickListener(v -> {
+                if (favoriteListener != null) {
+                    favoriteListener.onFavoriteClick(activity);
+                }
+            });
 
             itemView.setOnClickListener(v -> listener.onActivityClick(activity));
         }

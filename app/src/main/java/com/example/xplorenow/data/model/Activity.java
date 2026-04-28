@@ -27,11 +27,20 @@ public class Activity implements Serializable {
     @SerializedName("assigned_guide")
     private String assignedGuide;
 
+    @SerializedName("latitude")
+    private Double latitude;
+
+    @SerializedName("longitude")
+    private Double longitude;
+
     @SerializedName("is_featured")
     private boolean isFeatured;
 
     @SerializedName("is_active")
     private boolean isActive;
+
+    @SerializedName("is_favorited")
+    private boolean isFavorited;
 
     private List<ActivityImage> images;
 
@@ -120,4 +129,12 @@ public class Activity implements Serializable {
     public void setTitle(String title) { this.title = title; }
     public void setMeetingPoint(String meetingPoint) { this.meetingPoint = meetingPoint; }
     public void setImages(List<ActivityImage> images) { this.images = images; }
+
+    public Double getLatitude() { return latitude; }
+
+    public Double getLongitude() { return longitude; }
+
+    public boolean isFavorited() { return isFavorited; }
+
+    public void setFavorited(boolean favorited) { isFavorited = favorited; }
 }

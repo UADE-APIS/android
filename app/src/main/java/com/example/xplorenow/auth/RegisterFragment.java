@@ -165,7 +165,9 @@ public class RegisterFragment extends Fragment {
 
                 if (response.isSuccessful()) {
                     Log.d(TAG, "Registration successful: " + email);
-                    Navigation.findNavController(rootView).navigate(R.id.action_register_to_home);
+                    Bundle args = new Bundle();
+                    args.putBoolean("register_success", true);
+                    Navigation.findNavController(rootView).navigate(R.id.action_register_to_authStart, args);
                 } else {
                     // mostramos el mensaje específico que devuelve el backend
                     showError(tvError, parseErrorMessage(response));
