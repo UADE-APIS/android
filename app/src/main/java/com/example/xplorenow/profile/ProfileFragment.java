@@ -28,6 +28,11 @@ import android.widget.CheckBox;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.widget.ImageView;
+import com.bumptech.glide.Glide;
+import com.example.xplorenow.data.network.dto.bookings.Booking;
+import com.example.xplorenow.data.network.dto.bookings.BookingsListResponse;
+
 import javax.inject.Inject;
 
 import dagger.hilt.android.AndroidEntryPoint;
@@ -46,9 +51,9 @@ public class ProfileFragment extends Fragment {
     @Inject
     TokenManager tokenManager;
 
-    private TextView tvName, tvEmail, tvUsername;
-
-    private EditText etFirstName, etLastName, etUsername;
+    private ImageView ivProfileImage;
+    private TextView tvName, tvEmail, tvUsername, tvPhone;
+    private EditText etFirstName, etLastName, etUsername, etPhone;
 
     private Button btnSave, btnEditProfile;
 
@@ -75,17 +80,16 @@ public class ProfileFragment extends Fragment {
         tvReservadas = view.findViewById(R.id.tvReservadas);
         tvRealizadas = view.findViewById(R.id.tvRealizadas);
 
-// MOCK resumen (hasta tener backend)
-        tvReservadas.setText("Reservadas: 3");
-        tvRealizadas.setText("Realizadas: 1");
-
+        ivProfileImage = view.findViewById(R.id.ivProfileImage);
         tvName = view.findViewById(R.id.tvName);
         tvEmail = view.findViewById(R.id.tvEmail);
         tvUsername = view.findViewById(R.id.tvUsername);
+        tvPhone = view.findViewById(R.id.tvPhone);
 
         etFirstName = view.findViewById(R.id.etFirstName);
         etLastName = view.findViewById(R.id.etLastName);
         etUsername = view.findViewById(R.id.etUsername);
+        etPhone = view.findViewById(R.id.etPhone);
 
         btnSave = view.findViewById(R.id.btnSave);
         btnEditProfile = view.findViewById(R.id.btnEditProfile);
@@ -145,10 +149,23 @@ public class ProfileFragment extends Fragment {
                         tvName.setText(fullName.isEmpty() ? "-" : fullName);
                         tvEmail.setText(user.getEmail() != null ? user.getEmail() : "-");
                         tvUsername.setText(user.getUsername() != null ? user.getUsername() : "-");
+                        tvPhone.setText(user.getPhone() != null && !user.getPhone().isEmpty() ? user.getPhone() : "-");
 
                         etFirstName.setText(firstName);
                         etLastName.setText(lastName);
                         etUsername.setText(user.getUsername() != null ? user.getUsername() : "");
+                        etPhone.setText(user.getPhone() != null ? user.getPhone() : "");
+
+                        String imageUrl = user.getProfileImageUrl();
+                        if (imageUrl != null && !imageUrl.isEmpty()) {
+                            Glide.with(requireContext())
+                                    .load(imageUrl)
+                                    .placeholder(android.R.drawable.ic_menu_camera)
+                                    .circleCrop()
+                                    .into(ivProfileImage);
+                        } else {
+                            ivProfileImage.setImageResource(android.R.drawable.ic_menu_camera);
+                        }
 
                         List<String> prefs = user.getPreferredCategories();
                         if (prefs != null) {
@@ -158,6 +175,8 @@ public class ProfileFragment extends Fragment {
                             cbNaturaleza.setChecked(prefs.contains("excursion"));
                             cbRelax.setChecked(prefs.contains("free_tour"));
                         }
+
+                        loadBookingsSummary();
 
                     } catch (Exception e) {
                         Log.e(TAG, "PARSE ERROR", e);
@@ -178,6 +197,36 @@ public class ProfileFragment extends Fragment {
         });
     }
 
+    private void loadBookingsSummary() {
+        apiService.getMyBookings().enqueue(new Callback<BookingsListResponse>() {
+            @Override
+            public void onResponse(Call<BookingsListResponse> call, Response<BookingsListResponse> response) {
+                if (!isAdded()) return;
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Booking> bookings = response.body().getResults();
+                    int reservadas = 0;
+                    int realizadas = 0;
+                    if (bookings != null) {
+                        for (Booking b : bookings) {
+                            if ("finished".equalsIgnoreCase(b.getStatus())) {
+                                realizadas++;
+                            } else if (!"canceled".equalsIgnoreCase(b.getStatus())) {
+                                reservadas++;
+                            }
+                        }
+                    }
+                    tvReservadas.setText("Reservadas: " + reservadas);
+                    tvRealizadas.setText("Realizadas: " + realizadas);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<BookingsListResponse> call, Throwable t) {
+                // Ignore failure for summary
+            }
+        });
+    }
+
     private void setupSaveButton() {
 
         btnSave.setOnClickListener(v -> {
@@ -185,6 +234,7 @@ public class ProfileFragment extends Fragment {
             String firstName = etFirstName.getText().toString().trim();
             String lastName = etLastName.getText().toString().trim();
             String username = etUsername.getText().toString().trim();
+            String phone = etPhone.getText().toString().trim();
 
             List<String> preferences = new ArrayList<>();
 
@@ -195,7 +245,7 @@ public class ProfileFragment extends Fragment {
             if (cbRelax.isChecked()) preferences.add("free_tour");
 
             UpdateProfileRequest request =
-                    new UpdateProfileRequest(firstName, lastName, username, preferences);
+                    new UpdateProfileRequest(firstName, lastName, username, phone, preferences);
 
             apiService.updateProfile(request).enqueue(new Callback<WrappedResponse<MeResponseData>>() {
                 @Override
@@ -218,6 +268,7 @@ public class ProfileFragment extends Fragment {
                         tvName.setText(fullName.isEmpty() ? "-" : fullName);
                         tvEmail.setText(updatedUser.getEmail() != null ? updatedUser.getEmail() : "-");
                         tvUsername.setText(updatedUser.getUsername() != null ? updatedUser.getUsername() : "-");
+                        tvPhone.setText(updatedUser.getPhone() != null && !updatedUser.getPhone().isEmpty() ? updatedUser.getPhone() : "-");
 
                         Toast.makeText(getContext(), "Perfil actualizado", Toast.LENGTH_SHORT).show();
                         toggleEditMode(false);
