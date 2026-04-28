@@ -34,11 +34,18 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import com.example.xplorenow.data.local.CachedBooking;
+import com.example.xplorenow.data.local.CachedBookingDao;
+import com.example.xplorenow.data.model.ActivityImage;
+import java.util.ArrayList;
+
 @AndroidEntryPoint
 public class MyBookingsFragment extends Fragment {
 
     @Inject ApiService apiService;
+    @Inject CachedBookingDao cachedBookingDao;
     private BookingsAdapter adapter;
+    private TextView tvOfflineMode;
 
     @Nullable
     @Override
@@ -50,6 +57,7 @@ public class MyBookingsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        tvOfflineMode = view.findViewById(R.id.tvOfflineMode);
         RecyclerView rvBookings = view.findViewById(R.id.rvBookings);
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
         TextView tvError = view.findViewById(R.id.tvError);
@@ -64,13 +72,34 @@ public class MyBookingsFragment extends Fragment {
     private void loadBookings(ProgressBar pb, TextView err) {
         pb.setVisibility(View.VISIBLE);
         err.setVisibility(View.GONE);
+        tvOfflineMode.setVisibility(View.GONE);
 
         apiService.getMyBookings().enqueue(new Callback<ApiResponse<List<Booking>>>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse<List<Booking>>> call, @NonNull Response<ApiResponse<List<Booking>>> response) {
                 pb.setVisibility(View.GONE);
                 if (response.isSuccessful() && response.body() != null) {
-                    adapter.setBookings(response.body().getData());
+                    List<Booking> list = response.body().getData();
+                    adapter.setBookings(list);
+                    new Thread(() -> {
+                        cachedBookingDao.clearAllBookings();
+                        List<CachedBooking> cacheList = new ArrayList<>();
+                        for (Booking b : list) {
+                            String imgUrl = "";
+                            if (b.getActivityDetail() != null && b.getActivityDetail().getImages() != null && !b.getActivityDetail().getImages().isEmpty()) {
+                                imgUrl = b.getActivityDetail().getImages().get(0).getImageUrl();
+                            }
+                            cacheList.add(new CachedBooking(
+                                    String.valueOf(b.getId()),
+                                    b.getActivityDetail() != null ? b.getActivityDetail().getTitle() : "",
+                                    b.getDate(),
+                                    b.getActivityDetail() != null ? b.getActivityDetail().getMeetingPoint() : "",
+                                    b.getStatus(),
+                                    imgUrl
+                            ));
+                        }
+                        cachedBookingDao.insertBookings(cacheList);
+                    }).start();
                 } else {
                     err.setVisibility(View.VISIBLE);
                     err.setText(getString(R.string.error_loading_data));
@@ -79,9 +108,41 @@ public class MyBookingsFragment extends Fragment {
 
             @Override
             public void onFailure(@NonNull Call<ApiResponse<List<Booking>>> call, @NonNull Throwable t) {
-                pb.setVisibility(View.GONE);
-                err.setVisibility(View.VISIBLE);
-                err.setText(getString(R.string.error_connection));
+                new Thread(() -> {
+                    List<CachedBooking> cached = cachedBookingDao.getAllBookings();
+                    if (!cached.isEmpty()) {
+                        List<Booking> converted = new ArrayList<>();
+                        for (CachedBooking cb : cached) {
+                            Booking b = new Booking();
+                            b.setId(Integer.parseInt(cb.getId()));
+                            b.setStatus(cb.getStatus());
+                            b.setCreatedAt(cb.getDate());
+                            com.example.xplorenow.data.model.Activity a = new com.example.xplorenow.data.model.Activity();
+                            a.setTitle(cb.getActivityTitle());
+                            a.setMeetingPoint(cb.getMeetingPoint());
+                            if (cb.getActivityImageUrl() != null && !cb.getActivityImageUrl().isEmpty()) {
+                                ActivityImage ai = new ActivityImage();
+                                ai.setImageUrl(cb.getActivityImageUrl());
+                                List<ActivityImage> imgs = new ArrayList<>();
+                                imgs.add(ai);
+                                a.setImages(imgs);
+                            }
+                            b.setActivityDetail(a);
+                            converted.add(b);
+                        }
+                        requireActivity().runOnUiThread(() -> {
+                            pb.setVisibility(View.GONE);
+                            tvOfflineMode.setVisibility(View.VISIBLE);
+                            adapter.setBookings(converted);
+                        });
+                    } else {
+                        requireActivity().runOnUiThread(() -> {
+                            pb.setVisibility(View.GONE);
+                            err.setVisibility(View.VISIBLE);
+                            err.setText(getString(R.string.error_connection));
+                        });
+                    }
+                }).start();
             }
         });
     }

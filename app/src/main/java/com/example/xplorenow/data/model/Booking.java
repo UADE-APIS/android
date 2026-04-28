@@ -31,10 +31,23 @@ public class Booking {
     private String createdAt;
 
     public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
     public int getActivityId() { return activityId; }
+    public void setActivityId(int activityId) { this.activityId = activityId; }
     public Activity getActivityDetail() { return activityDetail; }
+    public void setActivityDetail(Activity activityDetail) { this.activityDetail = activityDetail; }
     public Integer getAvailabilityId() { return availabilityId; }
+    public void setAvailabilityId(Integer availabilityId) { this.availabilityId = availabilityId; }
     public ActivityAvailability getAvailabilityDetail() { return availabilityDetail; }
+    public void setAvailabilityDetail(ActivityAvailability availabilityDetail) { this.availabilityDetail = availabilityDetail; }
     public int getQuantity() { return quantity; }
+    public void setQuantity(int quantity) { this.quantity = quantity; }
     public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+    public String getDate() {
+        if (availabilityDetail != null && availabilityDetail.getDate() != null) {
+            return availabilityDetail.getDate();
+        }
+        return createdAt;
+    }
 }

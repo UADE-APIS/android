@@ -116,15 +116,19 @@ public class Activity implements Serializable {
         return images;
     }
 
-    public int getAvailableSlots() {
-        return availableSlots;
-    }
+    public int getAvailableSlots() { return availableSlots; }
+    public void setAvailableSlots(int availableSlots) { this.availableSlots = availableSlots; }
 
-    public int getReservedSlots() {
-        return reservedSlots;
-    }
+    public int getReservedSlots() { return reservedSlots; }
+    public void setReservedSlots(int reservedSlots) { this.reservedSlots = reservedSlots; }
 
     public List<ActivityAvailability> getAvailabilities() { return availabilities; }
+    public void setAvailabilities(List<ActivityAvailability> availabilities) { this.availabilities = availabilities; }
+
+    public void setId(int id) { this.id = id; }
+    public void setTitle(String title) { this.title = title; }
+    public void setMeetingPoint(String meetingPoint) { this.meetingPoint = meetingPoint; }
+    public void setImages(List<ActivityImage> images) { this.images = images; }
 
     public Double getLatitude() { return latitude; }
 
