@@ -25,6 +25,7 @@ import com.example.xplorenow.data.model.ApiResponse;
 import com.example.xplorenow.data.model.Booking;
 import com.example.xplorenow.data.model.BookingRequest;
 import com.example.xplorenow.data.network.ApiService;
+import com.example.xplorenow.data.local.CachedBooking;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +44,9 @@ public class CreateBookingFragment extends Fragment {
 
     @Inject
     ApiService apiService;
+
+    @Inject
+    com.example.xplorenow.data.local.CachedBookingDao cachedBookingDao;
 
     private List<ActivityAvailability> availabilities = new ArrayList<>();
     private Activity currentActivity;
@@ -190,6 +194,30 @@ public class CreateBookingFragment extends Fragment {
                     err.setTextColor(getResources().getColor(android.R.color.holo_green_dark, null));
                     err.setText(getString(R.string.msg_booking_success));
                     err.setVisibility(View.VISIBLE);
+
+                    Booking createdBooking = response.body().getData();
+                    if (createdBooking != null) {
+                        new Thread(() -> {
+                            String imgUrl = "";
+                            if (createdBooking.getActivityDetail() != null &&
+                                    createdBooking.getActivityDetail().getImages() != null &&
+                                    !createdBooking.getActivityDetail().getImages().isEmpty()) {
+                                imgUrl = createdBooking.getActivityDetail().getImages().get(0).getImageUrl();
+                            }
+                            
+                            CachedBooking cb = new CachedBooking(
+                                    String.valueOf(createdBooking.getId()),
+                                    createdBooking.getActivityDetail() != null ? createdBooking.getActivityDetail().getTitle() : "",
+                                    createdBooking.getDate(),
+                                    createdBooking.getActivityDetail() != null ? createdBooking.getActivityDetail().getMeetingPoint() : "",
+                                    createdBooking.getStatus() != null ? createdBooking.getStatus() : "CONFIRMED",
+                                    imgUrl
+                            );
+                            List<CachedBooking> list = new ArrayList<>();
+                            list.add(cb);
+                            cachedBookingDao.insertBookings(list);
+                        }).start();
+                    }
 
                     view.postDelayed(() -> Navigation.findNavController(view).popBackStack(), 1500);
                 } else {

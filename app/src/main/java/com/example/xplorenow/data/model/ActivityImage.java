@@ -22,4 +22,5 @@ public class ActivityImage implements Serializable {
     public String getCreatedAt() {
         return createdAt;
     }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 }
