@@ -65,6 +65,9 @@ public class MyBookingsFragment extends Fragment {
         rvBookings.setLayoutManager(new LinearLayoutManager(requireContext()));
         adapter = new BookingsAdapter(booking -> showCancelDialog(booking, progressBar, tvError));
         rvBookings.setAdapter(adapter);
+        view.findViewById(R.id.btnBack).setOnClickListener(v ->
+                requireActivity().onBackPressed()
+        );
 
         loadBookings(progressBar, tvError);
     }
@@ -112,22 +115,29 @@ public class MyBookingsFragment extends Fragment {
                     List<CachedBooking> cached = cachedBookingDao.getAllBookings();
                     if (!cached.isEmpty()) {
                         List<Booking> converted = new ArrayList<>();
+
                         for (CachedBooking cb : cached) {
+
                             Booking b = new Booking();
                             b.setId(Integer.parseInt(cb.getId()));
                             b.setStatus(cb.getStatus());
                             b.setCreatedAt(cb.getDate());
+
                             com.example.xplorenow.data.model.Activity a = new com.example.xplorenow.data.model.Activity();
                             a.setTitle(cb.getActivityTitle());
                             a.setMeetingPoint(cb.getMeetingPoint());
+
                             if (cb.getActivityImageUrl() != null && !cb.getActivityImageUrl().isEmpty()) {
                                 ActivityImage ai = new ActivityImage();
                                 ai.setImageUrl(cb.getActivityImageUrl());
+
                                 List<ActivityImage> imgs = new ArrayList<>();
                                 imgs.add(ai);
                                 a.setImages(imgs);
                             }
+
                             b.setActivityDetail(a);
+
                             converted.add(b);
                         }
                         requireActivity().runOnUiThread(() -> {
