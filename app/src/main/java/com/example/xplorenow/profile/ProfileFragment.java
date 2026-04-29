@@ -17,7 +17,9 @@ import androidx.navigation.NavOptions;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.xplorenow.R;
+import com.example.xplorenow.data.model.ApiResponse;
 import com.example.xplorenow.data.model.User;
+import com.example.xplorenow.data.model.Booking;
 import com.example.xplorenow.data.network.ApiService;
 import com.example.xplorenow.data.network.dto.MeResponseData;
 import com.example.xplorenow.data.network.dto.UpdateProfileRequest;
@@ -30,8 +32,6 @@ import java.util.List;
 
 import android.widget.ImageView;
 import com.bumptech.glide.Glide;
-import com.example.xplorenow.data.network.dto.bookings.Booking;
-import com.example.xplorenow.data.network.dto.bookings.BookingsListResponse;
 
 import javax.inject.Inject;
 
@@ -108,7 +108,6 @@ public class ProfileFragment extends Fragment {
                         .navigate(R.id.action_profileFragment_to_changePasswordFragment));
 
         setupSaveButton();
-
         loadProfile();
 
         return view;
@@ -124,8 +123,6 @@ public class ProfileFragment extends Fragment {
             public void onResponse(Call<WrappedResponse<MeResponseData>> call,
                                    Response<WrappedResponse<MeResponseData>> response) {
 
-                Log.d(TAG, "HTTP CODE: " + response.code());
-
                 if (response.code() == 401) {
                     handleUnauthorized();
                     return;
@@ -133,109 +130,94 @@ public class ProfileFragment extends Fragment {
 
                 if (response.isSuccessful() && response.body() != null) {
 
-                    try {
-                        MeResponseData data = response.body().getData();
-                        User user = data != null ? data.getUser() : null;
+                    MeResponseData data = response.body().getData();
+                    User user = data != null ? data.getUser() : null;
 
-                        if (user == null) {
-                            Toast.makeText(getContext(), "No llegaron datos del usuario", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
+                    if (user == null) return;
 
-                        String firstName = user.getFirstName() != null ? user.getFirstName() : "";
-                        String lastName = user.getLastName() != null ? user.getLastName() : "";
-                        String fullName = (firstName + " " + lastName).trim();
+                    String fullName = (user.getFirstName() + " " + user.getLastName()).trim();
 
-                        tvName.setText(fullName.isEmpty() ? "-" : fullName);
-                        tvEmail.setText(user.getEmail() != null ? user.getEmail() : "-");
-                        tvUsername.setText(user.getUsername() != null ? user.getUsername() : "-");
-                        tvPhone.setText(user.getPhone() != null && !user.getPhone().isEmpty() ? user.getPhone() : "-");
+                    tvName.setText(fullName.isEmpty() ? "-" : fullName);
+                    tvEmail.setText(user.getEmail() != null ? user.getEmail() : "-");
+                    tvUsername.setText(user.getUsername() != null ? user.getUsername() : "-");
+                    tvPhone.setText(user.getPhone() != null ? user.getPhone() : "-");
 
-                        etFirstName.setText(firstName);
-                        etLastName.setText(lastName);
-                        etUsername.setText(user.getUsername() != null ? user.getUsername() : "");
-                        etPhone.setText(user.getPhone() != null ? user.getPhone() : "");
+                    etFirstName.setText(user.getFirstName());
+                    etLastName.setText(user.getLastName());
+                    etUsername.setText(user.getUsername());
+                    etPhone.setText(user.getPhone());
 
-                        String imageUrl = user.getProfileImageUrl();
-                        if (imageUrl != null && !imageUrl.isEmpty()) {
-                            Glide.with(requireContext())
-                                    .load(imageUrl)
-                                    .placeholder(android.R.drawable.ic_menu_camera)
-                                    .circleCrop()
-                                    .into(ivProfileImage);
-                        } else {
-                            ivProfileImage.setImageResource(android.R.drawable.ic_menu_camera);
-                        }
-
-                        List<String> prefs = user.getPreferredCategories();
-                        if (prefs != null) {
-                            cbAventura.setChecked(prefs.contains("adventure"));
-                            cbCultura.setChecked(prefs.contains("guided_tour"));
-                            cbGastronomia.setChecked(prefs.contains("gastronomic"));
-                            cbNaturaleza.setChecked(prefs.contains("excursion"));
-                            cbRelax.setChecked(prefs.contains("free_tour"));
-                        }
-
-                        loadBookingsSummary();
-
-                    } catch (Exception e) {
-                        Log.e(TAG, "PARSE ERROR", e);
-                        Toast.makeText(getContext(), "Error parseando usuario", Toast.LENGTH_SHORT).show();
+                    if (user.getProfileImageUrl() != null) {
+                        Glide.with(requireContext())
+                                .load(user.getProfileImageUrl())
+                                .circleCrop()
+                                .into(ivProfileImage);
                     }
 
-                } else {
-                    Log.e(TAG, "ERROR BODY: " + response.errorBody());
-                    Toast.makeText(getContext(), "Error al obtener perfil", Toast.LENGTH_SHORT).show();
+                    loadBookingsSummary();
                 }
             }
 
             @Override
             public void onFailure(Call<WrappedResponse<MeResponseData>> call, Throwable t) {
-                Log.e(TAG, "NETWORK ERROR", t);
-                Toast.makeText(getContext(), "Error de conexión", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Error perfil", t);
             }
         });
     }
 
     private void loadBookingsSummary() {
-        apiService.getMyBookings().enqueue(new Callback<BookingsListResponse>() {
+        apiService.getMyBookings().enqueue(new Callback<ApiResponse<List<Booking>>>() {
+
             @Override
-            public void onResponse(Call<BookingsListResponse> call, Response<BookingsListResponse> response) {
+            public void onResponse(Call<ApiResponse<List<Booking>>> call,
+                                   Response<ApiResponse<List<Booking>>> response) {
+
                 if (!isAdded()) return;
-                if (response.isSuccessful() && response.body() != null) {
-                    List<Booking> bookings = response.body().getResults();
-                    int reservadas = 0;
-                    int realizadas = 0;
-                    if (bookings != null) {
-                        for (Booking b : bookings) {
-                            if ("finished".equalsIgnoreCase(b.getStatus())) {
-                                realizadas++;
-                            } else if (!"canceled".equalsIgnoreCase(b.getStatus())) {
+
+                if (!response.isSuccessful() || response.body() == null) {
+                    Log.e(TAG, "Error obteniendo bookings");
+                    return;
+                }
+
+                List<Booking> bookings = response.body().getData();
+
+                int reservadas = 0;
+                int realizadas = 0;
+
+                if (bookings != null) {
+                    for (Booking b : bookings) {
+
+                        if (b == null || b.getStatus() == null) continue;
+
+                        switch (b.getStatus()) {
+                            case "CONFIRMED":
                                 reservadas++;
-                            }
+                                break;
+
+                            case "FINISHED":
+                                realizadas++;
+                                break;
+
+                            case "CANCELED":
+                                // ignoramos
+                                break;
                         }
                     }
-                    tvReservadas.setText("Reservadas: " + reservadas);
-                    tvRealizadas.setText("Realizadas: " + realizadas);
                 }
+
+                tvReservadas.setText("Reservadas: " + reservadas);
+                tvRealizadas.setText("Realizadas: " + realizadas);
             }
 
             @Override
-            public void onFailure(Call<BookingsListResponse> call, Throwable t) {
-                // Ignore failure for summary
+            public void onFailure(Call<ApiResponse<List<Booking>>> call, Throwable t) {
+                Log.e(TAG, "Error cargando bookings", t);
             }
         });
     }
 
     private void setupSaveButton() {
-
         btnSave.setOnClickListener(v -> {
-
-            String firstName = etFirstName.getText().toString().trim();
-            String lastName = etLastName.getText().toString().trim();
-            String username = etUsername.getText().toString().trim();
-            String phone = etPhone.getText().toString().trim();
-
             List<String> preferences = new ArrayList<>();
 
             if (cbAventura.isChecked()) preferences.add("adventure");
@@ -244,47 +226,33 @@ public class ProfileFragment extends Fragment {
             if (cbNaturaleza.isChecked()) preferences.add("excursion");
             if (cbRelax.isChecked()) preferences.add("free_tour");
 
-            UpdateProfileRequest request =
-                    new UpdateProfileRequest(firstName, lastName, username, phone, preferences);
+            UpdateProfileRequest request = new UpdateProfileRequest(
+                    etFirstName.getText().toString(),
+                    etLastName.getText().toString(),
+                    etUsername.getText().toString(),
+                    etPhone.getText().toString(),
+                    preferences
+            );
 
             apiService.updateProfile(request).enqueue(new Callback<WrappedResponse<MeResponseData>>() {
                 @Override
                 public void onResponse(Call<WrappedResponse<MeResponseData>> call,
                                        Response<WrappedResponse<MeResponseData>> response) {
 
-                    Log.d(TAG, "PATCH CODE: " + response.code());
-
                     if (response.code() == 401) {
                         handleUnauthorized();
                         return;
                     }
 
-                    if (response.isSuccessful() && response.body() != null) {
-
-                        User updatedUser = response.body().getData().getUser();
-
-                        String fullName = (updatedUser.getFirstName() + " " + updatedUser.getLastName()).trim();
-
-                        tvName.setText(fullName.isEmpty() ? "-" : fullName);
-                        tvEmail.setText(updatedUser.getEmail() != null ? updatedUser.getEmail() : "-");
-                        tvUsername.setText(updatedUser.getUsername() != null ? updatedUser.getUsername() : "-");
-                        tvPhone.setText(updatedUser.getPhone() != null && !updatedUser.getPhone().isEmpty() ? updatedUser.getPhone() : "-");
-
+                    if (response.isSuccessful()) {
                         Toast.makeText(getContext(), "Perfil actualizado", Toast.LENGTH_SHORT).show();
                         toggleEditMode(false);
-
-                    } else {
-                        try {
-                            Log.e(TAG, "PATCH ERROR BODY: " + (response.errorBody() != null ? response.errorBody().string() : "sin body"));
-                        } catch (Exception ignored) {
-                        }
-                        Toast.makeText(getContext(), "Error al actualizar perfil", Toast.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<WrappedResponse<MeResponseData>> call, Throwable t) {
-                    Toast.makeText(getContext(), "Error de conexión", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Error", Toast.LENGTH_SHORT).show();
                 }
             });
         });
@@ -292,18 +260,10 @@ public class ProfileFragment extends Fragment {
 
     private void toggleEditMode(boolean editing) {
         editContainer.setVisibility(editing ? View.VISIBLE : View.GONE);
-        btnEditProfile.setText(editing ? R.string.profile_cancel_edit : R.string.profile_edit);
     }
 
     private void handleUnauthorized() {
         tokenManager.clear();
-        if (!isAdded()) {
-            return;
-        }
-        Toast.makeText(getContext(), "Sesión vencida. Iniciá sesión de nuevo.", Toast.LENGTH_SHORT).show();
-        NavOptions options = new NavOptions.Builder()
-                .setPopUpTo(R.id.homeFragment, true)
-                .build();
-        NavHostFragment.findNavController(this).navigate(R.id.authStartFragment, null, options);
+        NavHostFragment.findNavController(this).navigate(R.id.authStartFragment);
     }
 }
