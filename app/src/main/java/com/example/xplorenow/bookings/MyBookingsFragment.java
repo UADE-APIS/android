@@ -39,6 +39,7 @@ public class MyBookingsFragment extends Fragment {
     @Inject
     ApiService apiService;
 
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -51,23 +52,20 @@ public class MyBookingsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Vistas como variables locales (Regla 3)
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
         TextView tvError = view.findViewById(R.id.tvError);
         RecyclerView rvBookings = view.findViewById(R.id.rvBookings);
         TextView tvOfflineMode = view.findViewById(R.id.tvOfflineMode);
 
-        // Inicializar UI
         tvOfflineMode.setVisibility(View.GONE);
         rvBookings.setLayoutManager(new LinearLayoutManager(requireContext()));
-        
-        // Adapter como variable local
-        BookingsAdapter adapter = new BookingsAdapter(booking -> 
+
+        BookingsAdapter adapter = new BookingsAdapter(booking ->
                 showCancelDialog(view, booking, progressBar, tvError));
+
         rvBookings.setAdapter(adapter);
 
-        // Navegación (Regla 16)
-        view.findViewById(R.id.btnBack).setOnClickListener(v -> 
+        view.findViewById(R.id.btnBack).setOnClickListener(v ->
                 Navigation.findNavController(view).popBackStack());
 
         loadBookings(adapter, progressBar, tvError);
@@ -105,33 +103,43 @@ public class MyBookingsFragment extends Fragment {
         });
     }
 
-    private void showCancelDialog(View view, Booking booking, ProgressBar progressBar, TextView tvError) {
-        String policy = (booking.getActivityDetail() != null && booking.getActivityDetail().getCancellationPolicy() != null)
-                ? booking.getActivityDetail().getCancellationPolicy()
-                : getString(R.string.default_cancellation_policy);
+    private void showCancelDialog(View view, Booking booking, ProgressBar pb, TextView err) {
+        String policy = getString(R.string.default_cancellation_policy);
+
+        if (booking.getActivityDetail() != null &&
+                booking.getActivityDetail().getCancellationPolicy() != null &&
+                !booking.getActivityDetail().getCancellationPolicy().trim().isEmpty()) {
+            policy = booking.getActivityDetail().getCancellationPolicy();
+        }
 
         new AlertDialog.Builder(requireContext())
                 .setTitle(R.string.title_cancel_booking)
                 .setMessage(getString(R.string.msg_cancel_policy, policy))
-                .setPositiveButton(R.string.action_confirm, (d, w) -> 
-                        performApiCancel(view, booking.getId(), progressBar, tvError))
+                .setPositiveButton(R.string.action_confirm,
+                        (d, w) -> performApiCancel(view, booking.getId(), pb, err))
                 .setNegativeButton(R.string.action_back, null)
                 .show();
     }
 
     private void performApiCancel(View view, int bookingId, ProgressBar progressBar, TextView tvError) {
         progressBar.setVisibility(View.VISIBLE);
-        
+
         apiService.cancelBooking(bookingId).enqueue(new Callback<ApiResponse<Booking>>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse<Booking>> call,
                                    @NonNull Response<ApiResponse<Booking>> response) {
-                // Al cancelar, recargamos la lista
-                RecyclerView rv = view.findViewById(R.id.rvBookings);
-                if (rv != null && rv.getAdapter() instanceof BookingsAdapter) {
-                    loadBookings((BookingsAdapter) rv.getAdapter(), progressBar, tvError);
+
+                if (response.isSuccessful()) {
+                    RecyclerView rv = view.findViewById(R.id.rvBookings);
+                    if (rv != null && rv.getAdapter() instanceof BookingsAdapter) {
+                        loadBookings((BookingsAdapter) rv.getAdapter(), progressBar, tvError);
+                    } else {
+                        progressBar.setVisibility(View.GONE);
+                    }
                 } else {
                     progressBar.setVisibility(View.GONE);
+                    tvError.setText(getString(R.string.error_http, response.code()));
+                    tvError.setVisibility(View.VISIBLE);
                 }
             }
 

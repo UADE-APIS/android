@@ -72,20 +72,21 @@ public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.Bookin
         Booking booking = bookings.get(position);
         Context context = holder.itemView.getContext();
 
-        holder.tvActivityTitle.setText(booking.getActivityDetail().getTitle());
-        holder.tvQuantity.setText(String.valueOf(booking.getQuantity()));
+        String title = "-";
+        if (booking.getActivityDetail() != null && booking.getActivityDetail().getTitle() != null) {
+            title = booking.getActivityDetail().getTitle();
+        }
 
-        String date = booking.getAvailabilityDetail() != null ? booking.getAvailabilityDetail().getDate() : "-";
-        holder.tvDate.setText(date);
+        holder.tvActivityTitle.setText(title);
+        holder.tvQuantity.setText("Participantes: " + booking.getQuantity());
+
+        String date = booking.getDate() != null ? booking.getDate() : "-";
+        holder.tvDate.setText("Fecha: " + date);
 
         String status = booking.getStatus();
         holder.tvStatus.setText(getStatusLabel(status, context));
 
-        if ("CONFIRMED".equals(status)) {
-            holder.btnCancel.setVisibility(View.VISIBLE);
-        } else {
-            holder.btnCancel.setVisibility(View.GONE);
-        }
+        holder.btnCancel.setVisibility("CONFIRMED".equals(status) ? View.VISIBLE : View.GONE);
     }
 
     private String getStatusLabel(String status, Context context) {

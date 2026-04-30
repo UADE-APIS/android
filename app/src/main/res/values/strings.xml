@@ -35,7 +35,7 @@
     <string name="status_confirmed">Confirmada</string>
     <string name="title_cancel_booking">Cancelar Reserva</string>
     <string name="msg_cancel_policy">Política: %1$s\n\n¿Confirma la cancelación?</string>
-    <string name="default_cancellation_policy">Sin política específica.</string>
+    <string name="default_cancellation_policy">La política de cancelación no está disponible.</string>
     <string name="action_confirm">Confirmar</string>
     <string name="action_back">Volver</string>
     <string name="error_loading_data">Error al cargar los datos de las reservas.</string>
@@ -103,4 +103,5 @@
     <string name="detail_duration_format">%1$d min</string>
     <string name="detail_availability_row">%1$s — %2$d cupos disponibles</string>
     <string name="detail_como_llegar">Cómo llegar</string>
+
 </resources>
