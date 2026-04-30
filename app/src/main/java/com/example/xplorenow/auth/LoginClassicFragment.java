@@ -12,6 +12,8 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.biometric.BiometricManager;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
@@ -96,10 +98,13 @@ public class LoginClassicFragment extends Fragment {
 
                         AuthTokensResponse tokens = response.body().getData();
                         tokenManager.saveTokens(tokens.access, tokens.refresh);
-                        rootView.post(() -> {
-                            if (!isAdded()) return;
-                            Navigation.findNavController(rootView).navigate(R.id.action_loginClassic_to_home);
-                        });
+                        
+                        // CORRECCIÓN 3: Preguntar biometría
+                        if (!tokenManager.isBiometricEnabled()) {
+                            offerBiometricEnrollment(rootView);
+                        } else {
+                            navigateToHome(rootView);
+                        }
                     }
 
                     @Override
@@ -108,6 +113,36 @@ public class LoginClassicFragment extends Fragment {
                         tvError.setText("Error de red: " + t.getMessage());
                     }
                 });
+    }
+
+    private void offerBiometricEnrollment(View rootView) {
+        if (!isAdded()) return;
+
+        int canAuth = BiometricManager.from(requireContext())
+                .canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG
+                        | BiometricManager.Authenticators.DEVICE_CREDENTIAL);
+
+        if (canAuth != BiometricManager.BIOMETRIC_SUCCESS) {
+            navigateToHome(rootView);
+            return;
+        }
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle(getString(R.string.biometric_enable_title))
+                .setMessage(getString(R.string.biometric_enable_message))
+                .setPositiveButton(android.R.string.yes, (dialog, which) -> {
+                    tokenManager.setBiometricEnabled(true);
+                    navigateToHome(rootView);
+                })
+                .setNegativeButton(android.R.string.no, (dialog, which) -> navigateToHome(rootView))
+                .show();
+    }
+
+    private void navigateToHome(View rootView) {
+        rootView.post(() -> {
+            if (!isAdded()) return;
+            Navigation.findNavController(rootView).navigate(R.id.action_loginClassic_to_home);
+        });
     }
 
     private void setLoading(boolean loading) {
@@ -121,4 +156,3 @@ public class LoginClassicFragment extends Fragment {
         return at > 0 && dot > at + 1 && dot < email.length() - 1;
     }
 }
-
