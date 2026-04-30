@@ -14,6 +14,7 @@ public class TokenManager {
     private static final String PREFS_NAME = "auth_tokens";
     private static final String KEY_ACCESS = "access_token";
     private static final String KEY_REFRESH = "refresh_token";
+    private static final String KEY_BIOMETRIC = "biometric_enabled";
 
     private final SharedPreferences prefs;
 
@@ -42,8 +43,6 @@ public class TokenManager {
         return t != null && !t.trim().isEmpty();
     }
 
-    private static final String KEY_BIOMETRIC = "biometric_enabled";
-
     public boolean isBiometricEnabled() {
         return prefs.getBoolean(KEY_BIOMETRIC, false);
     }
@@ -56,6 +55,7 @@ public class TokenManager {
         prefs.edit()
                 .remove(KEY_ACCESS)
                 .remove(KEY_REFRESH)
+                .remove(KEY_BIOMETRIC)
                 .apply();
     }
 }
