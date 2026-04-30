@@ -14,7 +14,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
-import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -43,6 +42,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import android.content.Intent;
+import com.example.xplorenow.MainActivity;
+
 @AndroidEntryPoint
 public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivityClickListener {
 
@@ -66,7 +68,6 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // REGLA 3: Vistas como variables locales
         MaterialToolbar toolbar = view.findViewById(R.id.toolbar);
         TextView tvError = view.findViewById(R.id.tvError);
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
@@ -118,6 +119,52 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
         fetchRecommendedActivities(recommendedAdapter, rvRecommended, tvRecommendedLabel, tvError);
     }
 
+    private void doLogout(View rootView, TextView tvError) {
+        tvError.setVisibility(View.GONE);
+        tvError.setText("");
+
+        String refresh = tokenManager.getRefreshToken();
+
+        Runnable goToAuth = () -> {
+            if (!isAdded()) return;
+
+            tokenManager.clear();
+
+            Intent intent = new Intent(requireContext(), MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);        };
+
+        if (refresh == null || refresh.trim().isEmpty()) {
+            rootView.post(goToAuth);
+            return;
+        }
+
+        apiService.logout(new LogoutRequest(refresh)).enqueue(new Callback<WrappedResponse<Void>>() {
+            @Override
+            public void onResponse(@NonNull Call<WrappedResponse<Void>> call, @NonNull Response<WrappedResponse<Void>> response) {
+                rootView.post(goToAuth);
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<WrappedResponse<Void>> call, @NonNull Throwable t) {
+                rootView.post(goToAuth);
+            }
+        });
+    }
+
+    private void handleUnauthorized(View view) {
+        tokenManager.clear();
+
+        if (!isAdded()) return;
+
+        NavOptions options = new NavOptions.Builder()
+                .setPopUpTo(R.id.nav_graph, true)
+                .build();
+
+        Navigation.findNavController(view)
+                .navigate(R.id.authStartFragment, null, options);
+    }
+
     private void setupRecyclerView(RecyclerView rvActivities, ProgressBar progressBar, TextView tvError) {
         adapter = new ActivitiesAdapter(this);
         adapter.setOnFavoriteClickListener(activity -> toggleFavorite(activity, tvError));
@@ -128,13 +175,12 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
         rvActivities.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
                 int visibleItemCount = layoutManager.getChildCount();
                 int totalItemCount = layoutManager.getItemCount();
                 int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
 
                 if (!isLoading && currentPage < totalPages) {
-                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount && firstVisibleItemPosition >= 0) {
+                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount) {
                         fetchActivities(currentPage + 1, progressBar, tvError);
                     }
                 }
@@ -144,6 +190,7 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
 
     private void showFilterDialog(TextView tvError, ProgressBar progressBar) {
         DialogFiltersBinding filterBinding = DialogFiltersBinding.inflate(getLayoutInflater());
+
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
                 .setView(filterBinding.getRoot())
                 .create();
@@ -159,16 +206,9 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
         orderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         filterBinding.spinnerOrdering.setAdapter(orderAdapter);
 
-        if (currentFilters.containsKey("search")) filterBinding.etSearch.setText(currentFilters.get("search"));
-        if (currentFilters.containsKey("location")) filterBinding.etLocation.setText(currentFilters.get("location"));
-        if (currentFilters.containsKey("min_price")) filterBinding.etMinPrice.setText(currentFilters.get("min_price"));
-        if (currentFilters.containsKey("max_price")) filterBinding.etMaxPrice.setText(currentFilters.get("max_price"));
-        if (currentFilters.containsKey("is_featured")) {
-            filterBinding.cbIsFeatured.setChecked("true".equals(currentFilters.get("is_featured")));
-        }
-
         filterBinding.btnApplyFilters.setOnClickListener(v -> {
             currentFilters.clear();
+
             String search = filterBinding.etSearch.getText().toString().trim();
             if (!search.isEmpty()) currentFilters.put("search", search);
 
@@ -217,10 +257,11 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
             public void onResponse(@NonNull Call<ActivitiesListResponse> call, @NonNull Response<ActivitiesListResponse> response) {
                 isLoading = false;
                 progressBar.setVisibility(View.GONE);
+
                 if (!isAdded()) return;
 
                 if (response.code() == 401) {
-                    if (getView() != null) handleUnauthorized(getView());
+                    handleUnauthorized(requireView());
                     return;
                 }
 
@@ -249,6 +290,7 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
                 isLoading = false;
                 progressBar.setVisibility(View.GONE);
                 if (!isAdded()) return;
+
                 tvError.setText("Error de red: " + t.getMessage());
                 tvError.setVisibility(View.VISIBLE);
             }
@@ -260,8 +302,10 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
             @Override
             public void onResponse(@NonNull Call<ActivitiesListResponse> call, @NonNull Response<ActivitiesListResponse> response) {
                 if (!isAdded()) return;
+
                 if (response.isSuccessful() && response.body() != null) {
                     List<Activity> activities = response.body().getResults();
+
                     if (activities != null && !activities.isEmpty()) {
                         adapter.setActivities(activities);
                         rv.setVisibility(View.VISIBLE);
@@ -275,7 +319,6 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
 
             @Override
             public void onFailure(@NonNull Call<ActivitiesListResponse> call, @NonNull Throwable t) {
-                // If it fails we just hide the recommended section
                 if (!isAdded()) return;
                 rv.setVisibility(View.GONE);
                 tvLabel.setVisibility(View.GONE);
@@ -290,44 +333,12 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
         Navigation.findNavController(requireView()).navigate(R.id.action_home_to_activityDetail, args);
     }
 
-    private void doLogout(View rootView, TextView tvError) {
-        tvError.setVisibility(View.GONE);
-        tvError.setText("");
-
-        String refresh = tokenManager.getRefreshToken();
-        if (refresh == null || refresh.trim().isEmpty()) {
-            tokenManager.clear();
-            if (!isAdded()) return;
-            Navigation.findNavController(rootView).navigate(R.id.action_home_to_authStart);
-            return;
-        }
-
-        apiService.logout(new LogoutRequest(refresh)).enqueue(new Callback<WrappedResponse<Void>>() {
-            @Override
-            public void onResponse(@NonNull Call<WrappedResponse<Void>> call, @NonNull Response<WrappedResponse<Void>> response) {
-                tokenManager.clear();
-                rootView.post(() -> {
-                    if (!isAdded()) return;
-                    Navigation.findNavController(rootView).navigate(R.id.action_home_to_authStart);
-                });
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<WrappedResponse<Void>> call, @NonNull Throwable t) {
-                tokenManager.clear();
-                rootView.post(() -> {
-                    if (!isAdded()) return;
-                    Navigation.findNavController(rootView).navigate(R.id.action_home_to_authStart);
-                });
-            }
-        });
-    }
-
     private void toggleFavorite(Activity activity, TextView tvError) {
         apiService.toggleFavorite(activity.getId()).enqueue(new Callback<WrappedResponse<Void>>() {
             @Override
             public void onResponse(@NonNull Call<WrappedResponse<Void>> call, @NonNull Response<WrappedResponse<Void>> response) {
                 if (!isAdded()) return;
+
                 if (response.isSuccessful()) {
                     activity.setFavorited(!activity.isFavorited());
                     adapter.notifyDataSetChanged();
@@ -340,19 +351,10 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
             @Override
             public void onFailure(@NonNull Call<WrappedResponse<Void>> call, @NonNull Throwable t) {
                 if (!isAdded()) return;
+
                 tvError.setText(R.string.error_connection);
                 tvError.setVisibility(View.VISIBLE);
             }
         });
-    }
-
-    private void handleUnauthorized(View view) {
-        tokenManager.clear();
-        if (!isAdded()) return;
-
-        NavOptions options = new NavOptions.Builder()
-                .setPopUpTo(R.id.nav_graph, true)
-                .build();
-        Navigation.findNavController(view).navigate(R.id.authStartFragment, null, options);
     }
 }
