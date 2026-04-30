@@ -1,13 +1,16 @@
 package com.example.xplorenow.adapters;
 
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.example.xplorenow.databinding.ItemActivityBinding;
+import com.example.xplorenow.R;
 import com.example.xplorenow.data.model.Activity;
 
 import java.util.ArrayList;
@@ -19,6 +22,7 @@ public class ActivitiesAdapter extends RecyclerView.Adapter<ActivitiesAdapter.Ac
     private final OnActivityClickListener listener;
     private OnFavoriteClickListener favoriteListener;
 
+    // Interfaces dentro del Adapter (Regla 25)
     public interface OnActivityClickListener {
         void onActivityClick(Activity activity);
     }
@@ -54,14 +58,46 @@ public class ActivitiesAdapter extends RecyclerView.Adapter<ActivitiesAdapter.Ac
     @NonNull
     @Override
     public ActivityViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemActivityBinding binding = ItemActivityBinding.inflate(
-                LayoutInflater.from(parent.getContext()), parent, false);
-        return new ActivityViewHolder(binding);
+        // Sin View Binding (Regla 22)
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_activity, parent, false);
+        return new ActivityViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ActivityViewHolder holder, int position) {
-        holder.bind(activities.get(position));
+        Activity activity = activities.get(position);
+        
+        holder.tvTitle.setText(activity.getTitle());
+        holder.tvLocation.setText(activity.getLocation());
+        holder.tvCategory.setText(activity.getCategory().toUpperCase().replace("_", " "));
+        holder.tvDuration.setText("Duración: " + activity.getDuration() + "h");
+        holder.tvPrice.setText("$" + activity.getPrice());
+        holder.tvSlots.setText("Cupos disponibles: " + activity.getAvailableSlots());
+
+        if (activity.getImages() != null && !activity.getImages().isEmpty()) {
+            Glide.with(holder.itemView.getContext())
+                    .load(activity.getImages().get(0).getImageUrl())
+                    .placeholder(android.R.drawable.ic_menu_gallery)
+                    .into(holder.ivActivityImage);
+        } else {
+            holder.ivActivityImage.setImageResource(android.R.drawable.ic_menu_gallery);
+        }
+
+        holder.ivFavorite.setImageResource(
+                activity.isFavorited()
+                        ? android.R.drawable.btn_star_big_on
+                        : android.R.drawable.btn_star_big_off
+        );
+
+        // Click en vistas individuales solo si es necesario (favorito), 
+        // pero el principal va en itemView (Regla 24)
+        holder.ivFavorite.setOnClickListener(v -> {
+            if (favoriteListener != null) {
+                favoriteListener.onFavoriteClick(activity);
+            }
+        });
+
+        holder.itemView.setOnClickListener(v -> listener.onActivityClick(activity));
     }
 
     @Override
@@ -69,44 +105,28 @@ public class ActivitiesAdapter extends RecyclerView.Adapter<ActivitiesAdapter.Ac
         return activities.size();
     }
 
-    class ActivityViewHolder extends RecyclerView.ViewHolder {
-        private final ItemActivityBinding binding;
+    static class ActivityViewHolder extends RecyclerView.ViewHolder {
+        // Campos de clase para el ViewHolder (Regla 23)
+        final ImageView ivActivityImage;
+        final ImageView ivFavorite;
+        final TextView tvTitle;
+        final TextView tvLocation;
+        final TextView tvCategory;
+        final TextView tvDuration;
+        final TextView tvPrice;
+        final TextView tvSlots;
 
-        public ActivityViewHolder(ItemActivityBinding binding) {
-            super(binding.getRoot());
-            this.binding = binding;
-        }
-
-        public void bind(Activity activity) {
-            binding.tvTitle.setText(activity.getTitle());
-            binding.tvLocation.setText(activity.getLocation());
-            binding.tvCategory.setText(activity.getCategory().toUpperCase().replace("_", " "));
-            binding.tvDuration.setText("Duración: " + activity.getDuration() + "h");
-            binding.tvPrice.setText("$" + activity.getPrice());
-            binding.tvSlots.setText("Cupos disponibles: " + activity.getAvailableSlots());
-
-            if (activity.getImages() != null && !activity.getImages().isEmpty()) {
-                Glide.with(itemView.getContext())
-                        .load(activity.getImages().get(0).getImageUrl())
-                        .placeholder(android.R.drawable.ic_menu_gallery)
-                        .into(binding.ivActivityImage);
-            } else {
-                binding.ivActivityImage.setImageResource(android.R.drawable.ic_menu_gallery);
-            }
-
-            binding.ivFavorite.setImageResource(
-                    activity.isFavorited()
-                            ? android.R.drawable.btn_star_big_on
-                            : android.R.drawable.btn_star_big_off
-            );
-
-            binding.ivFavorite.setOnClickListener(v -> {
-                if (favoriteListener != null) {
-                    favoriteListener.onFavoriteClick(activity);
-                }
-            });
-
-            itemView.setOnClickListener(v -> listener.onActivityClick(activity));
+        public ActivityViewHolder(@NonNull View itemView) {
+            super(itemView);
+            // findViewById SOLO en el constructor (Regla 23)
+            ivActivityImage = itemView.findViewById(R.id.ivActivityImage);
+            ivFavorite = itemView.findViewById(R.id.ivFavorite);
+            tvTitle = itemView.findViewById(R.id.tvTitle);
+            tvLocation = itemView.findViewById(R.id.tvLocation);
+            tvCategory = itemView.findViewById(R.id.tvCategory);
+            tvDuration = itemView.findViewById(R.id.tvDuration);
+            tvPrice = itemView.findViewById(R.id.tvPrice);
+            tvSlots = itemView.findViewById(R.id.tvSlots);
         }
     }
 }
