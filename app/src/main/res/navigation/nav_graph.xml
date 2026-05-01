@@ -10,7 +10,7 @@
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.example.xplorenow.home.HomeFragment"
-        android:label="Home"
+        android:label="Explorar"
         tools:layout="@layout/fragment_home">
 
         <action
@@ -46,6 +46,10 @@
         <action
             android:id="@+id/action_home_to_activityDetail"
             app:destination="@id/activityDetailFragment" />
+
+        <action
+            android:id="@+id/action_home_to_biometric"
+            app:destination="@id/biometricFragment" />
     </fragment>
 
     <fragment
@@ -69,7 +73,7 @@
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.example.xplorenow.profile.ProfileFragment"
-        android:label="Perfil"
+        android:label="Mi Perfil"
         tools:layout="@layout/fragment_profile">
 
         <action
@@ -80,13 +84,13 @@
     <fragment
         android:id="@+id/changePasswordFragment"
         android:name="com.example.xplorenow.profile.ChangePasswordFragment"
-        android:label="Cambiar contraseña"
+        android:label="Cambiar Contraseña"
         tools:layout="@layout/fragment_change_password" />
 
     <fragment
         android:id="@+id/activityDetailFragment"
         android:name="com.example.xplorenow.detail.ActivityDetailFragment"
-        android:label="Detalle de Actividad"
+        android:label="Detalle"
         tools:layout="@layout/fragment_activity_detail">
 
         <argument
@@ -113,7 +117,7 @@
     <fragment
         android:id="@+id/favoritesFragment"
         android:name="com.example.xplorenow.favorites.FavoritesFragment"
-        android:label="Mis Favoritos"
+        android:label="Favoritos"
         tools:layout="@layout/fragment_favorites" />
 
     <fragment
@@ -130,7 +134,7 @@
     <fragment
         android:id="@+id/newsDetailFragment"
         android:name="com.example.xplorenow.news.NewsDetailFragment"
-        android:label="Detalle de Noticia"
+        android:label="Noticia"
         tools:layout="@layout/fragment_news_detail">
 
         <argument
@@ -138,5 +142,11 @@
             app:argType="integer"
             android:defaultValue="-1" />
     </fragment>
+
+    <fragment
+        android:id="@+id/biometricFragment"
+        android:name="com.example.xplorenow.biometric.BiometricFragment"
+        android:label="Biometría"
+        tools:layout="@layout/fragment_biometric" />
 
 </navigation>

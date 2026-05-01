@@ -6,8 +6,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -22,6 +20,9 @@ import com.example.xplorenow.data.model.OtpRequest;
 import com.example.xplorenow.data.model.VerifyOtpData;
 import com.example.xplorenow.data.model.VerifyOtpRequest;
 import com.example.xplorenow.data.network.ApiService;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputLayout;
 
 import javax.inject.Inject;
 
@@ -37,7 +38,7 @@ public class VerifyOtpFragment extends Fragment {
 
     @Inject
     ApiService apiService;
-    // tiempo de espera entre reenvíos (30 segundos)
+
     private static final long RESEND_COOLDOWN_MS = 30_000;
 
     private CountDownTimer countDownTimer;
@@ -54,56 +55,54 @@ public class VerifyOtpFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // el email viene del fragment anterior
         String email = getArguments() != null
                 ? getArguments().getString("email", "")
                 : "";
 
         TextView tvSubtitle = view.findViewById(R.id.tvSubtitle);
-        EditText etCodigo = view.findViewById(R.id.etCodigo);
-        Button btnVerificar = view.findViewById(R.id.btnVerificar);
-        TextView btnReenviar = view.findViewById(R.id.btnReenviar);
+        TextInputLayout tilCodigo = view.findViewById(R.id.tilCodigo);
+        MaterialButton btnVerificar = view.findViewById(R.id.btnVerificar);
+        MaterialButton btnReenviar = view.findViewById(R.id.btnReenviar);
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
-        TextView tvError = view.findViewById(R.id.tvError);
 
-        tvSubtitle.setText("We sent a code to " + email);
+        tvSubtitle.setText("Enviamos un código a " + email);
 
-        // arrancamos el cooldown apenas entra, el código ya fue enviado
         startResendCooldown(btnReenviar);
 
         btnVerificar.setOnClickListener(v -> {
-            String code = etCodigo.getText().toString().trim();
+            tilCodigo.setError(null);
+            String code = tilCodigo.getEditText() != null
+                    ? tilCodigo.getEditText().getText().toString().trim() : "";
 
             if (code.length() != 6) {
-                showError(tvError, "The code must be 6 digits");
+                tilCodigo.setError("El código debe tener 6 dígitos");
                 return;
             }
 
-            verifyOtp(view, email, code, progressBar, btnVerificar, tvError);
+            verifyOtp(view, email, code, progressBar, btnVerificar);
         });
 
         btnReenviar.setOnClickListener(v -> {
             if (!btnReenviar.isEnabled()) return;
-            resendOtp(email, btnReenviar, tvError);
+            resendOtp(view, email, btnReenviar);
         });
     }
 
-    // bloquea el botón de reenvío y hace el countdown visible
-    private void startResendCooldown(TextView btnReenviar) {
+    private void startResendCooldown(MaterialButton btnReenviar) {
         btnReenviar.setEnabled(false);
 
         countDownTimer = new CountDownTimer(RESEND_COOLDOWN_MS, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 long seconds = millisUntilFinished / 1000;
-                btnReenviar.setText("Resend code in " + seconds + "s");
+                btnReenviar.setText("Reenviar en " + seconds + "s");
                 btnReenviar.setAlpha(0.5f);
             }
 
             @Override
             public void onFinish() {
                 btnReenviar.setEnabled(true);
-                btnReenviar.setText("Didn't receive the code? Resend");
+                btnReenviar.setText("¿No recibiste el código? Reenviar");
                 btnReenviar.setAlpha(1f);
             }
         }.start();
@@ -111,12 +110,10 @@ public class VerifyOtpFragment extends Fragment {
 
     private void verifyOtp(View view, String email, String code,
                            ProgressBar progressBar,
-                           Button btnVerificar,
-                           TextView tvError) {
+                           MaterialButton btnVerificar) {
 
         progressBar.setVisibility(View.VISIBLE);
         btnVerificar.setEnabled(false);
-        tvError.setVisibility(View.GONE);
 
         apiService.verifyOtp(new VerifyOtpRequest(email, code))
                 .enqueue(new Callback<ApiResponse<VerifyOtpData>>() {
@@ -127,46 +124,38 @@ public class VerifyOtpFragment extends Fragment {
                         btnVerificar.setEnabled(true);
 
                         if (response.isSuccessful()) {
-                            // código válido, navegamos al registro con el email
                             Bundle args = new Bundle();
                             args.putString("email", email);
                             Navigation.findNavController(view)
                                     .navigate(R.id.action_verifyOtp_to_register, args);
                         } else {
-                            showError(tvError, "Incorrect or expired code. Please try again.");
+                            Snackbar.make(view, "Código incorrecto o expirado", Snackbar.LENGTH_SHORT).show();
                             Log.e(TAG, "verifyOtp error HTTP: " + response.code());
                         }
                     }
 
                     @Override
-                    public void onFailure(@NonNull Call<ApiResponse<VerifyOtpData>> call,
-                                          @NonNull Throwable t) {
+                    public void onFailure(@NonNull Call<ApiResponse<VerifyOtpData>> call, @NonNull Throwable t) {
                         progressBar.setVisibility(View.GONE);
                         btnVerificar.setEnabled(true);
-                        showError(tvError, "Connection error: " + t.getMessage());
+                        Snackbar.make(view, "Error de conexión", Snackbar.LENGTH_SHORT).show();
                         Log.e(TAG, "verifyOtp onFailure: " + t.getMessage());
                     }
                 });
     }
 
-    private void resendOtp(String email, TextView btnReenviar, TextView tvError) {
-        // deshabilitamos de entrada para evitar doble tap
+    private void resendOtp(View view, String email, MaterialButton btnReenviar) {
         btnReenviar.setEnabled(false);
-        tvError.setVisibility(View.GONE);
 
         apiService.resendOtp(new OtpRequest(email)).enqueue(new Callback<ApiResponse<Void>>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse<Void>> call,
                                    @NonNull Response<ApiResponse<Void>> response) {
                 if (response.isSuccessful()) {
-                    tvError.setTextColor(
-                            requireContext().getColor(android.R.color.holo_green_dark));
-                    tvError.setText("Code resent successfully");
-                    tvError.setVisibility(View.VISIBLE);
-                    // reiniciamos el cooldown después de cada reenvío exitoso
+                    Snackbar.make(view, "Código reenviado", Snackbar.LENGTH_SHORT).show();
                     startResendCooldown(btnReenviar);
                 } else {
-                    showError(tvError, "Could not resend the code. Please try again.");
+                    Snackbar.make(view, "No se pudo reenviar el código", Snackbar.LENGTH_SHORT).show();
                     btnReenviar.setEnabled(true);
                     btnReenviar.setAlpha(1f);
                     Log.e(TAG, "resendOtp error HTTP: " + response.code());
@@ -175,7 +164,7 @@ public class VerifyOtpFragment extends Fragment {
 
             @Override
             public void onFailure(@NonNull Call<ApiResponse<Void>> call, @NonNull Throwable t) {
-                showError(tvError, "Connection error: " + t.getMessage());
+                Snackbar.make(view, "Error de conexión", Snackbar.LENGTH_SHORT).show();
                 btnReenviar.setEnabled(true);
                 btnReenviar.setAlpha(1f);
                 Log.e(TAG, "resendOtp onFailure: " + t.getMessage());
@@ -183,16 +172,9 @@ public class VerifyOtpFragment extends Fragment {
         });
     }
 
-    private void showError(TextView tvError, String message) {
-        tvError.setTextColor(requireContext().getColor(android.R.color.holo_red_dark));
-        tvError.setText(message);
-        tvError.setVisibility(View.VISIBLE);
-    }
-
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // cancelamos el timer para no tener memory leaks
         if (countDownTimer != null) {
             countDownTimer.cancel();
             countDownTimer = null;

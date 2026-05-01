@@ -6,17 +6,14 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.biometric.BiometricManager;
-import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
@@ -26,6 +23,8 @@ import com.example.xplorenow.data.network.dto.LoginClassicRequest;
 import com.example.xplorenow.data.network.dto.WrappedResponse;
 import com.example.xplorenow.data.network.dto.auth.AuthTokensResponse;
 import com.example.xplorenow.data.session.TokenManager;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.concurrent.Executor;
 
@@ -46,9 +45,8 @@ public class AuthStartFragment extends Fragment {
     @Inject
     TokenManager tokenManager;
 
-    private EditText etEmail;
-    private EditText etPassword;
-    private TextView tvError;
+    private TextInputLayout tilEmail;
+    private TextInputLayout tilPassword;
     private ProgressBar progress;
 
     @Nullable
@@ -63,15 +61,16 @@ public class AuthStartFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        etEmail = view.findViewById(R.id.etEmail);
-        etPassword = view.findViewById(R.id.etPassword);
-        tvError = view.findViewById(R.id.tvError);
-        progress = view.findViewById(R.id.progress);
+        ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            int dp24 = Math.round(24 * getResources().getDisplayMetrics().density);
+            v.setPadding(dp24 + bars.left, bars.top, dp24 + bars.right, dp24 + bars.bottom);
+            return insets;
+        });
 
-        if (tokenManager.isLoggedIn() && tokenManager.isBiometricEnabled()) {
-            tryBiometricLogin(view);
-            return;
-        }
+        tilEmail = view.findViewById(R.id.tilEmail);
+        tilPassword = view.findViewById(R.id.tilPassword);
+        progress = view.findViewById(R.id.progress);
 
         if (tokenManager.isLoggedIn()) {
             view.post(() -> {
@@ -82,9 +81,7 @@ public class AuthStartFragment extends Fragment {
         }
 
         if (getArguments() != null && getArguments().getBoolean("register_success", false)) {
-            tvError.setTextColor(requireContext().getColor(android.R.color.holo_green_dark));
-            tvError.setText(R.string.register_success);
-            tvError.setVisibility(View.VISIBLE);
+            Snackbar.make(view, R.string.register_success, Snackbar.LENGTH_LONG).show();
         }
 
         view.findViewById(R.id.btnIngresar).setOnClickListener(v -> doLogin(view));
@@ -94,75 +91,23 @@ public class AuthStartFragment extends Fragment {
                 Navigation.findNavController(view).navigate(R.id.action_authStart_to_loginEmail));
     }
 
-    private void tryBiometricLogin(View rootView) {
-        int canAuth = BiometricManager.from(requireContext())
-                .canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG
-                        | BiometricManager.Authenticators.DEVICE_CREDENTIAL);
 
-        if (canAuth != BiometricManager.BIOMETRIC_SUCCESS) {
-            tokenManager.setBiometricEnabled(false);
-            Log.w(TAG, "Biometric not available, fallback to password. Code: " + canAuth);
-            showLoginForm(rootView);
-            return;
-        }
-
-        Executor executor = ContextCompat.getMainExecutor(requireContext());
-
-        BiometricPrompt biometricPrompt = new BiometricPrompt(this, executor,
-                new BiometricPrompt.AuthenticationCallback() {
-                    @Override
-                    public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
-                        super.onAuthenticationSucceeded(result);
-                        if (!isAdded()) return;
-                        Log.d(TAG, "Biometric authentication succeeded");
-                        Navigation.findNavController(rootView).navigate(R.id.action_authStart_to_home);
-                    }
-
-                    @Override
-                    public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
-                        super.onAuthenticationError(errorCode, errString);
-                        Log.w(TAG, "Biometric error: " + errString);
-                        showLoginForm(rootView);
-                    }
-
-                    @Override
-                    public void onAuthenticationFailed() {
-                        super.onAuthenticationFailed();
-                        Log.w(TAG, "Biometric authentication failed");
-                    }
-                });
-
-        BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
-                .setTitle(getString(R.string.biometric_prompt_title))
-                .setSubtitle(getString(R.string.biometric_prompt_subtitle))
-                .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG
-                        | BiometricManager.Authenticators.DEVICE_CREDENTIAL)
-                .build();
-
-        biometricPrompt.authenticate(promptInfo);
-    }
-
-    private void showLoginForm(View view) {
-        if (!isAdded()) return;
-        view.findViewById(R.id.btnIngresar).setOnClickListener(v -> doLogin(view));
-        view.findViewById(R.id.btnRegister).setOnClickListener(v ->
-                Navigation.findNavController(view).navigate(R.id.action_authStart_to_requestOtp));
-        view.findViewById(R.id.btnLoginOtp).setOnClickListener(v ->
-                Navigation.findNavController(view).navigate(R.id.action_authStart_to_loginEmail));
-    }
 
     private void doLogin(View rootView) {
-        tvError.setText("");
+        tilEmail.setError(null);
+        tilPassword.setError(null);
 
-        String email = etEmail.getText().toString().trim();
-        String password = etPassword.getText().toString();
+        String email = tilEmail.getEditText() != null
+                ? tilEmail.getEditText().getText().toString().trim() : "";
+        String password = tilPassword.getEditText() != null
+                ? tilPassword.getEditText().getText().toString() : "";
 
         if (!isValidEmail(email)) {
-            tvError.setText("Correo inválido.");
+            tilEmail.setError("Correo inválido");
             return;
         }
         if (TextUtils.isEmpty(password)) {
-            tvError.setText("La contraseña es obligatoria.");
+            tilPassword.setError("La contraseña es obligatoria");
             return;
         }
 
@@ -174,45 +119,37 @@ public class AuthStartFragment extends Fragment {
                     public void onResponse(@NonNull Call<WrappedResponse<AuthTokensResponse>> call,
                                            @NonNull Response<WrappedResponse<AuthTokensResponse>> response) {
                         progress.setVisibility(View.GONE);
-                        if (!response.isSuccessful() || response.body() == null
-                                || response.body().getData() == null) {
-                            tvError.setText("No se pudo iniciar sesión (" + response.code() + ").");
+                        if (!isAdded()) return;
+
+                        if (response.code() == 400 || response.code() == 401) {
+                            tilPassword.setError("Contraseña incorrecta");
                             return;
                         }
+
+                        if (!response.isSuccessful() || response.body() == null
+                                || response.body().getData() == null) {
+                            Snackbar.make(rootView, "Error al iniciar sesión", Snackbar.LENGTH_SHORT).show();
+                            return;
+                        }
+
                         AuthTokensResponse tokens = response.body().getData();
                         tokenManager.saveTokens(tokens.access, tokens.refresh);
 
-                        if (!tokenManager.isBiometricEnabled()) {
-                            offerBiometricEnrollment(rootView);
-                        } else {
-                            navigateToHome(rootView);
-                        }
+                        navigateToHome(rootView);
                     }
 
                     @Override
                     public void onFailure(@NonNull Call<WrappedResponse<AuthTokensResponse>> call,
                                           @NonNull Throwable t) {
                         progress.setVisibility(View.GONE);
-                        tvError.setText("Error de red: " + t.getMessage());
+                        if (!isAdded()) return;
+                        Snackbar.make(rootView, "Error de conexión", Snackbar.LENGTH_SHORT).show();
                         Log.e(TAG, "onFailure: " + t.getMessage());
                     }
                 });
     }
 
-    private void offerBiometricEnrollment(View rootView) {
-        if (!isAdded()) return;
-        new AlertDialog.Builder(requireContext())
-                .setTitle(getString(R.string.biometric_enable_title))
-                .setMessage(getString(R.string.biometric_enable_message))
-                .setPositiveButton(android.R.string.yes, (dialog, which) -> {
-                    tokenManager.setBiometricEnabled(true);
-                    tokenManager.saveEncryptedToken(tokenManager.getAccessToken());
-                    navigateToHome(rootView);
-                })
-                .setNegativeButton(android.R.string.no, (dialog, which) -> navigateToHome(rootView))
-                .setCancelable(false)
-                .show();
-    }
+
 
     private void navigateToHome(View rootView) {
         rootView.post(() -> {

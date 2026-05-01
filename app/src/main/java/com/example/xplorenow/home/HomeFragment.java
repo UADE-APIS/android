@@ -1,5 +1,6 @@
 package com.example.xplorenow.home;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,12 +12,16 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.xplorenow.MainActivity;
 import com.example.xplorenow.R;
 import com.example.xplorenow.adapters.ActivitiesAdapter;
 import com.example.xplorenow.adapters.RecommendedActivitiesAdapter;
@@ -28,7 +33,7 @@ import com.example.xplorenow.data.network.dto.LogoutRequest;
 import com.example.xplorenow.data.network.dto.WrappedResponse;
 import com.example.xplorenow.data.session.TokenManager;
 import com.example.xplorenow.databinding.DialogFiltersBinding;
-import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,9 +46,6 @@ import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
-import android.content.Intent;
-import com.example.xplorenow.MainActivity;
 
 @AndroidEntryPoint
 public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivityClickListener {
@@ -68,8 +70,13 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        MaterialToolbar toolbar = view.findViewById(R.id.toolbar);
-        TextView tvError = view.findViewById(R.id.tvError);
+        ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            int dp8 = Math.round(8 * getResources().getDisplayMetrics().density);
+            v.setPadding(dp8 + bars.left, bars.top, dp8 + bars.right, bars.bottom);
+            return insets;
+        });
+
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
         RecyclerView rvActivities = view.findViewById(R.id.rvActivities);
         RecyclerView rvRecommended = view.findViewById(R.id.rvRecommended);
@@ -80,59 +87,30 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
             return;
         }
 
-        toolbar.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == R.id.action_logout) {
-                doLogout(view, tvError);
-                return true;
-            }
-            if (item.getItemId() == R.id.action_profile) {
-                Navigation.findNavController(view).navigate(R.id.action_home_to_profile);
-                return true;
-            }
-            if (item.getItemId() == R.id.action_my_bookings) {
-                Navigation.findNavController(view).navigate(R.id.action_home_to_myBookings);
-                return true;
-            }
-            if (item.getItemId() == R.id.action_history) {
-                Navigation.findNavController(view).navigate(R.id.action_home_to_history);
-                return true;
-            }
-            if (item.getItemId() == R.id.action_favorites) {
-                Navigation.findNavController(view).navigate(R.id.action_home_to_favorites);
-                return true;
-            }
-            if (item.getItemId() == R.id.action_news) {
-                Navigation.findNavController(view).navigate(R.id.action_home_to_news);
-                return true;
-            }
-            return false;
-        });
+        view.findViewById(R.id.fabFilter).setOnClickListener(v -> showFilterDialog(view, progressBar));
+        view.findViewById(R.id.btnBiometric).setOnClickListener(v -> 
+            Navigation.findNavController(view).navigate(R.id.action_home_to_biometric)
+        );
 
-        view.findViewById(R.id.fabFilter).setOnClickListener(v -> showFilterDialog(tvError, progressBar));
-
-        setupRecyclerView(rvActivities, progressBar, tvError);
-        fetchActivities(1, progressBar, tvError);
+        setupRecyclerView(rvActivities, progressBar, view);
+        fetchActivities(1, progressBar, view);
 
         RecommendedActivitiesAdapter recommendedAdapter = new RecommendedActivitiesAdapter(this);
         rvRecommended.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
         rvRecommended.setAdapter(recommendedAdapter);
-        fetchRecommendedActivities(recommendedAdapter, rvRecommended, tvRecommendedLabel, tvError);
+        fetchRecommendedActivities(recommendedAdapter, rvRecommended, tvRecommendedLabel, view);
     }
 
-    private void doLogout(View rootView, TextView tvError) {
-        tvError.setVisibility(View.GONE);
-        tvError.setText("");
-
+    private void doLogout(View rootView) {
         String refresh = tokenManager.getRefreshToken();
 
         Runnable goToAuth = () -> {
             if (!isAdded()) return;
-
             tokenManager.clear();
-
             Intent intent = new Intent(requireContext(), MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);        };
+            startActivity(intent);
+        };
 
         if (refresh == null || refresh.trim().isEmpty()) {
             rootView.post(goToAuth);
@@ -165,9 +143,9 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
                 .navigate(R.id.authStartFragment, null, options);
     }
 
-    private void setupRecyclerView(RecyclerView rvActivities, ProgressBar progressBar, TextView tvError) {
+    private void setupRecyclerView(RecyclerView rvActivities, ProgressBar progressBar, View rootView) {
         adapter = new ActivitiesAdapter(this);
-        adapter.setOnFavoriteClickListener(activity -> toggleFavorite(activity, tvError));
+        adapter.setOnFavoriteClickListener(activity -> toggleFavorite(activity));
         LinearLayoutManager layoutManager = new LinearLayoutManager(requireContext());
         rvActivities.setLayoutManager(layoutManager);
         rvActivities.setAdapter(adapter);
@@ -181,14 +159,14 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
 
                 if (!isLoading && currentPage < totalPages) {
                     if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount) {
-                        fetchActivities(currentPage + 1, progressBar, tvError);
+                        fetchActivities(currentPage + 1, progressBar, rootView);
                     }
                 }
             }
         });
     }
 
-    private void showFilterDialog(TextView tvError, ProgressBar progressBar) {
+    private void showFilterDialog(View rootView, ProgressBar progressBar) {
         DialogFiltersBinding filterBinding = DialogFiltersBinding.inflate(getLayoutInflater());
 
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
@@ -230,21 +208,19 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
             if (orderPos > 0) currentFilters.put("ordering", orderingValues[orderPos]);
 
             dialog.dismiss();
-            tvError.setVisibility(View.GONE);
-            fetchActivities(1, progressBar, tvError);
+            fetchActivities(1, progressBar, rootView);
         });
 
         filterBinding.btnResetFilters.setOnClickListener(v -> {
             currentFilters.clear();
             dialog.dismiss();
-            tvError.setVisibility(View.GONE);
-            fetchActivities(1, progressBar, tvError);
+            fetchActivities(1, progressBar, rootView);
         });
 
         dialog.show();
     }
 
-    private void fetchActivities(int page, ProgressBar progressBar, TextView tvError) {
+    private void fetchActivities(int page, ProgressBar progressBar, View rootView) {
         isLoading = true;
         progressBar.setVisibility(View.VISIBLE);
 
@@ -280,8 +256,7 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
                         adapter.addActivities(activities);
                     }
                 } else {
-                    tvError.setText("Error: " + response.code());
-                    tvError.setVisibility(View.VISIBLE);
+                    Snackbar.make(rootView, "Error al cargar actividades", Snackbar.LENGTH_SHORT).show();
                 }
             }
 
@@ -290,14 +265,12 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
                 isLoading = false;
                 progressBar.setVisibility(View.GONE);
                 if (!isAdded()) return;
-
-                tvError.setText("Error de red: " + t.getMessage());
-                tvError.setVisibility(View.VISIBLE);
+                Snackbar.make(rootView, "Error de conexión", Snackbar.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void fetchRecommendedActivities(RecommendedActivitiesAdapter adapter, RecyclerView rv, TextView tvLabel, TextView tvError) {
+    private void fetchRecommendedActivities(RecommendedActivitiesAdapter adapter, RecyclerView rv, TextView tvLabel, View rootView) {
         apiService.getRecommendedActivities(new HashMap<>()).enqueue(new Callback<ActivitiesListResponse>() {
             @Override
             public void onResponse(@NonNull Call<ActivitiesListResponse> call, @NonNull Response<ActivitiesListResponse> response) {
@@ -333,27 +306,23 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
         Navigation.findNavController(requireView()).navigate(R.id.action_home_to_activityDetail, args);
     }
 
-    private void toggleFavorite(Activity activity, TextView tvError) {
+    private void toggleFavorite(Activity activity) {
         apiService.toggleFavorite(activity.getId()).enqueue(new Callback<WrappedResponse<Void>>() {
             @Override
             public void onResponse(@NonNull Call<WrappedResponse<Void>> call, @NonNull Response<WrappedResponse<Void>> response) {
                 if (!isAdded()) return;
-
                 if (response.isSuccessful()) {
                     activity.setFavorited(!activity.isFavorited());
-                    adapter.notifyActivityChanged(activity); // solo redibuja el ítem afectado
+                    adapter.notifyActivityChanged(activity);
                 } else {
-                    tvError.setText(getString(R.string.error_http, response.code()));
-                    tvError.setVisibility(View.VISIBLE);
+                    Snackbar.make(requireView(), getString(R.string.error_http, response.code()), Snackbar.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<WrappedResponse<Void>> call, @NonNull Throwable t) {
                 if (!isAdded()) return;
-
-                tvError.setText(R.string.error_connection);
-                tvError.setVisibility(View.VISIBLE);
+                Snackbar.make(requireView(), R.string.error_connection, Snackbar.LENGTH_SHORT).show();
             }
         });
     }

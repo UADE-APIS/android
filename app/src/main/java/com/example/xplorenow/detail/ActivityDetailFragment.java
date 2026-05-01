@@ -7,14 +7,18 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.google.android.material.button.MaterialButton;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -67,6 +71,12 @@ public class ActivityDetailFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            int dp16 = Math.round(16 * getResources().getDisplayMetrics().density);
+            v.setPadding(bars.left, bars.top, bars.right, dp16 + bars.bottom);
+            return insets;
+        });
         // Referencias a las vistas — locales en onViewCreated, igual que CreateBookingFragment
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
         TextView tvError = view.findViewById(R.id.tvError);
@@ -87,11 +97,11 @@ public class ActivityDetailFragment extends Fragment {
         TextView tvCancellation = view.findViewById(R.id.tvCancellation);
         TextView tvAvailableDatesLabel = view.findViewById(R.id.tvAvailableDatesLabel);
         LinearLayout layoutAvailabilities = view.findViewById(R.id.layoutAvailabilities);
-        Button btnReservar = view.findViewById(R.id.btnReservar);
-        Button btnFavorite = view.findViewById(R.id.btnFavorite);
+        MaterialButton btnReservar = view.findViewById(R.id.btnReservar);
+        MaterialButton btnFavorite = view.findViewById(R.id.btnFavorite);
 
         mapView = view.findViewById(R.id.mapView);
-        Button btnComoLlegar = view.findViewById(R.id.btnComoLlegar);
+        MaterialButton btnComoLlegar = view.findViewById(R.id.btnComoLlegar);
 
         Configuration.getInstance().setUserAgentValue(requireContext().getPackageName());
         mapView.setTileSource(TileSourceFactory.MAPNIK);
@@ -245,7 +255,7 @@ public class ActivityDetailFragment extends Fragment {
         });
     }
 
-    private void updateFavoriteButton(Button btn, boolean favorited) {
+    private void updateFavoriteButton(MaterialButton btn, boolean favorited) {
         btn.setText(favorited
                 ? getString(R.string.favorites_title)
                 : getString(R.string.favorite_toggle));

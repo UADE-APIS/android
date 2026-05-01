@@ -5,10 +5,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,6 +16,9 @@ import com.example.xplorenow.R;
 import com.example.xplorenow.data.model.ApiResponse;
 import com.example.xplorenow.data.model.OtpRequest;
 import com.example.xplorenow.data.network.ApiService;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputLayout;
 
 import javax.inject.Inject;
 
@@ -47,53 +47,49 @@ public class RequestOtpFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        EditText etEmail = view.findViewById(R.id.etEmail);
-        Button btnContinuar = view.findViewById(R.id.btnContinuar);
+        TextInputLayout tilEmail = view.findViewById(R.id.tilEmail);
+        MaterialButton btnContinuar = view.findViewById(R.id.btnContinuar);
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
-        TextView tvError = view.findViewById(R.id.tvError);
 
         btnContinuar.setOnClickListener(v -> {
-            String email = etEmail.getText().toString().trim();
+            tilEmail.setError(null);
+            String email = tilEmail.getEditText() != null
+                    ? tilEmail.getEditText().getText().toString().trim() : "";
 
             if (email.isEmpty()) {
-                showError(tvError, "Please enter your email");
+                tilEmail.setError("Ingresá tu email");
                 return;
             }
 
-            // primero verificamos si el mail ya tiene cuenta, después enviamos el código
-            checkEmailAndRequestOtp(view, email, progressBar, btnContinuar, tvError);
+            checkEmailAndRequestOtp(view, email, progressBar, btnContinuar, tilEmail);
         });
     }
 
-    // paso 1: chequear si el email ya está registrado
     private void checkEmailAndRequestOtp(View view, String email,
                                          ProgressBar progressBar,
-                                         Button btnContinuar,
-                                         TextView tvError) {
+                                         MaterialButton btnContinuar,
+                                         TextInputLayout tilEmail) {
         progressBar.setVisibility(View.VISIBLE);
         btnContinuar.setEnabled(false);
-        tvError.setVisibility(View.GONE);
 
         apiService.checkEmail(new OtpRequest(email)).enqueue(new Callback<ApiResponse<Void>>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse<Void>> call,
                                    @NonNull Response<ApiResponse<Void>> response) {
 
-                // 409 significa que ya existe una cuenta con ese email
                 if (response.code() == 409) {
                     progressBar.setVisibility(View.GONE);
                     btnContinuar.setEnabled(true);
-                    showError(tvError, "An account already exists with this email.");
+                    tilEmail.setError("Ya existe una cuenta con este email");
                     return;
                 }
 
                 if (response.isSuccessful()) {
-                    // email libre, enviamos el código OTP
-                    requestOtp(view, email, progressBar, btnContinuar, tvError);
+                    requestOtp(view, email, progressBar, btnContinuar);
                 } else {
                     progressBar.setVisibility(View.GONE);
                     btnContinuar.setEnabled(true);
-                    showError(tvError, "Could not verify email. Please try again.");
+                    Snackbar.make(view, "No se pudo verificar el email", Snackbar.LENGTH_SHORT).show();
                     Log.e(TAG, "checkEmail error HTTP: " + response.code());
                 }
             }
@@ -102,17 +98,15 @@ public class RequestOtpFragment extends Fragment {
             public void onFailure(@NonNull Call<ApiResponse<Void>> call, @NonNull Throwable t) {
                 progressBar.setVisibility(View.GONE);
                 btnContinuar.setEnabled(true);
-                showError(tvError, "Connection error: " + t.getMessage());
+                Snackbar.make(view, "Error de conexión", Snackbar.LENGTH_SHORT).show();
                 Log.e(TAG, "checkEmail onFailure: " + t.getMessage());
             }
         });
     }
 
-    // paso 2: email libre, pedimos el código al servidor
     private void requestOtp(View view, String email,
                             ProgressBar progressBar,
-                            Button btnContinuar,
-                            TextView tvError) {
+                            MaterialButton btnContinuar) {
 
         apiService.requestOtp(new OtpRequest(email)).enqueue(new Callback<ApiResponse<Void>>() {
             @Override
@@ -122,13 +116,12 @@ public class RequestOtpFragment extends Fragment {
                 btnContinuar.setEnabled(true);
 
                 if (response.isSuccessful()) {
-                    // pasamos el email a la siguiente pantalla para usarlo en la verificación
                     Bundle args = new Bundle();
                     args.putString("email", email);
                     Navigation.findNavController(view)
                             .navigate(R.id.action_requestOtp_to_verifyOtp, args);
                 } else {
-                    showError(tvError, "Could not send the code. Please try again.");
+                    Snackbar.make(view, "No se pudo enviar el código", Snackbar.LENGTH_SHORT).show();
                     Log.e(TAG, "requestOtp error HTTP: " + response.code());
                 }
             }
@@ -137,15 +130,9 @@ public class RequestOtpFragment extends Fragment {
             public void onFailure(@NonNull Call<ApiResponse<Void>> call, @NonNull Throwable t) {
                 progressBar.setVisibility(View.GONE);
                 btnContinuar.setEnabled(true);
-                showError(tvError, "Connection error: " + t.getMessage());
+                Snackbar.make(view, "Error de conexión", Snackbar.LENGTH_SHORT).show();
                 Log.e(TAG, "requestOtp onFailure: " + t.getMessage());
             }
         });
-    }
-
-    private void showError(TextView tvError, String message) {
-        tvError.setTextColor(requireContext().getColor(android.R.color.holo_red_dark));
-        tvError.setText(message);
-        tvError.setVisibility(View.VISIBLE);
     }
 }

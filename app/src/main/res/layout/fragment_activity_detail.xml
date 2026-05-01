@@ -25,7 +25,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            android:textColor="#B00020"
+            android:textColor="?attr/colorError"
             android:visibility="gone" />
 
         <!-- Imagen principal (primera de la galería) -->
@@ -60,7 +60,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:textSize="14sp"
-                android:textColor="#757575" />
+                android:textColor="?android:attr/textColorSecondary" />
 
             <!-- Categoría -->
             <TextView
@@ -170,8 +170,9 @@
                 android:layout_marginTop="12dp"
                 android:visibility="gone" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnComoLlegar"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -246,15 +247,16 @@
                 android:visibility="gone" />
 
             <!-- Botón reservar y favorito -->
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnReservar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="@string/btn_reservar" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnFavorite"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"

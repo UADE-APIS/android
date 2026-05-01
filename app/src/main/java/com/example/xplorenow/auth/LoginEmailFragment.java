@@ -5,10 +5,6 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -17,10 +13,12 @@ import androidx.navigation.Navigation;
 
 import com.example.xplorenow.R;
 import com.example.xplorenow.di.TokenManagerAccessor;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputLayout;
 
 public class LoginEmailFragment extends Fragment {
-    private EditText etEmail;
-    private TextView tvError;
+
+    private TextInputLayout tilEmail;
 
     @Nullable
     @Override
@@ -32,11 +30,10 @@ public class LoginEmailFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        etEmail = view.findViewById(R.id.etEmail);
-        tvError = view.findViewById(R.id.tvError);
+        tilEmail = view.findViewById(R.id.tilEmail);
 
-        Button btnSendOtp = view.findViewById(R.id.btnSendOtp);
-        Button btnGoClassic = view.findViewById(R.id.btnGoClassic);
+        MaterialButton btnSendOtp = view.findViewById(R.id.btnSendOtp);
+        MaterialButton btnGoClassic = view.findViewById(R.id.btnGoClassic);
 
         if (TokenManagerAccessor.from(requireContext()).isLoggedIn()) {
             view.post(() -> {
@@ -46,10 +43,10 @@ public class LoginEmailFragment extends Fragment {
         }
 
         btnSendOtp.setOnClickListener(v -> {
-            tvError.setText("");
+            tilEmail.setError(null);
             String email = getEmail();
             if (!isValidEmail(email)) {
-                tvError.setText("Email inválido.");
+                tilEmail.setError("Email inválido");
                 return;
             }
 
@@ -59,10 +56,10 @@ public class LoginEmailFragment extends Fragment {
         });
 
         btnGoClassic.setOnClickListener(v -> {
-            tvError.setText("");
+            tilEmail.setError(null);
             String email = getEmail();
             if (!isValidEmail(email)) {
-                tvError.setText("Email inválido.");
+                tilEmail.setError("Email inválido");
                 return;
             }
             Bundle args = new Bundle();
@@ -72,7 +69,8 @@ public class LoginEmailFragment extends Fragment {
     }
 
     private String getEmail() {
-        return etEmail == null ? "" : etEmail.getText().toString().trim();
+        if (tilEmail == null || tilEmail.getEditText() == null) return "";
+        return tilEmail.getEditText().getText().toString().trim();
     }
 
     private boolean isValidEmail(String email) {
@@ -82,4 +80,3 @@ public class LoginEmailFragment extends Fragment {
         return at > 0 && dot > at + 1 && dot < email.length() - 1;
     }
 }
-

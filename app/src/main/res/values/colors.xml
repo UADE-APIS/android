@@ -1,22 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Primary Colors -->
-    <color name="primary">#6200EE</color>
-    <color name="primary_variant">#3700B3</color>
+    <color name="primary">#0077B6</color>
+    <color name="primary_variant">#005F8E</color>
     <color name="on_primary">#FFFFFF</color>
 
     <!-- Secondary Colors -->
-    <color name="secondary">#03DAC6</color>
-    <color name="secondary_variant">#018786</color>
-    <color name="on_secondary">#000000</color>
+    <color name="secondary">#00B4D8</color>
+    <color name="secondary_variant">#0096B7</color>
+    <color name="on_secondary">#FFFFFF</color>
 
     <!-- UI Colors -->
-    <color name="background">#F5F5F5</color>
-    <color name="on_background">#000000</color>
+    <color name="background">#F8F9FA</color>
+    <color name="on_background">#212121</color>
     <color name="surface">#FFFFFF</color>
-    <color name="on_surface">#000000</color>
+    <color name="on_surface">#212121</color>
     <color name="error">#B00020</color>
     <color name="on_error">#FFFFFF</color>
+    <color name="text_secondary">#757575</color>
 
     <!-- Custom Colors -->
     <color name="danger">#D32F2F</color>
