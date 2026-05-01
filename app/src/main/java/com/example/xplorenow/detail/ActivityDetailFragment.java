@@ -51,6 +51,9 @@ public class ActivityDetailFragment extends Fragment {
     @Inject
     ApiService apiService;
 
+    // Se guarda la referencia para delegar correctamente el ciclo de vida (evita memory leaks)
+    private MapView mapView;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -85,7 +88,7 @@ public class ActivityDetailFragment extends Fragment {
         LinearLayout layoutAvailabilities = view.findViewById(R.id.layoutAvailabilities);
         Button btnReservar = view.findViewById(R.id.btnReservar);
 
-        MapView mapView = view.findViewById(R.id.mapView);
+        mapView = view.findViewById(R.id.mapView);
         Button btnComoLlegar = view.findViewById(R.id.btnComoLlegar);
 
         Configuration.getInstance().setUserAgentValue(requireContext().getPackageName());
@@ -217,5 +220,26 @@ public class ActivityDetailFragment extends Fragment {
                 Log.e(TAG, "onFailure: " + t.getMessage());
             }
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mapView != null) mapView.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (mapView != null) mapView.onPause();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (mapView != null) {
+            mapView.onDetach();
+            mapView = null;
+        }
     }
 }

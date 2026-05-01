@@ -104,4 +104,16 @@
     <string name="detail_availability_row">%1$s — %2$d cupos disponibles</string>
     <string name="detail_como_llegar">Cómo llegar</string>
 
+    <!-- Perfil: resumen de reservas -->
+    <string name="profile_bookings_confirmed">Reservadas: %1$d</string>
+    <string name="profile_bookings_finished">Realizadas: %1$d</string>
+
+    <!-- Items del catálogo (adapter) -->
+    <string name="item_duration_format">Duración: %1$d h</string>
+    <string name="item_price_format">$%1$s</string>
+    <string name="item_slots_format">Cupos disponibles: %1$d</string>
+
+    <!-- Offline -->
+    <string name="offline_banner">Sin conexión — mostrando datos guardados</string>
+
 </resources>
