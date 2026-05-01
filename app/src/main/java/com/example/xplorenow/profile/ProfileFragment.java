@@ -147,6 +147,15 @@ public class ProfileFragment extends Fragment {
                     etUsername.setText(user.getUsername());
                     etPhone.setText(user.getPhone());
 
+                    java.util.List<String> prefs = user.getPreferredCategories();
+                    if (prefs != null) {
+                        cbAventura.setChecked(prefs.contains("adventure"));
+                        cbCultura.setChecked(prefs.contains("guided_tour"));
+                        cbGastronomia.setChecked(prefs.contains("gastronomic"));
+                        cbNaturaleza.setChecked(prefs.contains("excursion"));
+                        cbRelax.setChecked(prefs.contains("free_tour"));
+                    }
+
                     if (user.getProfileImageUrl() != null) {
                         Glide.with(requireContext())
                                 .load(user.getProfileImageUrl())

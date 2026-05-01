@@ -26,7 +26,7 @@ public final class NetworkModule {
 
     @Provides
     @Singleton
-    static OkHttpClient provideOkHttpClient(TokenManager tokenManager) {
+    static OkHttpClient provideOkHttpClient(TokenManager tokenManager, AuthEventBus authEventBus) {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
         return new OkHttpClient.Builder()
@@ -34,17 +34,22 @@ public final class NetworkModule {
                 .addInterceptor(chain -> {
                     Request original = chain.request();
                     String token = tokenManager.getAccessToken();
-                    if (token == null || token.trim().isEmpty()) {
-                        return chain.proceed(original);
+                    Request request = original;
+                    if (token != null && !token.trim().isEmpty()) {
+                        String normalized = token.trim();
+                        if (normalized.regionMatches(true, 0, "Bearer ", 0, 7)) {
+                            normalized = normalized.substring(7).trim();
+                        }
+                        request = original.newBuilder()
+                                .header("Authorization", "Bearer " + normalized)
+                                .build();
                     }
-                    String normalized = token.trim();
-                    if (normalized.regionMatches(true, 0, "Bearer ", 0, 7)) {
-                        normalized = normalized.substring(7).trim();
+                    okhttp3.Response response = chain.proceed(request);
+                    if (response.code() == 401) {
+                        tokenManager.clear();
+                        authEventBus.emitSessionExpired();
                     }
-                    Request authed = original.newBuilder()
-                            .header("Authorization", "Bearer " + normalized)
-                            .build();
-                    return chain.proceed(authed);
+                    return response;
                 })
                 .build();
     }

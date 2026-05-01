@@ -73,7 +73,15 @@ public class HistoryFragment extends Fragment {
 
         toolbar.setNavigationOnClickListener(v -> Navigation.findNavController(view).navigateUp());
 
-        adapter = new HistoryAdapter(item -> mostrarDialogoCalificacion(item.getId(), progressBar, tvError));
+        adapter = new HistoryAdapter(
+                item -> mostrarDialogoCalificacion(item.getId(), progressBar, tvError),
+                item -> {
+                    Bundle args = new Bundle();
+                    args.putInt("activityId", item.getActivityId());
+                    Navigation.findNavController(view).navigate(
+                            R.id.action_history_to_activityDetail, args);
+                }
+        );
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(requireContext());
         rvHistory.setLayoutManager(layoutManager);

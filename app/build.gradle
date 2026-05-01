@@ -58,6 +58,7 @@ dependencies {
     annotationProcessor libs.room.compiler
 
     implementation libs.biometric
+    implementation libs.security.crypto
     implementation 'org.osmdroid:osmdroid-android:6.1.18'
 
     testImplementation libs.junit

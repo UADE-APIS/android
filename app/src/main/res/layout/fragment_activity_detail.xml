@@ -245,14 +245,21 @@
                 android:orientation="vertical"
                 android:visibility="gone" />
 
-            <!-- Botón reservar -->
+            <!-- Botón reservar y favorito -->
             <Button
                 android:id="@+id/btnReservar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:layout_marginBottom="16dp"
                 android:text="@string/btn_reservar" />
+
+            <Button
+                android:id="@+id/btnFavorite"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="16dp"
+                android:text="@string/favorite_toggle" />
 
         </LinearLayout>
 

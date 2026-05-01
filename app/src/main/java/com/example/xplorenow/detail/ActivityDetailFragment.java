@@ -27,6 +27,7 @@ import com.example.xplorenow.data.model.Activity;
 import com.example.xplorenow.data.model.ActivityAvailability;
 import com.example.xplorenow.data.model.ApiResponse;
 import com.example.xplorenow.data.network.ApiService;
+import com.example.xplorenow.data.network.dto.WrappedResponse;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
@@ -87,6 +88,7 @@ public class ActivityDetailFragment extends Fragment {
         TextView tvAvailableDatesLabel = view.findViewById(R.id.tvAvailableDatesLabel);
         LinearLayout layoutAvailabilities = view.findViewById(R.id.layoutAvailabilities);
         Button btnReservar = view.findViewById(R.id.btnReservar);
+        Button btnFavorite = view.findViewById(R.id.btnFavorite);
 
         mapView = view.findViewById(R.id.mapView);
         Button btnComoLlegar = view.findViewById(R.id.btnComoLlegar);
@@ -210,6 +212,27 @@ public class ActivityDetailFragment extends Fragment {
                     args.putInt("activityId", activityId);
                     Navigation.findNavController(view).navigate(R.id.action_activityDetailFragment_to_createBookingFragment, args);
                 });
+
+                updateFavoriteButton(btnFavorite, activity.isFavorited());
+                btnFavorite.setOnClickListener(v -> {
+                    apiService.toggleFavorite(activityId).enqueue(new Callback<WrappedResponse<Void>>() {
+                        @Override
+                        public void onResponse(@NonNull Call<WrappedResponse<Void>> call,
+                                               @NonNull Response<WrappedResponse<Void>> response) {
+                            if (!isAdded()) return;
+                            if (response.isSuccessful()) {
+                                activity.setFavorited(!activity.isFavorited());
+                                updateFavoriteButton(btnFavorite, activity.isFavorited());
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(@NonNull Call<com.example.xplorenow.data.network.dto.WrappedResponse<Void>> call,
+                                              @NonNull Throwable t) {
+                            Log.e(TAG, "onFailure toggleFavorite: " + t.getMessage());
+                        }
+                    });
+                });
             }
 
             @Override
@@ -220,6 +243,12 @@ public class ActivityDetailFragment extends Fragment {
                 Log.e(TAG, "onFailure: " + t.getMessage());
             }
         });
+    }
+
+    private void updateFavoriteButton(Button btn, boolean favorited) {
+        btn.setText(favorited
+                ? getString(R.string.favorites_title)
+                : getString(R.string.favorite_toggle));
     }
 
     @Override

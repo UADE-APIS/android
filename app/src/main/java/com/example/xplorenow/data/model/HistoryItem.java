@@ -7,6 +7,9 @@ public class HistoryItem {
     @SerializedName("id")
     private int id;
 
+    @SerializedName("activity_id")
+    private int activityId;
+
     @SerializedName("activity_title")
     private String activityTitle;
 
@@ -32,6 +35,7 @@ public class HistoryItem {
     private String createdAt;
 
     public int getId() { return id; }
+    public int getActivityId() { return activityId; }
     public String getActivityTitle() { return activityTitle; }
     public String getActivityLocation() { return activityLocation; }
     public int getActivityDuration() { return activityDuration; }
