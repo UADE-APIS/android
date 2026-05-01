@@ -195,18 +195,15 @@ public class ProfileFragment extends Fragment {
                                 break;
 
                             case "FINISHED":
+                            case "CANCELED": // CANCELED también suma a realizadas (actividad ocurrió)
                                 realizadas++;
-                                break;
-
-                            case "CANCELED":
-                                // ignoramos
                                 break;
                         }
                     }
                 }
 
-                tvReservadas.setText("Reservadas: " + reservadas);
-                tvRealizadas.setText("Realizadas: " + realizadas);
+                tvReservadas.setText(getString(R.string.profile_bookings_confirmed, reservadas));
+                tvRealizadas.setText(getString(R.string.profile_bookings_finished, realizadas));
             }
 
             @Override

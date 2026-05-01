@@ -50,6 +50,15 @@ public class ActivitiesAdapter extends RecyclerView.Adapter<ActivitiesAdapter.Ac
         notifyItemRangeInserted(startPosition, newActivities.size());
     }
 
+    /**
+     * Actualiza un único ítem sin redibujar toda la lista.
+     * Llamar desde el Fragment tras un toggle de favorito.
+     */
+    public void notifyActivityChanged(Activity activity) {
+        int index = activities.indexOf(activity);
+        if (index >= 0) notifyItemChanged(index);
+    }
+
     public void clear() {
         this.activities.clear();
         notifyDataSetChanged();
@@ -70,9 +79,9 @@ public class ActivitiesAdapter extends RecyclerView.Adapter<ActivitiesAdapter.Ac
         holder.tvTitle.setText(activity.getTitle());
         holder.tvLocation.setText(activity.getLocation());
         holder.tvCategory.setText(activity.getCategory().toUpperCase().replace("_", " "));
-        holder.tvDuration.setText("Duración: " + activity.getDuration() + "h");
-        holder.tvPrice.setText("$" + activity.getPrice());
-        holder.tvSlots.setText("Cupos disponibles: " + activity.getAvailableSlots());
+        holder.tvDuration.setText(holder.itemView.getContext().getString(R.string.item_duration_format, activity.getDuration()));
+        holder.tvPrice.setText(holder.itemView.getContext().getString(R.string.item_price_format, activity.getPrice()));
+        holder.tvSlots.setText(holder.itemView.getContext().getString(R.string.item_slots_format, activity.getAvailableSlots()));
 
         if (activity.getImages() != null && !activity.getImages().isEmpty()) {
             Glide.with(holder.itemView.getContext())

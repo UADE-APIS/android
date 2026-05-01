@@ -28,6 +28,7 @@ public class DatabaseModule {
     }
 
     @Provides
+    @Singleton
     public CachedBookingDao provideCachedBookingDao(AppDatabase database) {
         return database.cachedBookingDao();
     }

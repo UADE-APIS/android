@@ -341,7 +341,7 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
 
                 if (response.isSuccessful()) {
                     activity.setFavorited(!activity.isFavorited());
-                    adapter.notifyDataSetChanged();
+                    adapter.notifyActivityChanged(activity); // solo redibuja el ítem afectado
                 } else {
                     tvError.setText(getString(R.string.error_http, response.code()));
                     tvError.setVisibility(View.VISIBLE);
