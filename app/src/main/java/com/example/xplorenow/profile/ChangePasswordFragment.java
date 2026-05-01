@@ -1,8 +1,8 @@
 package com.example.xplorenow.profile;
 
 import android.content.res.ColorStateList;
-import android.os.CountDownTimer;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,7 +11,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -29,6 +28,7 @@ import com.example.xplorenow.data.network.dto.RequestOtpRequest;
 import com.example.xplorenow.data.network.dto.WrappedResponse;
 import com.example.xplorenow.data.network.dto.auth.AuthTokensResponse;
 import com.example.xplorenow.data.session.TokenManager;
+import com.google.android.material.snackbar.Snackbar;
 
 import javax.inject.Inject;
 
@@ -40,7 +40,7 @@ import retrofit2.Response;
 @AndroidEntryPoint
 public class ChangePasswordFragment extends Fragment {
 
-    private static final String TAG = "CHANGE_PASSWORD";
+    private static final String TAG = "ChangePasswordFragment";
 
     @Inject
     ApiService apiService;
@@ -58,15 +58,19 @@ public class ChangePasswordFragment extends Fragment {
     private CountDownTimer otpCooldownTimer;
     private ColorStateList defaultSendOtpTint;
 
-    public ChangePasswordFragment() {
-    }
+    public ChangePasswordFragment() {}
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_change_password, container, false);
+        return inflater.inflate(R.layout.fragment_change_password, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         tvOtpHint = view.findViewById(R.id.tvOtpHint);
         etOldPassword = view.findViewById(R.id.etOldPassword);
@@ -85,8 +89,6 @@ public class ChangePasswordFragment extends Fragment {
         btnConfirmChangePassword.setOnClickListener(v -> verifyOtpAndChangePassword());
 
         loadCurrentUserEmail();
-
-        return view;
     }
 
     private void loadCurrentUserEmail() {
@@ -123,7 +125,7 @@ public class ChangePasswordFragment extends Fragment {
 
     private void requestOtp() {
         if (TextUtils.isEmpty(email)) {
-            Toast.makeText(getContext(), R.string.profile_change_password_email_missing, Toast.LENGTH_SHORT).show();
+            Snackbar.make(requireView(), R.string.profile_change_password_email_missing, Snackbar.LENGTH_SHORT).show();
             return;
         }
 
@@ -138,16 +140,16 @@ public class ChangePasswordFragment extends Fragment {
                     return;
                 }
                 if (response.isSuccessful()) {
-                    Toast.makeText(getContext(), R.string.profile_change_password_otp_sent, Toast.LENGTH_SHORT).show();
+                    Snackbar.make(requireView(), R.string.profile_change_password_otp_sent, Snackbar.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(getContext(), getString(R.string.profile_change_password_otp_error, response.code()), Toast.LENGTH_SHORT).show();
+                    Snackbar.make(requireView(), getString(R.string.profile_change_password_otp_error, response.code()), Snackbar.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<WrappedResponse<Void>> call, @NonNull Throwable t) {
                 Log.e(TAG, "Error enviando OTP", t);
-                Toast.makeText(getContext(), R.string.error_connection, Toast.LENGTH_SHORT).show();
+                Snackbar.make(requireView(), R.string.error_connection, Snackbar.LENGTH_SHORT).show();
             }
         });
     }
@@ -199,12 +201,12 @@ public class ChangePasswordFragment extends Fragment {
         String otpCode = etOtpCode.getText().toString().trim();
 
         if (TextUtils.isEmpty(oldPassword) || TextUtils.isEmpty(newPassword) || TextUtils.isEmpty(otpCode)) {
-            Toast.makeText(getContext(), R.string.profile_change_password_fill_all, Toast.LENGTH_SHORT).show();
+            Snackbar.make(requireView(), R.string.profile_change_password_fill_all, Snackbar.LENGTH_SHORT).show();
             return;
         }
 
         if (TextUtils.isEmpty(email)) {
-            Toast.makeText(getContext(), R.string.profile_change_password_email_missing, Toast.LENGTH_SHORT).show();
+            Snackbar.make(requireView(), R.string.profile_change_password_email_missing, Snackbar.LENGTH_SHORT).show();
             return;
         }
 
@@ -218,7 +220,7 @@ public class ChangePasswordFragment extends Fragment {
                             return;
                         }
                         if (!response.isSuccessful() || response.body() == null || response.body().getData() == null) {
-                            Toast.makeText(getContext(), getString(R.string.profile_change_password_invalid_otp, response.code()), Toast.LENGTH_SHORT).show();
+                            Snackbar.make(requireView(), getString(R.string.profile_change_password_invalid_otp, response.code()), Snackbar.LENGTH_SHORT).show();
                             return;
                         }
 
@@ -233,7 +235,7 @@ public class ChangePasswordFragment extends Fragment {
                     @Override
                     public void onFailure(@NonNull Call<WrappedResponse<AuthTokensResponse>> call, @NonNull Throwable t) {
                         Log.e(TAG, "Error verificando OTP", t);
-                        Toast.makeText(getContext(), R.string.error_connection, Toast.LENGTH_SHORT).show();
+                        Snackbar.make(requireView(), R.string.error_connection, Snackbar.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -250,7 +252,7 @@ public class ChangePasswordFragment extends Fragment {
                     return;
                 }
                 if (response.isSuccessful()) {
-                    Toast.makeText(getContext(), R.string.profile_change_password_success, Toast.LENGTH_SHORT).show();
+                    Snackbar.make(requireView(), R.string.profile_change_password_success, Snackbar.LENGTH_SHORT).show();
                     NavHostFragment.findNavController(ChangePasswordFragment.this).navigateUp();
                 } else {
                     String detail = "";
@@ -263,25 +265,22 @@ public class ChangePasswordFragment extends Fragment {
                     if (!detail.isEmpty()) {
                         msg = msg + " " + detail;
                     }
-                    Toast.makeText(getContext(), msg, Toast.LENGTH_LONG).show();
+                    Snackbar.make(requireView(), msg, Snackbar.LENGTH_LONG).show();
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<WrappedResponse<Void>> call, @NonNull Throwable t) {
                 Log.e(TAG, "Error cambiando contraseña", t);
-                Toast.makeText(getContext(), R.string.error_connection, Toast.LENGTH_SHORT).show();
+                Snackbar.make(requireView(), R.string.error_connection, Snackbar.LENGTH_SHORT).show();
             }
         });
     }
 
     private void handleUnauthorized() {
         tokenManager.clear();
-        if (!isAdded()) {
-            return;
-        }
-        Toast.makeText(getContext(), "Sesión vencida. Iniciá sesión de nuevo.", Toast.LENGTH_SHORT).show();
+        if (!isAdded()) return;
+        Snackbar.make(requireView(), R.string.session_expired, Snackbar.LENGTH_SHORT).show();
         NavHostFragment.findNavController(this).navigate(R.id.authStartFragment);
     }
 }
-

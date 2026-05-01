@@ -21,7 +21,6 @@
             android:id="@+id/action_authStart_to_requestOtp"
             app:destination="@id/requestOtpFragment" />
 
-        <!-- BUG-03: acción para acceder al login por OTP -->
         <action
             android:id="@+id/action_authStart_to_loginEmail"
             app:destination="@id/loginEmailFragment" />
@@ -82,10 +81,6 @@
             app:popUpToInclusive="true" />
     </fragment>
 
-    <!-- BUG-05: homeFragment y profileFragment ELIMINADOS de acá.
-         Ahora viven SOLO en nav_graph.xml. Las actions de arriba
-         siguen apuntando a @id/homeFragment — se resuelve en nav_graph. -->
-
     <fragment
         android:id="@+id/requestOtpFragment"
         android:name="com.example.xplorenow.auth.RequestOtpFragment"
@@ -124,7 +119,6 @@
             app:argType="string"
             android:defaultValue="" />
 
-        <!-- BUG-01: ya no va a Home (sin tokens), vuelve a AuthStart con flag de éxito -->
         <action
             android:id="@+id/action_register_to_authStart"
             app:destination="@id/authStartFragment"

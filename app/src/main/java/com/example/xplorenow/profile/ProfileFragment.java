@@ -5,33 +5,31 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Button;
-import android.widget.Toast;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.navigation.NavOptions;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.bumptech.glide.Glide;
 import com.example.xplorenow.R;
 import com.example.xplorenow.data.model.ApiResponse;
-import com.example.xplorenow.data.model.User;
 import com.example.xplorenow.data.model.Booking;
+import com.example.xplorenow.data.model.User;
 import com.example.xplorenow.data.network.ApiService;
 import com.example.xplorenow.data.network.dto.MeResponseData;
 import com.example.xplorenow.data.network.dto.UpdateProfileRequest;
 import com.example.xplorenow.data.network.dto.WrappedResponse;
 import com.example.xplorenow.data.session.TokenManager;
+import com.google.android.material.snackbar.Snackbar;
 
-import android.widget.CheckBox;
 import java.util.ArrayList;
 import java.util.List;
-
-import android.widget.ImageView;
-import com.bumptech.glide.Glide;
 
 import javax.inject.Inject;
 
@@ -43,7 +41,7 @@ import retrofit2.Response;
 @AndroidEntryPoint
 public class ProfileFragment extends Fragment {
 
-    private static final String TAG = "PROFILE_DEBUG";
+    private static final String TAG = "ProfileFragment";
 
     @Inject
     ApiService apiService;
@@ -54,11 +52,8 @@ public class ProfileFragment extends Fragment {
     private ImageView ivProfileImage;
     private TextView tvName, tvEmail, tvUsername, tvPhone;
     private EditText etFirstName, etLastName, etUsername, etPhone;
-
     private Button btnSave, btnEditProfile;
-
     private View editContainer;
-
     private CheckBox cbAventura, cbCultura, cbGastronomia, cbNaturaleza, cbRelax;
     private TextView tvReservadas, tvRealizadas;
 
@@ -68,8 +63,12 @@ public class ProfileFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_profile, container, false);
+    }
 
-        View view = inflater.inflate(R.layout.fragment_profile, container, false);
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         cbAventura = view.findViewById(R.id.cbAventura);
         cbCultura = view.findViewById(R.id.cbCultura);
@@ -109,8 +108,6 @@ public class ProfileFragment extends Fragment {
 
         setupSaveButton();
         loadProfile();
-
-        return view;
     }
 
     private void loadProfile() {
@@ -147,7 +144,7 @@ public class ProfileFragment extends Fragment {
                     etUsername.setText(user.getUsername());
                     etPhone.setText(user.getPhone());
 
-                    java.util.List<String> prefs = user.getPreferredCategories();
+                    List<String> prefs = user.getPreferredCategories();
                     if (prefs != null) {
                         cbAventura.setChecked(prefs.contains("adventure"));
                         cbCultura.setChecked(prefs.contains("guided_tour"));
@@ -195,16 +192,13 @@ public class ProfileFragment extends Fragment {
 
                 if (bookings != null) {
                     for (Booking b : bookings) {
-
                         if (b == null || b.getStatus() == null) continue;
-
                         switch (b.getStatus()) {
                             case "CONFIRMED":
                                 reservadas++;
                                 break;
-
                             case "FINISHED":
-                            case "CANCELED": // CANCELED también suma a realizadas (actividad ocurrió)
+                            case "CANCELED":
                                 realizadas++;
                                 break;
                         }
@@ -251,14 +245,14 @@ public class ProfileFragment extends Fragment {
                     }
 
                     if (response.isSuccessful()) {
-                        Toast.makeText(getContext(), "Perfil actualizado", Toast.LENGTH_SHORT).show();
+                        Snackbar.make(requireView(), getString(R.string.profile_save_success), Snackbar.LENGTH_SHORT).show();
                         toggleEditMode(false);
                     }
                 }
 
                 @Override
                 public void onFailure(Call<WrappedResponse<MeResponseData>> call, Throwable t) {
-                    Toast.makeText(getContext(), "Error", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(requireView(), getString(R.string.error_connection), Snackbar.LENGTH_SHORT).show();
                 }
             });
         });

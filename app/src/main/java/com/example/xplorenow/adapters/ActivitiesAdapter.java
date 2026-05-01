@@ -22,7 +22,6 @@ public class ActivitiesAdapter extends RecyclerView.Adapter<ActivitiesAdapter.Ac
     private final OnActivityClickListener listener;
     private OnFavoriteClickListener favoriteListener;
 
-    // Interfaces dentro del Adapter (Regla 25)
     public interface OnActivityClickListener {
         void onActivityClick(Activity activity);
     }
@@ -50,10 +49,6 @@ public class ActivitiesAdapter extends RecyclerView.Adapter<ActivitiesAdapter.Ac
         notifyItemRangeInserted(startPosition, newActivities.size());
     }
 
-    /**
-     * Actualiza un único ítem sin redibujar toda la lista.
-     * Llamar desde el Fragment tras un toggle de favorito.
-     */
     public void notifyActivityChanged(Activity activity) {
         int index = activities.indexOf(activity);
         if (index >= 0) notifyItemChanged(index);
@@ -67,7 +62,6 @@ public class ActivitiesAdapter extends RecyclerView.Adapter<ActivitiesAdapter.Ac
     @NonNull
     @Override
     public ActivityViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Sin View Binding (Regla 22)
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_activity, parent, false);
         return new ActivityViewHolder(view);
     }
@@ -98,8 +92,6 @@ public class ActivitiesAdapter extends RecyclerView.Adapter<ActivitiesAdapter.Ac
                         : android.R.drawable.btn_star_big_off
         );
 
-        // Click en vistas individuales solo si es necesario (favorito), 
-        // pero el principal va en itemView (Regla 24)
         holder.ivFavorite.setOnClickListener(v -> {
             if (favoriteListener != null) {
                 favoriteListener.onFavoriteClick(activity);
@@ -115,7 +107,6 @@ public class ActivitiesAdapter extends RecyclerView.Adapter<ActivitiesAdapter.Ac
     }
 
     static class ActivityViewHolder extends RecyclerView.ViewHolder {
-        // Campos de clase para el ViewHolder (Regla 23)
         final ImageView ivActivityImage;
         final ImageView ivFavorite;
         final TextView tvTitle;
@@ -127,7 +118,6 @@ public class ActivitiesAdapter extends RecyclerView.Adapter<ActivitiesAdapter.Ac
 
         public ActivityViewHolder(@NonNull View itemView) {
             super(itemView);
-            // findViewById SOLO en el constructor (Regla 23)
             ivActivityImage = itemView.findViewById(R.id.ivActivityImage);
             ivFavorite = itemView.findViewById(R.id.ivFavorite);
             tvTitle = itemView.findViewById(R.id.tvTitle);
