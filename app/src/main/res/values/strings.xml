@@ -113,6 +113,9 @@
     <string name="item_price_format">$%1$s</string>
     <string name="item_slots_format">Cupos disponibles: %1$d</string>
 
+    <string name="profile_save_success">Perfil actualizado</string>
+    <string name="session_expired">Sesión vencida. Iniciá sesión de nuevo.</string>
+
     <!-- Offline -->
     <string name="offline_banner">Sin conexión — mostrando datos guardados</string>
 
