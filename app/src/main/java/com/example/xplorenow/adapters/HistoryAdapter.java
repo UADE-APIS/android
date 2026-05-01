@@ -38,12 +38,19 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
         }
     }
 
+    private final OnItemClickListener itemListener;
+
     public interface OnHistoryClickListener {
         void onReviewClick(HistoryItem item);
     }
 
-    public HistoryAdapter(OnHistoryClickListener listener) {
+    public interface OnItemClickListener {
+        void onItemClick(HistoryItem item);
+    }
+
+    public HistoryAdapter(OnHistoryClickListener listener, OnItemClickListener itemListener) {
         this.listener = listener;
+        this.itemListener = itemListener;
     }
 
     public void setItems(List<HistoryItem> items) {
@@ -67,6 +74,13 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
             int position = holder.getAdapterPosition();
             if (position != RecyclerView.NO_POSITION && listener != null) {
                 listener.onReviewClick(items.get(position));
+            }
+        });
+
+        holder.itemView.setOnClickListener(v -> {
+            int position = holder.getAdapterPosition();
+            if (position != RecyclerView.NO_POSITION && itemListener != null) {
+                itemListener.onItemClick(items.get(position));
             }
         });
 

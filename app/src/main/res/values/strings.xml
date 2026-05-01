@@ -116,4 +116,10 @@
     <!-- Offline -->
     <string name="offline_banner">Sin conexión — mostrando datos guardados</string>
 
+    <!-- Navegación inferior -->
+    <string name="nav_explore">Explorar</string>
+    <string name="nav_bookings">Reservas</string>
+    <string name="nav_favorites">Favoritos</string>
+    <string name="nav_profile">Perfil</string>
+
 </resources>

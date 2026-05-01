@@ -102,7 +102,7 @@ public class AuthStartFragment extends Fragment {
         if (canAuth != BiometricManager.BIOMETRIC_SUCCESS) {
             tokenManager.setBiometricEnabled(false);
             Log.w(TAG, "Biometric not available, fallback to password. Code: " + canAuth);
-            showLoginForm(rootView); // CORRECCIÓN 2
+            showLoginForm(rootView);
             return;
         }
 
@@ -201,24 +201,16 @@ public class AuthStartFragment extends Fragment {
 
     private void offerBiometricEnrollment(View rootView) {
         if (!isAdded()) return;
-
-        int canAuth = BiometricManager.from(requireContext())
-                .canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG
-                        | BiometricManager.Authenticators.DEVICE_CREDENTIAL);
-
-        if (canAuth != BiometricManager.BIOMETRIC_SUCCESS) {
-            navigateToHome(rootView);
-            return;
-        }
-
         new AlertDialog.Builder(requireContext())
                 .setTitle(getString(R.string.biometric_enable_title))
                 .setMessage(getString(R.string.biometric_enable_message))
                 .setPositiveButton(android.R.string.yes, (dialog, which) -> {
                     tokenManager.setBiometricEnabled(true);
+                    tokenManager.saveEncryptedToken(tokenManager.getAccessToken());
                     navigateToHome(rootView);
                 })
                 .setNegativeButton(android.R.string.no, (dialog, which) -> navigateToHome(rootView))
+                .setCancelable(false)
                 .show();
     }
 
