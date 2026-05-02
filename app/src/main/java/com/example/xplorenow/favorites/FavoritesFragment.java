@@ -159,6 +159,8 @@ public class FavoritesFragment extends Fragment implements ActivitiesAdapter.OnA
 
     @Override
     public void onActivityClick(Activity activity) {
-        // navegación a detalle cuando Persona A lo implemente
+        Bundle args = new Bundle();
+        args.putInt("activityId", activity.getId());
+        Navigation.findNavController(requireView()).navigate(R.id.action_favorites_to_activityDetail, args);
     }
 }

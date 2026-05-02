@@ -114,7 +114,12 @@
         android:id="@+id/favoritesFragment"
         android:name="com.example.xplorenow.favorites.FavoritesFragment"
         android:label="Favoritos"
-        tools:layout="@layout/fragment_favorites" />
+        tools:layout="@layout/fragment_favorites">
+
+        <action
+            android:id="@+id/action_favorites_to_activityDetail"
+            app:destination="@id/activityDetailFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/newsFragment"
