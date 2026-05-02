@@ -9,6 +9,7 @@ import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -115,7 +116,11 @@ public class LoginClassicFragment extends Fragment {
                         AuthTokensResponse tokens = response.body().getData();
                         tokenManager.saveTokens(tokens.access, tokens.refresh);
 
-                        navigateToHome(rootView);
+                        if (!tokenManager.hasAskedBiometric() && !tokenManager.isBiometricEnabled()) {
+                            offerBiometricEnrollment(rootView);
+                        } else {
+                            navigateToHome(rootView);
+                        }
                     }
 
                     @Override
@@ -128,6 +133,25 @@ public class LoginClassicFragment extends Fragment {
     }
 
 
+
+    private void offerBiometricEnrollment(View rootView) {
+        if (!isAdded()) return;
+        new AlertDialog.Builder(requireContext())
+                .setTitle(getString(R.string.biometric_enable_title))
+                .setMessage(getString(R.string.biometric_enable_message))
+                .setPositiveButton(android.R.string.yes, (dialog, which) -> {
+                    tokenManager.setBiometricEnabled(true);
+                    tokenManager.setAskedBiometric(true);
+                    navigateToHome(rootView);
+                })
+                .setNegativeButton(android.R.string.no, (dialog, which) -> {
+                    tokenManager.setBiometricEnabled(false);
+                    tokenManager.setAskedBiometric(true);
+                    navigateToHome(rootView);
+                })
+                .setCancelable(false)
+                .show();
+    }
 
     private void navigateToHome(View rootView) {
         rootView.post(() -> {

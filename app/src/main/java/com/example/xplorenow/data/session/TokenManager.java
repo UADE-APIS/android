@@ -17,6 +17,8 @@ public class TokenManager {
     private static final String PREFS_NAME = "auth_tokens";
     private static final String KEY_ACCESS = "access_token";
     private static final String KEY_REFRESH = "refresh_token";
+    private static final String KEY_BIOMETRIC = "biometric_enabled";
+    private static final String KEY_BIOMETRIC_ASKED = "biometric_asked";
 
     private static final String ENCRYPTED_PREFS_NAME = "auth_tokens_enc";
     private static final String KEY_ENCRYPTED_ACCESS = "encrypted_access_token";
@@ -50,12 +52,30 @@ public class TokenManager {
         return t != null && !t.trim().isEmpty();
     }
 
+    public boolean isBiometricEnabled() {
+        return prefs.getBoolean(KEY_BIOMETRIC, false);
+    }
+
+    public void setBiometricEnabled(boolean enabled) {
+        prefs.edit().putBoolean(KEY_BIOMETRIC, enabled).apply();
+    }
+
+    public boolean hasAskedBiometric() {
+        return prefs.getBoolean(KEY_BIOMETRIC_ASKED, false);
+    }
+
+    public void setAskedBiometric(boolean asked) {
+        prefs.edit().putBoolean(KEY_BIOMETRIC_ASKED, asked).apply();
+    }
+
 
 
     public void clear() {
         prefs.edit()
                 .remove(KEY_ACCESS)
                 .remove(KEY_REFRESH)
+                .remove(KEY_BIOMETRIC)
+                .remove(KEY_BIOMETRIC_ASKED)
                 .apply();
     }
 

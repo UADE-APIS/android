@@ -88,9 +88,6 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
         }
 
         view.findViewById(R.id.fabFilter).setOnClickListener(v -> showFilterDialog(view, progressBar));
-        view.findViewById(R.id.btnBiometric).setOnClickListener(v -> 
-            Navigation.findNavController(view).navigate(R.id.action_home_to_biometric)
-        );
 
         setupRecyclerView(rvActivities, progressBar, view);
         fetchActivities(1, progressBar, view);
