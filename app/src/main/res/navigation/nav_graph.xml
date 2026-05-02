@@ -46,10 +46,6 @@
         <action
             android:id="@+id/action_home_to_activityDetail"
             app:destination="@id/activityDetailFragment" />
-
-        <action
-            android:id="@+id/action_home_to_biometric"
-            app:destination="@id/biometricFragment" />
     </fragment>
 
     <fragment
@@ -142,11 +138,5 @@
             app:argType="integer"
             android:defaultValue="-1" />
     </fragment>
-
-    <fragment
-        android:id="@+id/biometricFragment"
-        android:name="com.example.xplorenow.biometric.BiometricFragment"
-        android:label="Biometría"
-        tools:layout="@layout/fragment_biometric" />
 
 </navigation>

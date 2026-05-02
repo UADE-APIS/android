@@ -10,6 +10,9 @@ import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.biometric.BiometricManager;
+import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -72,6 +75,11 @@ public class AuthStartFragment extends Fragment {
         tilPassword = view.findViewById(R.id.tilPassword);
         progress = view.findViewById(R.id.progress);
 
+        if (tokenManager.isLoggedIn() && tokenManager.isBiometricEnabled()) {
+            tryBiometricLogin(view);
+            return;
+        }
+
         if (tokenManager.isLoggedIn()) {
             view.post(() -> {
                 if (!isAdded()) return;
@@ -91,7 +99,59 @@ public class AuthStartFragment extends Fragment {
                 Navigation.findNavController(view).navigate(R.id.action_authStart_to_loginEmail));
     }
 
+    private void tryBiometricLogin(View rootView) {
+        int canAuth = BiometricManager.from(requireContext())
+                .canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG
+                        | BiometricManager.Authenticators.DEVICE_CREDENTIAL);
 
+        if (canAuth != BiometricManager.BIOMETRIC_SUCCESS) {
+            tokenManager.setBiometricEnabled(false);
+            Log.w(TAG, "Biometric not available, fallback to password. Code: " + canAuth);
+            showLoginForm(rootView);
+            return;
+        }
+
+        Executor executor = ContextCompat.getMainExecutor(requireContext());
+
+        BiometricPrompt biometricPrompt = new BiometricPrompt(this, executor,
+                new BiometricPrompt.AuthenticationCallback() {
+                    @Override
+                    public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
+                        super.onAuthenticationSucceeded(result);
+                        if (!isAdded()) return;
+                        Navigation.findNavController(rootView).navigate(R.id.action_authStart_to_home);
+                    }
+
+                    @Override
+                    public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
+                        super.onAuthenticationError(errorCode, errString);
+                        showLoginForm(rootView);
+                    }
+
+                    @Override
+                    public void onAuthenticationFailed() {
+                        super.onAuthenticationFailed();
+                    }
+                });
+
+        BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
+                .setTitle(getString(R.string.biometric_prompt_title))
+                .setSubtitle(getString(R.string.biometric_prompt_subtitle))
+                .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG
+                        | BiometricManager.Authenticators.DEVICE_CREDENTIAL)
+                .build();
+
+        biometricPrompt.authenticate(promptInfo);
+    }
+
+    private void showLoginForm(View view) {
+        if (!isAdded()) return;
+        view.findViewById(R.id.btnIngresar).setOnClickListener(v -> doLogin(view));
+        view.findViewById(R.id.btnRegister).setOnClickListener(v ->
+                Navigation.findNavController(view).navigate(R.id.action_authStart_to_requestOtp));
+        view.findViewById(R.id.btnLoginOtp).setOnClickListener(v ->
+                Navigation.findNavController(view).navigate(R.id.action_authStart_to_loginEmail));
+    }
 
     private void doLogin(View rootView) {
         tilEmail.setError(null);
@@ -135,7 +195,11 @@ public class AuthStartFragment extends Fragment {
                         AuthTokensResponse tokens = response.body().getData();
                         tokenManager.saveTokens(tokens.access, tokens.refresh);
 
-                        navigateToHome(rootView);
+                        if (!tokenManager.hasAskedBiometric() && !tokenManager.isBiometricEnabled()) {
+                            offerBiometricEnrollment(rootView);
+                        } else {
+                            navigateToHome(rootView);
+                        }
                     }
 
                     @Override
@@ -150,6 +214,25 @@ public class AuthStartFragment extends Fragment {
     }
 
 
+
+    private void offerBiometricEnrollment(View rootView) {
+        if (!isAdded()) return;
+        new AlertDialog.Builder(requireContext())
+                .setTitle(getString(R.string.biometric_enable_title))
+                .setMessage(getString(R.string.biometric_enable_message))
+                .setPositiveButton(android.R.string.yes, (dialog, which) -> {
+                    tokenManager.setBiometricEnabled(true);
+                    tokenManager.setAskedBiometric(true);
+                    navigateToHome(rootView);
+                })
+                .setNegativeButton(android.R.string.no, (dialog, which) -> {
+                    tokenManager.setBiometricEnabled(false);
+                    tokenManager.setAskedBiometric(true);
+                    navigateToHome(rootView);
+                })
+                .setCancelable(false)
+                .show();
+    }
 
     private void navigateToHome(View rootView) {
         rootView.post(() -> {

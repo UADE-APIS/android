@@ -72,6 +72,8 @@ public class MyBookingsFragment extends Fragment {
     }
 
     private void loadBookings(BookingsAdapter adapter, ProgressBar progressBar, TextView tvError) {
+        TextView tvEmpty = getView() != null ? getView().findViewById(R.id.tvEmpty) : null;
+        if (tvEmpty != null) tvEmpty.setVisibility(View.GONE);
         progressBar.setVisibility(View.VISIBLE);
         tvError.setVisibility(View.GONE);
 
@@ -85,6 +87,9 @@ public class MyBookingsFragment extends Fragment {
                     List<Booking> bookings = response.body().getData();
                     if (bookings != null) {
                         adapter.setBookings(bookings);
+                        if (tvEmpty != null) {
+                            tvEmpty.setVisibility(bookings.isEmpty() ? View.VISIBLE : View.GONE);
+                        }
                     }
                 } else {
                     tvError.setText(getString(R.string.error_http, response.code()));
