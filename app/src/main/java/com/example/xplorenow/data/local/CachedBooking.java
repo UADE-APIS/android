@@ -18,10 +18,12 @@ public class CachedBooking {
     private String voucherCode;
     /** Cantidad de participantes (req. 19) */
     private int quantity;
+    /** ID de la actividad para navegar al detalle en modo offline (req. 18) */
+    private int activityId;
 
     public CachedBooking(@NonNull String id, String activityTitle, String date,
                          String meetingPoint, String status, String activityImageUrl,
-                         String voucherCode, int quantity) {
+                         String voucherCode, int quantity, int activityId) {
         this.id = id;
         this.activityTitle = activityTitle;
         this.date = date;
@@ -30,6 +32,7 @@ public class CachedBooking {
         this.activityImageUrl = activityImageUrl;
         this.voucherCode = voucherCode;
         this.quantity = quantity;
+        this.activityId = activityId;
     }
 
     @NonNull
@@ -56,4 +59,7 @@ public class CachedBooking {
 
     public int getQuantity() { return quantity; }
     public void setQuantity(int quantity) { this.quantity = quantity; }
+
+    public int getActivityId() { return activityId; }
+    public void setActivityId(int activityId) { this.activityId = activityId; }
 }
