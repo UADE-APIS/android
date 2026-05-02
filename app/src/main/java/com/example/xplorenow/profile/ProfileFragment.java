@@ -96,8 +96,6 @@ public class ProfileFragment extends Fragment {
 
         editContainer = view.findViewById(R.id.editContainer);
 
-        view.findViewById(R.id.btnBack).setOnClickListener(v ->
-                NavHostFragment.findNavController(this).navigateUp());
 
         btnEditProfile.setOnClickListener(v ->
                 toggleEditMode(editContainer.getVisibility() != View.VISIBLE));

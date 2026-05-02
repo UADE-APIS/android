@@ -45,7 +45,6 @@ public class NewsDetailFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        MaterialToolbar toolbar = view.findViewById(R.id.toolbar);
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
         TextView tvError = view.findViewById(R.id.tvError);
         ImageView ivImage = view.findViewById(R.id.ivImage);
@@ -54,7 +53,7 @@ public class NewsDetailFragment extends Fragment {
         TextView tvDescription = view.findViewById(R.id.tvDescription);
         TextView tvRelatedActivity = view.findViewById(R.id.tvRelatedActivity);
 
-        toolbar.setNavigationOnClickListener(v -> Navigation.findNavController(view).navigateUp());
+
 
         int newsId = -1;
         if (getArguments() != null) {

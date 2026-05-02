@@ -70,12 +70,6 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
-            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            int dp8 = Math.round(8 * getResources().getDisplayMetrics().density);
-            v.setPadding(dp8 + bars.left, bars.top, dp8 + bars.right, bars.bottom);
-            return insets;
-        });
 
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
         RecyclerView rvActivities = view.findViewById(R.id.rvActivities);
