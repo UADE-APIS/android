@@ -28,8 +28,15 @@ import com.example.xplorenow.data.network.ApiService;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -43,6 +50,7 @@ import retrofit2.Response;
 public class MyBookingsFragment extends Fragment {
 
     private static final String TAG = "MyBookingsFragment";
+    private static final int BOOKINGS_PAGE_SIZE = 1000;
 
     @Inject ApiService apiService;
 
@@ -97,19 +105,21 @@ public class MyBookingsFragment extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
         tvError.setVisibility(View.GONE);
 
-        apiService.getMyBookings(currentFilters).enqueue(new Callback<BookingsListResponse>() {
+        Map<String, String> requestQuery = new HashMap<>();
+        requestQuery.put("page", "1");
+        requestQuery.put("page_size", String.valueOf(BOOKINGS_PAGE_SIZE));
+
+        apiService.getMyBookings(requestQuery).enqueue(new Callback<BookingsListResponse>() {
             @Override
             public void onResponse(@NonNull Call<BookingsListResponse> call,
                                    @NonNull Response<BookingsListResponse> response) {
                 progressBar.setVisibility(View.GONE);
 
                 if (response.isSuccessful() && response.body() != null) {
-                    List<Booking> bookings = response.body().getResults();
-                    if (bookings != null) {
-                        adapter.setBookings(bookings);
-                        if (tvEmpty != null) {
-                            tvEmpty.setVisibility(bookings.isEmpty() ? View.VISIBLE : View.GONE);
-                        }
+                    List<Booking> bookings = applyFilters(response.body().getResults());
+                    adapter.setBookings(bookings);
+                    if (tvEmpty != null) {
+                        tvEmpty.setVisibility(bookings.isEmpty() ? View.VISIBLE : View.GONE);
                     }
                 } else {
                     tvError.setText(getString(R.string.error_http, response.code()));
@@ -126,6 +136,158 @@ public class MyBookingsFragment extends Fragment {
                 Log.e(TAG, "onFailure: " + t.getMessage());
             }
         });
+    }
+
+    private List<Booking> applyFilters(List<Booking> source) {
+        List<Booking> filtered = new ArrayList<>();
+        if (source == null) {
+            return filtered;
+        }
+
+        String nameFilter = normalize(currentFilters.get("name"));
+        String locationFilter = normalize(currentFilters.get("destination"));
+        String guideFilter = normalize(currentFilters.get("guide"));
+        String durationFilter = normalize(currentFilters.get("duration"));
+        LocalDate exactDate = parseDate(currentFilters.get("date"));
+        LocalDate fromDate = parseDate(currentFilters.get("date_from"));
+        LocalDate toDate = parseDate(currentFilters.get("date_to"));
+
+        for (Booking booking : source) {
+            if (booking == null) {
+                continue;
+            }
+
+            if (!nameFilter.isEmpty() && !containsIgnoreCase(getActivityTitle(booking), nameFilter)) {
+                continue;
+            }
+            if (!locationFilter.isEmpty() && !containsIgnoreCase(getActivityLocation(booking), locationFilter)) {
+                continue;
+            }
+            if (!guideFilter.isEmpty() && !containsIgnoreCase(getAssignedGuide(booking), guideFilter)) {
+                continue;
+            }
+            if (!durationFilter.isEmpty() && !containsIgnoreCase(getActivityDuration(booking), durationFilter)) {
+                continue;
+            }
+
+            LocalDate bookingDate = extractBookingDate(booking);
+            if (exactDate != null && (bookingDate == null || !bookingDate.equals(exactDate))) {
+                continue;
+            }
+            if (fromDate != null && (bookingDate == null || bookingDate.isBefore(fromDate))) {
+                continue;
+            }
+            if (toDate != null && (bookingDate == null || bookingDate.isAfter(toDate))) {
+                continue;
+            }
+
+            filtered.add(booking);
+        }
+
+        sortBookings(filtered, currentFilters.get("ordering"));
+        return filtered;
+    }
+
+    private void sortBookings(List<Booking> bookings, String ordering) {
+        if (bookings == null || bookings.size() < 2) {
+            return;
+        }
+
+        Comparator<Booking> comparator;
+        if ("created_at".equals(ordering)) {
+            comparator = Comparator.comparing(this::extractCreationDateTime,
+                    Comparator.nullsLast(Comparator.naturalOrder()));
+        } else if ("activity__duration".equals(ordering)) {
+            comparator = Comparator.comparingInt(this::extractDurationValue);
+        } else if ("activity__name".equals(ordering)) {
+            comparator = Comparator.comparing(this::getActivityTitle,
+                    String.CASE_INSENSITIVE_ORDER);
+        } else {
+            comparator = Comparator.comparing(this::extractCreationDateTime,
+                    Comparator.nullsLast(Comparator.reverseOrder()));
+        }
+
+        Collections.sort(bookings, comparator);
+    }
+
+    private String getActivityTitle(Booking booking) {
+        return booking.getActivityDetail() != null && booking.getActivityDetail().getTitle() != null
+                ? booking.getActivityDetail().getTitle()
+                : "";
+    }
+
+    private String getActivityLocation(Booking booking) {
+        if (booking.getActivityDetail() == null) {
+            return "";
+        }
+
+        String location = booking.getActivityDetail().getLocation();
+        if (location != null && !location.trim().isEmpty()) {
+            return location;
+        }
+
+        String meetingPoint = booking.getActivityDetail().getMeetingPoint();
+        return meetingPoint != null ? meetingPoint : "";
+    }
+
+    private String getAssignedGuide(Booking booking) {
+        return booking.getActivityDetail() != null && booking.getActivityDetail().getAssignedGuide() != null
+                ? booking.getActivityDetail().getAssignedGuide()
+                : "";
+    }
+
+    private String getActivityDuration(Booking booking) {
+        return booking.getActivityDetail() != null
+                ? String.valueOf(booking.getActivityDetail().getDuration())
+                : "";
+    }
+
+    private int extractDurationValue(Booking booking) {
+        return booking.getActivityDetail() != null ? booking.getActivityDetail().getDuration() : Integer.MAX_VALUE;
+    }
+
+    private OffsetDateTime extractCreationDateTime(Booking booking) {
+        String createdAt = booking != null ? booking.getCreatedAt() : null;
+        if (createdAt == null || createdAt.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            return OffsetDateTime.parse(createdAt);
+        } catch (DateTimeParseException e) {
+            Log.w(TAG, "Fecha de creación inválida: " + createdAt);
+            return null;
+        }
+    }
+
+    private LocalDate extractBookingDate(Booking booking) {
+        return parseDate(booking != null ? booking.getDate() : null);
+    }
+
+    private LocalDate parseDate(String rawValue) {
+        if (rawValue == null) {
+            return null;
+        }
+
+        String trimmed = rawValue.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+
+        String candidate = trimmed.length() >= 10 ? trimmed.substring(0, 10) : trimmed;
+        try {
+            return LocalDate.parse(candidate);
+        } catch (DateTimeParseException ignored) {
+            return null;
+        }
+    }
+
+    private boolean containsIgnoreCase(String value, String filter) {
+        return normalize(value).contains(filter);
+    }
+
+    private String normalize(String value) {
+        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
     }
 
     private void mostrarDialogoFiltros(ProgressBar progressBar, TextView tvError) {
