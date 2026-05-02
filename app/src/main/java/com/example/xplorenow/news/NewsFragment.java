@@ -58,12 +58,11 @@ public class NewsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        MaterialToolbar toolbar = view.findViewById(R.id.toolbar);
         TextView tvError = view.findViewById(R.id.tvError);
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
         RecyclerView rvNews = view.findViewById(R.id.rvNews);
 
-        toolbar.setNavigationOnClickListener(v -> Navigation.findNavController(view).navigateUp());
+
 
         adapter = new NewsAdapter(news -> {
             Bundle args = new Bundle();

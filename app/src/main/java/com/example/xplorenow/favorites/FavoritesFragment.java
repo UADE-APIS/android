@@ -56,12 +56,11 @@ public class FavoritesFragment extends Fragment implements ActivitiesAdapter.OnA
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        MaterialToolbar toolbar = view.findViewById(R.id.toolbar);
         TextView tvError = view.findViewById(R.id.tvError);
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
         RecyclerView rvFavorites = view.findViewById(R.id.rvFavorites);
 
-        toolbar.setNavigationOnClickListener(v -> Navigation.findNavController(view).navigateUp());
+
 
         adapter = new ActivitiesAdapter(this);
         adapter.setOnFavoriteClickListener(activity -> toggleFavorite(activity, progressBar, tvError));

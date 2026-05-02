@@ -66,12 +66,11 @@ public class HistoryFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        MaterialToolbar toolbar = view.findViewById(R.id.toolbar);
         TextView tvError = view.findViewById(R.id.tvError);
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
         RecyclerView rvHistory = view.findViewById(R.id.rvHistory);
 
-        toolbar.setNavigationOnClickListener(v -> Navigation.findNavController(view).navigateUp());
+
 
         adapter = new HistoryAdapter(
                 item -> mostrarDialogoCalificacion(item.getId(), progressBar, tvError),

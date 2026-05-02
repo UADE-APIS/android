@@ -61,10 +61,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void applyWindowInsets() {
-        MaterialToolbar toolbar = findViewById(R.id.toolbar);
+        View appbar = findViewById(R.id.appbar);
         BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
 
-        ViewCompat.setOnApplyWindowInsetsListener(toolbar, (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(appbar, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(v.getPaddingLeft(), bars.top, v.getPaddingRight(), v.getPaddingBottom());
             return insets;

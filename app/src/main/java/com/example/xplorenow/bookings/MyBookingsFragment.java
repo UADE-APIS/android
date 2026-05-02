@@ -65,8 +65,6 @@ public class MyBookingsFragment extends Fragment {
 
         rvBookings.setAdapter(adapter);
 
-        view.findViewById(R.id.btnBack).setOnClickListener(v ->
-                Navigation.findNavController(view).popBackStack());
 
         loadBookings(adapter, progressBar, tvError);
     }
