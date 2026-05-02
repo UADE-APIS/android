@@ -69,9 +69,14 @@
     <string name="history_calificar">Calificar</string>
     <string name="history_calificado">Ya calificado</string>
     <string name="history_filters_title">Filtrar historial</string>
+    <string name="history_filter_name">Nombre de actividad</string>
     <string name="history_filter_location">Destino</string>
-    <string name="history_filter_date_from">Fecha desde (YYYY-MM-DD)</string>
-    <string name="history_filter_date_to">Fecha hasta (YYYY-MM-DD)</string>
+    <string name="history_filter_guide">Nombre del guía</string>
+    <string name="history_filter_duration">Duración máxima (min)</string>
+    <string name="history_filter_date">Fecha exacta</string>
+    <string name="history_filter_date_from">Fecha desde</string>
+    <string name="history_filter_date_to">Fecha hasta</string>
+    <string name="history_filter_ordering">Ordenar por</string>
     <string name="history_filter_apply">Aplicar</string>
     <string name="history_filter_reset">Limpiar</string>
     <string name="history_review_title">Calificar actividad</string>

@@ -5,10 +5,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.RatingBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -28,7 +30,8 @@ import com.example.xplorenow.data.model.Pagination;
 import com.example.xplorenow.data.model.Review;
 import com.example.xplorenow.data.model.ReviewRequest;
 import com.example.xplorenow.data.network.ApiService;
-import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,8 +73,6 @@ public class HistoryFragment extends Fragment {
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
         RecyclerView rvHistory = view.findViewById(R.id.rvHistory);
 
-
-
         adapter = new HistoryAdapter(
                 item -> mostrarDialogoCalificacion(item.getId(), progressBar, tvError),
                 item -> {
@@ -110,7 +111,7 @@ public class HistoryFragment extends Fragment {
     private void cargarHistorial(int page, ProgressBar progressBar, TextView tvError) {
         isLoading = true;
         progressBar.setVisibility(View.VISIBLE);
-        tvError.setVisibility(View.GONE);
+        if (page == 1) tvError.setVisibility(View.GONE);
 
         Map<String, String> queryParams = new HashMap<>(currentFilters);
         queryParams.put("page", String.valueOf(page));
@@ -134,13 +135,16 @@ public class HistoryFragment extends Fragment {
 
                     if (page == 1) {
                         adapter.setItems(resultItems != null ? resultItems : new ArrayList<>());
+                        if (resultItems == null || resultItems.isEmpty()) {
+                            tvError.setText("No se encontraron actividades en el historial");
+                            tvError.setVisibility(View.VISIBLE);
+                        }
                     } else if (resultItems != null) {
                         adapter.addItems(resultItems);
                     }
                 } else {
                     tvError.setText(getString(R.string.error_http, response.code()));
                     tvError.setVisibility(View.VISIBLE);
-                    Log.e(TAG, "Error HTTP: " + response.code());
                 }
             }
 
@@ -151,7 +155,6 @@ public class HistoryFragment extends Fragment {
                 if (!isAdded()) return;
                 tvError.setText(getString(R.string.error_connection));
                 tvError.setVisibility(View.VISIBLE);
-                Log.e(TAG, "onFailure: " + t.getMessage());
             }
         });
     }
@@ -159,15 +162,43 @@ public class HistoryFragment extends Fragment {
     private void mostrarDialogoFiltros(ProgressBar progressBar, TextView tvError) {
         View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_history_filters, null);
 
-        EditText etLocation = dialogView.findViewById(R.id.etLocation);
-        EditText etDateFrom = dialogView.findViewById(R.id.etDateFrom);
-        EditText etDateTo = dialogView.findViewById(R.id.etDateTo);
+        TextInputEditText etName = dialogView.findViewById(R.id.etName);
+        TextInputEditText etLocation = dialogView.findViewById(R.id.etLocation);
+        TextInputEditText etGuide = dialogView.findViewById(R.id.etGuide);
+        TextInputEditText etDuration = dialogView.findViewById(R.id.etDuration);
+        TextInputEditText etDate = dialogView.findViewById(R.id.etDate);
+        TextInputEditText etDateFrom = dialogView.findViewById(R.id.etDateFrom);
+        TextInputEditText etDateTo = dialogView.findViewById(R.id.etDateTo);
+        Spinner spinnerOrdering = dialogView.findViewById(R.id.spinnerOrdering);
         Button btnApplyFilters = dialogView.findViewById(R.id.btnApplyFilters);
         Button btnResetFilters = dialogView.findViewById(R.id.btnResetFilters);
 
-        if (currentFilters.containsKey("location")) etLocation.setText(currentFilters.get("location"));
+        // Populate fields with current filters
+        if (currentFilters.containsKey("name")) etName.setText(currentFilters.get("name"));
+        if (currentFilters.containsKey("destination")) etLocation.setText(currentFilters.get("destination"));
+        if (currentFilters.containsKey("guide")) etGuide.setText(currentFilters.get("guide"));
+        if (currentFilters.containsKey("duration")) etDuration.setText(currentFilters.get("duration"));
+        if (currentFilters.containsKey("date")) etDate.setText(currentFilters.get("date"));
         if (currentFilters.containsKey("date_from")) etDateFrom.setText(currentFilters.get("date_from"));
         if (currentFilters.containsKey("date_to")) etDateTo.setText(currentFilters.get("date_to"));
+
+        // Setup Ordering Spinner
+        String[] orderings = {"Más recientes", "Más antiguos", "Duración", "Actividad (A-Z)"};
+        String[] orderingValues = {"-date", "date", "activity__duration", "activity__name"};
+        ArrayAdapter<String> orderAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, orderings);
+        orderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerOrdering.setAdapter(orderAdapter);
+
+        // Select current ordering if exists
+        if (currentFilters.containsKey("ordering")) {
+            String currentOrder = currentFilters.get("ordering");
+            for (int i = 0; i < orderingValues.length; i++) {
+                if (orderingValues[i].equals(currentOrder)) {
+                    spinnerOrdering.setSelection(i);
+                    break;
+                }
+            }
+        }
 
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
                 .setView(dialogView)
@@ -175,12 +206,31 @@ public class HistoryFragment extends Fragment {
 
         btnApplyFilters.setOnClickListener(v -> {
             currentFilters.clear();
+
+            String name = etName.getText().toString().trim();
+            if (!name.isEmpty()) currentFilters.put("name", name);
+
             String loc = etLocation.getText().toString().trim();
-            if (!loc.isEmpty()) currentFilters.put("location", loc);
+            if (!loc.isEmpty()) currentFilters.put("destination", loc);
+
+            String guide = etGuide.getText().toString().trim();
+            if (!guide.isEmpty()) currentFilters.put("guide", guide);
+
+            String dur = etDuration.getText().toString().trim();
+            if (!dur.isEmpty()) currentFilters.put("duration", dur);
+
+            String date = etDate.getText().toString().trim();
+            if (!date.isEmpty()) currentFilters.put("date", date);
+
             String df = etDateFrom.getText().toString().trim();
             if (!df.isEmpty()) currentFilters.put("date_from", df);
+
             String dt = etDateTo.getText().toString().trim();
             if (!dt.isEmpty()) currentFilters.put("date_to", dt);
+
+            int orderPos = spinnerOrdering.getSelectedItemPosition();
+            currentFilters.put("ordering", orderingValues[orderPos]);
+
             dialog.dismiss();
             cargarHistorial(1, progressBar, tvError);
         });
@@ -228,8 +278,7 @@ public class HistoryFragment extends Fragment {
                     if (response.isSuccessful()) {
                         cargarHistorial(1, progressBar, tvError);
                     } else {
-                        tvError.setText(getString(R.string.error_http, response.code()));
-                        tvError.setVisibility(View.VISIBLE);
+                        Snackbar.make(requireView(), getString(R.string.error_http, response.code()), Snackbar.LENGTH_SHORT).show();
                     }
                 }
 
@@ -237,8 +286,7 @@ public class HistoryFragment extends Fragment {
                 public void onFailure(@NonNull Call<ApiResponse<Review>> call, @NonNull Throwable t) {
                     if (!isAdded()) return;
                     dialog.dismiss();
-                    tvError.setText(R.string.error_connection);
-                    tvError.setVisibility(View.VISIBLE);
+                    Snackbar.make(requireView(), R.string.error_connection, Snackbar.LENGTH_SHORT).show();
                 }
             });
         });

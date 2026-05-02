@@ -5,28 +5,28 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.xplorenow.R;
+import com.example.xplorenow.data.model.Activity;
 import com.example.xplorenow.data.model.Booking;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 
 public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.BookingViewHolder> {
 
     private List<Booking> bookings = new ArrayList<>();
     private final OnBookingInteractionListener listener;
+
     public static class BookingViewHolder extends RecyclerView.ViewHolder {
         TextView tvActivityTitle, tvDate, tvQuantity, tvStatus;
+        ImageView ivActivityImage;
         Button btnCancel;
 
         public BookingViewHolder(@NonNull View itemView) {
@@ -35,9 +35,11 @@ public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.Bookin
             tvDate = itemView.findViewById(R.id.tvDate);
             tvQuantity = itemView.findViewById(R.id.tvQuantity);
             tvStatus = itemView.findViewById(R.id.tvStatus);
+            ivActivityImage = itemView.findViewById(R.id.ivActivityImage);
             btnCancel = itemView.findViewById(R.id.btnCancel);
         }
     }
+
     public interface OnBookingInteractionListener {
         void onCancelClick(Booking booking);
         void onItemClick(Booking booking);
@@ -80,10 +82,8 @@ public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.Bookin
         Booking booking = bookings.get(position);
         Context context = holder.itemView.getContext();
 
-        String title = "-";
-        if (booking.getActivityDetail() != null && booking.getActivityDetail().getTitle() != null) {
-            title = booking.getActivityDetail().getTitle();
-        }
+        Activity activity = booking.getActivityDetail();
+        String title = (activity != null && activity.getTitle() != null) ? activity.getTitle() : "-";
 
         holder.tvActivityTitle.setText(title);
         holder.tvQuantity.setText("Participantes: " + booking.getQuantity());
@@ -93,6 +93,17 @@ public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.Bookin
 
         String status = booking.getStatus();
         holder.tvStatus.setText(getStatusLabel(status, context));
+        holder.tvStatus.setBackgroundResource(getStatusBackground(status));
+
+        if (activity != null && activity.getImages() != null && !activity.getImages().isEmpty()) {
+            Glide.with(context)
+                    .load(activity.getImages().get(0).getImageUrl())
+                    .placeholder(android.R.drawable.ic_menu_gallery)
+                    .error(android.R.drawable.ic_menu_report_image)
+                    .into(holder.ivActivityImage);
+        } else {
+            holder.ivActivityImage.setImageResource(android.R.drawable.ic_menu_gallery);
+        }
 
         holder.btnCancel.setVisibility("CONFIRMED".equals(status) ? View.VISIBLE : View.GONE);
     }
@@ -101,6 +112,12 @@ public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.Bookin
         if ("CANCELED".equals(status)) return context.getString(R.string.status_canceled);
         if ("FINISHED".equals(status)) return context.getString(R.string.status_finished);
         return context.getString(R.string.status_confirmed);
+    }
+
+    private int getStatusBackground(String status) {
+        if ("CANCELED".equals(status)) return R.drawable.bg_category_tag; // Or a specific red one
+        if ("FINISHED".equals(status)) return R.drawable.bg_category_tag; // Or a specific green one
+        return R.drawable.bg_category_tag;
     }
 
     @Override
