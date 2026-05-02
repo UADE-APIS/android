@@ -11,7 +11,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -28,10 +31,21 @@ import com.example.xplorenow.data.local.CachedBookingDao;
 import com.example.xplorenow.data.model.Activity;
 import com.example.xplorenow.data.model.ApiResponse;
 import com.example.xplorenow.data.model.Booking;
+import com.example.xplorenow.data.model.BookingsListResponse;
 import com.example.xplorenow.data.network.ApiService;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputEditText;
 
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -44,14 +58,12 @@ import retrofit2.Response;
 public class MyBookingsFragment extends Fragment {
 
     private static final String TAG = "MyBookingsFragment";
+    private static final int BOOKINGS_PAGE_SIZE = 1000;
 
     @Inject ApiService apiService;
-    @Inject CachedBookingDao cachedBookingDao;
 
     private BookingsAdapter adapter;
-    private TextView tvOfflineMode;
-    private ConnectivityManager connectivityManager;
-    private ConnectivityManager.NetworkCallback networkCallback;
+    private final Map<String, String> currentFilters = new HashMap<>();
 
     @Nullable
     @Override
@@ -91,41 +103,31 @@ public class MyBookingsFragment extends Fragment {
 
         rvBookings.setAdapter(adapter);
 
-        // Req. 20: registrar callback de reconexión para auto-sync
-        registerConnectivityCallback(progressBar, tvError);
+        view.findViewById(R.id.fabFilter).setOnClickListener(v -> mostrarDialogoFiltros(progressBar, tvError));
 
-        // Carga inicial
         loadBookings(progressBar, tvError);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Req. 18 + 21: cargar reservas, fallback a Room si no hay conexión
-    // ─────────────────────────────────────────────────────────────────────────
     private void loadBookings(ProgressBar progressBar, TextView tvError) {
-        // Capturar tvEmpty de forma final para que sea accesible dentro del callback
-        View rootView = getView();
-        final TextView tvEmpty = rootView != null ? rootView.findViewById(R.id.tvEmpty) : null;
+        TextView tvEmpty = getView() != null ? getView().findViewById(R.id.tvEmpty) : null;
         if (tvEmpty != null) tvEmpty.setVisibility(View.GONE);
         progressBar.setVisibility(View.VISIBLE);
         tvError.setVisibility(View.GONE);
 
-        apiService.getMyBookings().enqueue(new Callback<ApiResponse<List<Booking>>>() {
+        Map<String, String> requestQuery = new HashMap<>();
+        requestQuery.put("page", "1");
+        requestQuery.put("page_size", String.valueOf(BOOKINGS_PAGE_SIZE));
+
+        apiService.getMyBookings(requestQuery).enqueue(new Callback<BookingsListResponse>() {
             @Override
-            public void onResponse(@NonNull Call<ApiResponse<List<Booking>>> call,
-                                   @NonNull Response<ApiResponse<List<Booking>>> response) {
+            public void onResponse(@NonNull Call<BookingsListResponse> call,
+                                   @NonNull Response<BookingsListResponse> response) {
                 progressBar.setVisibility(View.GONE);
                 if (!isAdded()) return;
 
                 if (response.isSuccessful() && response.body() != null) {
-                    List<Booking> bookings = response.body().getData();
-                    if (bookings == null) bookings = new ArrayList<>();
-
-                    // Req. 20: sincronizar Room con la respuesta fresca del servidor
-                    syncCacheFromServer(bookings);
-
+                    List<Booking> bookings = applyFilters(response.body().getResults());
                     adapter.setBookings(bookings);
-                    tvOfflineMode.setVisibility(View.GONE);  // online → ocultar banner
-
                     if (tvEmpty != null) {
                         tvEmpty.setVisibility(bookings.isEmpty() ? View.VISIBLE : View.GONE);
                     }
@@ -137,7 +139,7 @@ public class MyBookingsFragment extends Fragment {
             }
 
             @Override
-            public void onFailure(@NonNull Call<ApiResponse<List<Booking>>> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<BookingsListResponse> call, @NonNull Throwable t) {
                 progressBar.setVisibility(View.GONE);
                 if (!isAdded()) return;
                 Log.e(TAG, "onFailure - sin conexión, cargando desde Room: " + t.getMessage());
@@ -148,137 +150,232 @@ public class MyBookingsFragment extends Fragment {
         });
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Req. 18: cargar reservas confirmadas desde Room (en hilo secundario)
-    // ─────────────────────────────────────────────────────────────────────────
-    private void loadFromCache(TextView tvError, @Nullable TextView tvEmpty) {
-        new Thread(() -> {
-            List<CachedBooking> cached = cachedBookingDao.getAllBookings();
-            if (!isAdded()) return;
+    private List<Booking> applyFilters(List<Booking> source) {
+        List<Booking> filtered = new ArrayList<>();
+        if (source == null) {
+            return filtered;
+        }
 
-            requireActivity().runOnUiThread(() -> {
-                if (!isAdded()) return;
+        String nameFilter = normalize(currentFilters.get("name"));
+        String locationFilter = normalize(currentFilters.get("destination"));
+        String guideFilter = normalize(currentFilters.get("guide"));
+        String durationFilter = normalize(currentFilters.get("duration"));
+        LocalDate exactDate = parseDate(currentFilters.get("date"));
+        LocalDate fromDate = parseDate(currentFilters.get("date_from"));
+        LocalDate toDate = parseDate(currentFilters.get("date_to"));
 
-                if (cached != null && !cached.isEmpty()) {
-                    // Req. 21: mostrar aviso visual claro
-                    tvOfflineMode.setVisibility(View.VISIBLE);
-                    tvError.setVisibility(View.GONE);
+        for (Booking booking : source) {
+            if (booking == null) {
+                continue;
+            }
 
-                    // Convertir CachedBooking → Booking para reusar el adapter existente
-                    List<Booking> offlineBookings = new ArrayList<>();
-                    for (CachedBooking cb : cached) {
-                        Booking b = new Booking();
-                        b.setId(Integer.parseInt(cb.getId()));
-                        b.setStatus(cb.getStatus());
-                        b.setQuantity(cb.getQuantity());
+            if (!nameFilter.isEmpty() && !containsIgnoreCase(getActivityTitle(booking), nameFilter)) {
+                continue;
+            }
+            if (!locationFilter.isEmpty() && !containsIgnoreCase(getActivityLocation(booking), locationFilter)) {
+                continue;
+            }
+            if (!guideFilter.isEmpty() && !containsIgnoreCase(getAssignedGuide(booking), guideFilter)) {
+                continue;
+            }
+            if (!durationFilter.isEmpty() && !containsIgnoreCase(getActivityDuration(booking), durationFilter)) {
+                continue;
+            }
 
-                        // Inyectar datos en activity_detail para que el adapter los muestre
-                        Activity act = new Activity();
-                        act.setTitle(cb.getActivityTitle());
-                        act.setMeetingPoint(cb.getMeetingPoint());
-                        b.setActivityDetail(act);
-                        // Bug fix: usar el activityId real, no el id de la reserva
-                        b.setActivityId(cb.getActivityId());
+            LocalDate bookingDate = extractBookingDate(booking);
+            if (exactDate != null && (bookingDate == null || !bookingDate.equals(exactDate))) {
+                continue;
+            }
+            if (fromDate != null && (bookingDate == null || bookingDate.isBefore(fromDate))) {
+                continue;
+            }
+            if (toDate != null && (bookingDate == null || bookingDate.isAfter(toDate))) {
+                continue;
+            }
 
-                        offlineBookings.add(b);
-                    }
-                    adapter.setBookings(offlineBookings);
-                    if (tvEmpty != null) {
-                        tvEmpty.setVisibility(offlineBookings.isEmpty() ? View.VISIBLE : View.GONE);
-                    }
-                } else {
-                    // Sin cache y sin internet
-                    tvOfflineMode.setVisibility(View.VISIBLE);
-                    tvError.setText(getString(R.string.error_connection));
-                    tvError.setVisibility(View.VISIBLE);
-                    if (tvEmpty != null) tvEmpty.setVisibility(View.GONE);
-                }
-            });
-        }).start();
+            filtered.add(booking);
+        }
+
+        sortBookings(filtered, currentFilters.get("ordering"));
+        return filtered;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Req. 20: sincronizar Room cuando el servidor responde correctamente
-    //          (refleja cancelaciones y reprogramaciones del backend)
-    // ─────────────────────────────────────────────────────────────────────────
-    private void syncCacheFromServer(List<Booking> bookings) {
-        new Thread(() -> {
-            cachedBookingDao.clearAllBookings();   // limpiar datos viejos
-            List<CachedBooking> toCache = new ArrayList<>();
-            for (Booking b : bookings) {
-                // Req. 20: cachear todas las reservas excepto las canceladas
-                // (acepta mayúsculas/minúsculas por si el backend varía)
-                String status = b.getStatus() != null ? b.getStatus().toUpperCase() : "";
-                if ("CANCELED".equals(status) || "CANCELLED".equals(status)) continue;
+    private void sortBookings(List<Booking> bookings, String ordering) {
+        if (bookings == null || bookings.size() < 2) {
+            return;
+        }
 
-                String imgUrl = "";
-                if (b.getActivityDetail() != null
-                        && b.getActivityDetail().getImages() != null
-                        && !b.getActivityDetail().getImages().isEmpty()) {
-                    imgUrl = b.getActivityDetail().getImages().get(0).getImageUrl();
-                }
-                toCache.add(new CachedBooking(
-                        String.valueOf(b.getId()),
-                        b.getActivityDetail() != null ? b.getActivityDetail().getTitle() : "",
-                        b.getDate(),
-                        b.getActivityDetail() != null ? b.getActivityDetail().getMeetingPoint() : "",
-                        b.getStatus() != null ? b.getStatus() : "",
-                        imgUrl,
-                        "VOUCHER-" + b.getId(),
-                        b.getQuantity(),
-                        b.getActivityId()  // guardar activityId para navegar al detalle offline
-                ));
-            }
-            // Guardar aunque esté vacío (para reflejar que no hay reservas activas)
-            cachedBookingDao.insertBookings(toCache);
-            Log.d(TAG, "syncCacheFromServer: " + toCache.size() + " reservas guardadas en Room");
-        }).start();
+        Comparator<Booking> comparator;
+        if ("created_at".equals(ordering)) {
+            comparator = Comparator.comparing(this::extractCreationDateTime,
+                    Comparator.nullsLast(Comparator.naturalOrder()));
+        } else if ("activity__duration".equals(ordering)) {
+            comparator = Comparator.comparingInt(this::extractDurationValue);
+        } else if ("activity__name".equals(ordering)) {
+            comparator = Comparator.comparing(this::getActivityTitle,
+                    String.CASE_INSENSITIVE_ORDER);
+        } else {
+            comparator = Comparator.comparing(this::extractCreationDateTime,
+                    Comparator.nullsLast(Comparator.reverseOrder()));
+        }
+
+        Collections.sort(bookings, comparator);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Req. 20: escuchar reconexión y auto-sincronizar
-    // ─────────────────────────────────────────────────────────────────────────
-    private void registerConnectivityCallback(ProgressBar progressBar, TextView tvError) {
-        connectivityManager = (ConnectivityManager)
-                requireContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        networkCallback = new ConnectivityManager.NetworkCallback() {
-            @Override
-            public void onAvailable(@NonNull Network network) {
-                if (!isAdded()) return;
-                requireActivity().runOnUiThread(() -> {
-                    if (!isAdded()) return;
-                    // Solo sincroniza si el banner estaba visible (es decir, estábamos offline)
-                    if (tvOfflineMode.getVisibility() == View.VISIBLE) {
-                        Log.d(TAG, "Conexión restaurada → sincronizando (req. 20)");
-                        loadBookings(progressBar, tvError);
-                    }
-                });
-            }
-        };
-
-        NetworkRequest request = new NetworkRequest.Builder()
-                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                .build();
-        connectivityManager.registerNetworkCallback(request, networkCallback);
+    private String getActivityTitle(Booking booking) {
+        return booking.getActivityDetail() != null && booking.getActivityDetail().getTitle() != null
+                ? booking.getActivityDetail().getTitle()
+                : "";
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        // Limpiar el callback para evitar memory leaks
-        if (connectivityManager != null && networkCallback != null) {
-            try {
-                connectivityManager.unregisterNetworkCallback(networkCallback);
-            } catch (Exception e) {
-                Log.w(TAG, "NetworkCallback ya desregistrado: " + e.getMessage());
-            }
+    private String getActivityLocation(Booking booking) {
+        if (booking.getActivityDetail() == null) {
+            return "";
+        }
+
+        String location = booking.getActivityDetail().getLocation();
+        if (location != null && !location.trim().isEmpty()) {
+            return location;
+        }
+
+        String meetingPoint = booking.getActivityDetail().getMeetingPoint();
+        return meetingPoint != null ? meetingPoint : "";
+    }
+
+    private String getAssignedGuide(Booking booking) {
+        return booking.getActivityDetail() != null && booking.getActivityDetail().getAssignedGuide() != null
+                ? booking.getActivityDetail().getAssignedGuide()
+                : "";
+    }
+
+    private String getActivityDuration(Booking booking) {
+        return booking.getActivityDetail() != null
+                ? String.valueOf(booking.getActivityDetail().getDuration())
+                : "";
+    }
+
+    private int extractDurationValue(Booking booking) {
+        return booking.getActivityDetail() != null ? booking.getActivityDetail().getDuration() : Integer.MAX_VALUE;
+    }
+
+    private OffsetDateTime extractCreationDateTime(Booking booking) {
+        String createdAt = booking != null ? booking.getCreatedAt() : null;
+        if (createdAt == null || createdAt.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            return OffsetDateTime.parse(createdAt);
+        } catch (DateTimeParseException e) {
+            Log.w(TAG, "Fecha de creación inválida: " + createdAt);
+            return null;
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Cancelar reserva (igual que antes)
-    // ─────────────────────────────────────────────────────────────────────────
+    private LocalDate extractBookingDate(Booking booking) {
+        return parseDate(booking != null ? booking.getDate() : null);
+    }
+
+    private LocalDate parseDate(String rawValue) {
+        if (rawValue == null) {
+            return null;
+        }
+
+        String trimmed = rawValue.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+
+        String candidate = trimmed.length() >= 10 ? trimmed.substring(0, 10) : trimmed;
+        try {
+            return LocalDate.parse(candidate);
+        } catch (DateTimeParseException ignored) {
+            return null;
+        }
+    }
+
+    private boolean containsIgnoreCase(String value, String filter) {
+        return normalize(value).contains(filter);
+    }
+
+    private String normalize(String value) {
+        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private void mostrarDialogoFiltros(ProgressBar progressBar, TextView tvError) {
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_history_filters, null);
+
+        // We reuse dialog_history_filters as it has the same fields needed
+        TextInputEditText etName = dialogView.findViewById(R.id.etName);
+        TextInputEditText etLocation = dialogView.findViewById(R.id.etLocation);
+        TextInputEditText etGuide = dialogView.findViewById(R.id.etGuide);
+        TextInputEditText etDuration = dialogView.findViewById(R.id.etDuration);
+        TextInputEditText etDate = dialogView.findViewById(R.id.etDate);
+        TextInputEditText etDateFrom = dialogView.findViewById(R.id.etDateFrom);
+        TextInputEditText etDateTo = dialogView.findViewById(R.id.etDateTo);
+        Spinner spinnerOrdering = dialogView.findViewById(R.id.spinnerOrdering);
+        Button btnApplyFilters = dialogView.findViewById(R.id.btnApplyFilters);
+        Button btnResetFilters = dialogView.findViewById(R.id.btnResetFilters);
+
+        if (currentFilters.containsKey("name")) etName.setText(currentFilters.get("name"));
+        if (currentFilters.containsKey("destination")) etLocation.setText(currentFilters.get("destination"));
+        if (currentFilters.containsKey("guide")) etGuide.setText(currentFilters.get("guide"));
+        if (currentFilters.containsKey("duration")) etDuration.setText(currentFilters.get("duration"));
+        if (currentFilters.containsKey("date")) etDate.setText(currentFilters.get("date"));
+        if (currentFilters.containsKey("date_from")) etDateFrom.setText(currentFilters.get("date_from"));
+        if (currentFilters.containsKey("date_to")) etDateTo.setText(currentFilters.get("date_to"));
+
+        String[] orderings = {"Más recientes", "Más antiguos", "Duración", "Actividad (A-Z)"};
+        String[] orderingValues = {"-created_at", "created_at", "activity__duration", "activity__name"};
+        ArrayAdapter<String> orderAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, orderings);
+        orderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerOrdering.setAdapter(orderAdapter);
+
+        if (currentFilters.containsKey("ordering")) {
+            String currentOrder = currentFilters.get("ordering");
+            for (int i = 0; i < orderingValues.length; i++) {
+                if (orderingValues[i].equals(currentOrder)) {
+                    spinnerOrdering.setSelection(i);
+                    break;
+                }
+            }
+        }
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .create();
+
+        btnApplyFilters.setOnClickListener(v -> {
+            currentFilters.clear();
+            String name = etName.getText().toString().trim();
+            if (!name.isEmpty()) currentFilters.put("name", name);
+            String loc = etLocation.getText().toString().trim();
+            if (!loc.isEmpty()) currentFilters.put("destination", loc);
+            String guide = etGuide.getText().toString().trim();
+            if (!guide.isEmpty()) currentFilters.put("guide", guide);
+            String dur = etDuration.getText().toString().trim();
+            if (!dur.isEmpty()) currentFilters.put("duration", dur);
+            String date = etDate.getText().toString().trim();
+            if (!date.isEmpty()) currentFilters.put("date", date);
+            String df = etDateFrom.getText().toString().trim();
+            if (!df.isEmpty()) currentFilters.put("date_from", df);
+            String dt = etDateTo.getText().toString().trim();
+            if (!dt.isEmpty()) currentFilters.put("date_to", dt);
+            currentFilters.put("ordering", orderingValues[spinnerOrdering.getSelectedItemPosition()]);
+
+            dialog.dismiss();
+            loadBookings(progressBar, tvError);
+        });
+
+        btnResetFilters.setOnClickListener(v -> {
+            currentFilters.clear();
+            dialog.dismiss();
+            loadBookings(progressBar, tvError);
+        });
+
+        dialog.show();
+    }
+
     private void showCancelDialog(View view, Booking booking, ProgressBar pb, TextView err) {
         String policy = getString(R.string.default_cancellation_policy);
 
@@ -306,20 +403,17 @@ public class MyBookingsFragment extends Fragment {
                                    @NonNull Response<ApiResponse<Booking>> response) {
 
                 if (response.isSuccessful()) {
-                    // Req. 20: recargar desde el servidor al cancelar → sincroniza Room
                     loadBookings(progressBar, tvError);
                 } else {
                     progressBar.setVisibility(View.GONE);
-                    tvError.setText(getString(R.string.error_http, response.code()));
-                    tvError.setVisibility(View.VISIBLE);
+                    Snackbar.make(view, getString(R.string.error_http, response.code()), Snackbar.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<ApiResponse<Booking>> call, @NonNull Throwable t) {
                 progressBar.setVisibility(View.GONE);
-                tvError.setText(getString(R.string.error_connection));
-                tvError.setVisibility(View.VISIBLE);
+                Snackbar.make(view, R.string.error_connection, Snackbar.LENGTH_SHORT).show();
                 Log.e(TAG, "onFailure: " + t.getMessage());
             }
         });

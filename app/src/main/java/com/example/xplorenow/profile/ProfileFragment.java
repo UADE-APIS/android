@@ -22,6 +22,7 @@ import com.bumptech.glide.Glide;
 import com.example.xplorenow.R;
 import com.example.xplorenow.data.model.ApiResponse;
 import com.example.xplorenow.data.model.Booking;
+import com.example.xplorenow.data.model.BookingsListResponse;
 import com.example.xplorenow.data.model.User;
 import com.example.xplorenow.data.network.ApiService;
 import com.example.xplorenow.data.network.dto.MeResponseData;
@@ -31,6 +32,7 @@ import com.example.xplorenow.data.session.TokenManager;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -174,11 +176,11 @@ public class ProfileFragment extends Fragment {
     }
 
     private void loadBookingsSummary() {
-        apiService.getMyBookings().enqueue(new Callback<ApiResponse<List<Booking>>>() {
+        apiService.getMyBookings(new HashMap<>()).enqueue(new Callback<BookingsListResponse>() {
 
             @Override
-            public void onResponse(Call<ApiResponse<List<Booking>>> call,
-                                   Response<ApiResponse<List<Booking>>> response) {
+            public void onResponse(Call<BookingsListResponse> call,
+                                   Response<BookingsListResponse> response) {
 
                 if (!isAdded()) return;
 
@@ -187,7 +189,7 @@ public class ProfileFragment extends Fragment {
                     return;
                 }
 
-                List<Booking> bookings = response.body().getData();
+                List<Booking> bookings = response.body().getResults();
 
                 int reservadas = 0;
                 int realizadas = 0;
@@ -212,7 +214,7 @@ public class ProfileFragment extends Fragment {
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<List<Booking>>> call, Throwable t) {
+            public void onFailure(Call<BookingsListResponse> call, Throwable t) {
                 Log.e(TAG, "Error cargando bookings", t);
             }
         });

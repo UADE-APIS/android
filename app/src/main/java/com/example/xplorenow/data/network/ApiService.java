@@ -5,6 +5,7 @@ import com.example.xplorenow.data.model.Activity;
 import com.example.xplorenow.data.model.ApiResponse;
 import com.example.xplorenow.data.model.Booking;
 import com.example.xplorenow.data.model.BookingRequest;
+import com.example.xplorenow.data.model.BookingsListResponse;
 import com.example.xplorenow.data.model.CheckUsernameRequest;
 import com.example.xplorenow.data.model.HistoryListResponse;
 import com.example.xplorenow.data.model.News;
@@ -92,7 +93,7 @@ public interface ApiService {
     Call<ApiResponse<Booking>> createBooking(@Body BookingRequest request);
 
     @GET("api/activities/bookings/me/")
-    Call<ApiResponse<List<Booking>>> getMyBookings();
+    Call<BookingsListResponse> getMyBookings(@QueryMap Map<String, String> query);
 
     @POST("api/activities/bookings/{id}/cancel/")
     Call<ApiResponse<Booking>> cancelBooking(@Path("id") int id);
