@@ -16,4 +16,8 @@
         android:id="@+id/profileFragment"
         android:icon="@drawable/ic_nav_profile"
         android:title="Perfil" />
+    <item
+        android:id="@+id/newsFragment"
+        android:icon="@android:drawable/ic_menu_agenda"
+        android:title="Noticias" />
 </menu>

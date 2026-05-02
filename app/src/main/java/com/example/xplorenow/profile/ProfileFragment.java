@@ -96,6 +96,8 @@ public class ProfileFragment extends Fragment {
 
         editContainer = view.findViewById(R.id.editContainer);
 
+        Button btnLogout = view.findViewById(R.id.btnLogout);
+        btnLogout.setOnClickListener(v -> handleUnauthorized());
 
         btnEditProfile.setOnClickListener(v ->
                 toggleEditMode(editContainer.getVisibility() != View.VISIBLE));
