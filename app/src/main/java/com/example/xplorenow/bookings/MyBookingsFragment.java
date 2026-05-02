@@ -102,7 +102,9 @@ public class MyBookingsFragment extends Fragment {
     // Req. 18 + 21: cargar reservas, fallback a Room si no hay conexión
     // ─────────────────────────────────────────────────────────────────────────
     private void loadBookings(ProgressBar progressBar, TextView tvError) {
-        TextView tvEmpty = getView() != null ? getView().findViewById(R.id.tvEmpty) : null;
+        // Capturar tvEmpty de forma final para que sea accesible dentro del callback
+        View rootView = getView();
+        final TextView tvEmpty = rootView != null ? rootView.findViewById(R.id.tvEmpty) : null;
         if (tvEmpty != null) tvEmpty.setVisibility(View.GONE);
         progressBar.setVisibility(View.VISIBLE);
         tvError.setVisibility(View.GONE);
@@ -138,7 +140,7 @@ public class MyBookingsFragment extends Fragment {
             public void onFailure(@NonNull Call<ApiResponse<List<Booking>>> call, @NonNull Throwable t) {
                 progressBar.setVisibility(View.GONE);
                 if (!isAdded()) return;
-                Log.e(TAG, "onFailure: " + t.getMessage());
+                Log.e(TAG, "onFailure - sin conexión, cargando desde Room: " + t.getMessage());
 
                 // Req. 18 + 21: sin conexión → cargar desde Room y mostrar banner
                 loadFromCache(tvError, tvEmpty);
@@ -203,7 +205,11 @@ public class MyBookingsFragment extends Fragment {
             cachedBookingDao.clearAllBookings();   // limpiar datos viejos
             List<CachedBooking> toCache = new ArrayList<>();
             for (Booking b : bookings) {
-                if (!"CONFIRMED".equals(b.getStatus())) continue; // solo reservas activas
+                // Req. 20: cachear todas las reservas excepto las canceladas
+                // (acepta mayúsculas/minúsculas por si el backend varía)
+                String status = b.getStatus() != null ? b.getStatus().toUpperCase() : "";
+                if ("CANCELED".equals(status) || "CANCELLED".equals(status)) continue;
+
                 String imgUrl = "";
                 if (b.getActivityDetail() != null
                         && b.getActivityDetail().getImages() != null
@@ -215,15 +221,15 @@ public class MyBookingsFragment extends Fragment {
                         b.getActivityDetail() != null ? b.getActivityDetail().getTitle() : "",
                         b.getDate(),
                         b.getActivityDetail() != null ? b.getActivityDetail().getMeetingPoint() : "",
-                        b.getStatus(),
+                        b.getStatus() != null ? b.getStatus() : "",
                         imgUrl,
                         "VOUCHER-" + b.getId(),
                         b.getQuantity()
                 ));
             }
-            if (!toCache.isEmpty()) {
-                cachedBookingDao.insertBookings(toCache);
-            }
+            // Guardar aunque esté vacío (para reflejar que no hay reservas activas)
+            cachedBookingDao.insertBookings(toCache);
+            Log.d(TAG, "syncCacheFromServer: " + toCache.size() + " reservas guardadas en Room");
         }).start();
     }
 
