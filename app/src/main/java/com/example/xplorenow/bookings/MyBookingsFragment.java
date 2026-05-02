@@ -177,7 +177,8 @@ public class MyBookingsFragment extends Fragment {
                         act.setTitle(cb.getActivityTitle());
                         act.setMeetingPoint(cb.getMeetingPoint());
                         b.setActivityDetail(act);
-                        b.setActivityId(Integer.parseInt(cb.getId())); // referencia para navegar
+                        // Bug fix: usar el activityId real, no el id de la reserva
+                        b.setActivityId(cb.getActivityId());
 
                         offlineBookings.add(b);
                     }
@@ -224,7 +225,8 @@ public class MyBookingsFragment extends Fragment {
                         b.getStatus() != null ? b.getStatus() : "",
                         imgUrl,
                         "VOUCHER-" + b.getId(),
-                        b.getQuantity()
+                        b.getQuantity(),
+                        b.getActivityId()  // guardar activityId para navegar al detalle offline
                 ));
             }
             // Guardar aunque esté vacío (para reflejar que no hay reservas activas)
