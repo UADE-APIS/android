@@ -60,8 +60,20 @@ public class MyBookingsFragment extends Fragment {
         tvOfflineMode.setVisibility(View.GONE);
         rvBookings.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        BookingsAdapter adapter = new BookingsAdapter(booking ->
-                showCancelDialog(view, booking, progressBar, tvError));
+        BookingsAdapter adapter = new BookingsAdapter(new BookingsAdapter.OnBookingInteractionListener() {
+            @Override
+            public void onCancelClick(Booking booking) {
+                showCancelDialog(view, booking, progressBar, tvError);
+            }
+
+            @Override
+            public void onItemClick(Booking booking) {
+                Bundle args = new Bundle();
+                args.putInt("activityId", booking.getActivityId());
+                Navigation.findNavController(view).navigate(
+                        R.id.action_myBookings_to_activityDetail, args);
+            }
+        });
 
         rvBookings.setAdapter(adapter);
 

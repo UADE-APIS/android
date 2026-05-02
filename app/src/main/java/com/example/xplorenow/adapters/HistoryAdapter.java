@@ -99,7 +99,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
         holder.tvGuide.setText(context.getString(R.string.history_guide, item.getAssignedGuide()));
         holder.tvQuantity.setText(context.getString(R.string.history_quantity, item.getQuantity()));
 
-        if (item.getReview() != null) {
+        if (item.getReview() != null && item.getReview().getId() > 0) {
             holder.btnReview.setVisibility(View.GONE);
             holder.tvReviewed.setVisibility(View.VISIBLE);
         } else {
