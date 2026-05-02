@@ -14,6 +14,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavOptions;
+import androidx.navigation.Navigation;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.bumptech.glide.Glide;
@@ -264,6 +266,12 @@ public class ProfileFragment extends Fragment {
 
     private void handleUnauthorized() {
         tokenManager.clear();
-        NavHostFragment.findNavController(this).navigate(R.id.authStartFragment);
+        if (getView() != null) {
+            NavOptions navOptions = new NavOptions.Builder()
+                    .setPopUpTo(R.id.nav_graph, true)
+                    .build();
+            Navigation.findNavController(getView())
+                    .navigate(R.id.auth_nav_graph, null, navOptions);
+        }
     }
 }
