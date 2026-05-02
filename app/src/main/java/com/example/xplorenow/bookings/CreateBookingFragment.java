@@ -211,7 +211,10 @@ public class CreateBookingFragment extends Fragment {
                                     createdBooking.getDate(),
                                     createdBooking.getActivityDetail() != null ? createdBooking.getActivityDetail().getMeetingPoint() : "",
                                     createdBooking.getStatus() != null ? createdBooking.getStatus() : "CONFIRMED",
-                                    imgUrl
+                                    imgUrl,
+                                    "VOUCHER-" + createdBooking.getId(),   // voucher único (req. 19)
+                                    createdBooking.getQuantity(),           // participantes (req. 19)
+                                    createdBooking.getActivityId()          // para navegar al detalle offline
                             );
                             List<CachedBooking> list = new ArrayList<>();
                             list.add(cb);

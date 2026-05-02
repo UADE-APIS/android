@@ -1,6 +1,11 @@
 package com.example.xplorenow.bookings;
 
 import android.app.AlertDialog;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -21,6 +26,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.xplorenow.R;
 import com.example.xplorenow.adapters.BookingsAdapter;
+import com.example.xplorenow.data.local.CachedBooking;
+import com.example.xplorenow.data.local.CachedBookingDao;
+import com.example.xplorenow.data.model.Activity;
 import com.example.xplorenow.data.model.ApiResponse;
 import com.example.xplorenow.data.model.Booking;
 import com.example.xplorenow.data.model.BookingsListResponse;
@@ -72,8 +80,9 @@ public class MyBookingsFragment extends Fragment {
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
         TextView tvError = view.findViewById(R.id.tvError);
         RecyclerView rvBookings = view.findViewById(R.id.rvBookings);
-        TextView tvOfflineMode = view.findViewById(R.id.tvOfflineMode);
+        tvOfflineMode = view.findViewById(R.id.tvOfflineMode);
 
+        // Req. 21: banner empieza oculto
         tvOfflineMode.setVisibility(View.GONE);
         rvBookings.setLayoutManager(new LinearLayoutManager(requireContext()));
 
@@ -114,6 +123,7 @@ public class MyBookingsFragment extends Fragment {
             public void onResponse(@NonNull Call<BookingsListResponse> call,
                                    @NonNull Response<BookingsListResponse> response) {
                 progressBar.setVisibility(View.GONE);
+                if (!isAdded()) return;
 
                 if (response.isSuccessful() && response.body() != null) {
                     List<Booking> bookings = applyFilters(response.body().getResults());
@@ -131,9 +141,11 @@ public class MyBookingsFragment extends Fragment {
             @Override
             public void onFailure(@NonNull Call<BookingsListResponse> call, @NonNull Throwable t) {
                 progressBar.setVisibility(View.GONE);
-                tvError.setText(getString(R.string.error_connection));
-                tvError.setVisibility(View.VISIBLE);
-                Log.e(TAG, "onFailure: " + t.getMessage());
+                if (!isAdded()) return;
+                Log.e(TAG, "onFailure - sin conexión, cargando desde Room: " + t.getMessage());
+
+                // Req. 18 + 21: sin conexión → cargar desde Room y mostrar banner
+                loadFromCache(tvError, tvEmpty);
             }
         });
     }
