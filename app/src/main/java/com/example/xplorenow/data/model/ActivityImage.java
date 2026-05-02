@@ -11,6 +11,12 @@ public class ActivityImage implements Serializable {
     @SerializedName("created_at")
     private String createdAt;
 
+    public ActivityImage() {}
+
+    public ActivityImage(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     public int getId() {
         return id;
     }
@@ -22,5 +28,6 @@ public class ActivityImage implements Serializable {
     public String getCreatedAt() {
         return createdAt;
     }
+
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 }

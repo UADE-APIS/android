@@ -4,6 +4,13 @@ import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+import com.example.xplorenow.data.model.Activity;
+import com.example.xplorenow.data.model.ActivityImage;
+import com.example.xplorenow.data.model.Booking;
+
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity(tableName = "cached_bookings")
 public class CachedBooking {
     @PrimaryKey
@@ -33,6 +40,34 @@ public class CachedBooking {
         this.voucherCode = voucherCode;
         this.quantity = quantity;
         this.activityId = activityId;
+    }
+
+    public Booking toBooking() {
+        Booking b = new Booking();
+        try {
+            b.setId(Integer.parseInt(id));
+        } catch (NumberFormatException e) {
+            b.setId(0);
+        }
+        b.setActivityId(activityId);
+        b.setQuantity(quantity);
+        b.setStatus(status);
+        b.setCreatedAt(date);
+
+        Activity activity = new Activity();
+        activity.setId(activityId);
+        activity.setTitle(activityTitle);
+        activity.setMeetingPoint(meetingPoint);
+
+        if (activityImageUrl != null && !activityImageUrl.isEmpty()) {
+            List<ActivityImage> images = new ArrayList<>();
+            // CORRECCIÓN: usar el constructor de 1 parámetro definido en ActivityImage
+            images.add(new ActivityImage(activityImageUrl));
+            activity.setImages(images);
+        }
+
+        b.setActivityDetail(activity);
+        return b;
     }
 
     @NonNull

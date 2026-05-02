@@ -1,11 +1,6 @@
 package com.example.xplorenow.bookings;
 
 import android.app.AlertDialog;
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.NetworkRequest;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -28,7 +23,6 @@ import com.example.xplorenow.R;
 import com.example.xplorenow.adapters.BookingsAdapter;
 import com.example.xplorenow.data.local.CachedBooking;
 import com.example.xplorenow.data.local.CachedBookingDao;
-import com.example.xplorenow.data.model.Activity;
 import com.example.xplorenow.data.model.ApiResponse;
 import com.example.xplorenow.data.model.Booking;
 import com.example.xplorenow.data.model.BookingsListResponse;
@@ -61,6 +55,7 @@ public class MyBookingsFragment extends Fragment {
     private static final int BOOKINGS_PAGE_SIZE = 1000;
 
     @Inject ApiService apiService;
+    @Inject CachedBookingDao cachedBookingDao;
 
     private BookingsAdapter adapter;
     private final Map<String, String> currentFilters = new HashMap<>();
@@ -80,7 +75,7 @@ public class MyBookingsFragment extends Fragment {
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
         TextView tvError = view.findViewById(R.id.tvError);
         RecyclerView rvBookings = view.findViewById(R.id.rvBookings);
-        tvOfflineMode = view.findViewById(R.id.tvOfflineMode);
+        TextView tvOfflineMode = view.findViewById(R.id.tvOfflineMode);
 
         // Req. 21: banner empieza oculto
         tvOfflineMode.setVisibility(View.GONE);
@@ -144,10 +139,34 @@ public class MyBookingsFragment extends Fragment {
                 if (!isAdded()) return;
                 Log.e(TAG, "onFailure - sin conexión, cargando desde Room: " + t.getMessage());
 
-                // Req. 18 + 21: sin conexión → cargar desde Room y mostrar banner
                 loadFromCache(tvError, tvEmpty);
             }
         });
+    }
+
+    private void loadFromCache(TextView tvError, TextView tvEmpty) {
+        if (getView() == null) return;
+        TextView tvOfflineMode = getView().findViewById(R.id.tvOfflineMode);
+        tvOfflineMode.setVisibility(View.VISIBLE);
+
+        new Thread(() -> {
+            List<CachedBooking> cached = cachedBookingDao.getAllBookings();
+            List<Booking> bookings = new ArrayList<>();
+            for (CachedBooking cb : cached) {
+                bookings.add(cb.toBooking());
+            }
+
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (!isAdded()) return;
+                    List<Booking> filtered = applyFilters(bookings);
+                    adapter.setBookings(filtered);
+                    if (tvEmpty != null) {
+                        tvEmpty.setVisibility(filtered.isEmpty() ? View.VISIBLE : View.GONE);
+                    }
+                });
+            }
+        }).start();
     }
 
     private List<Booking> applyFilters(List<Booking> source) {
@@ -305,7 +324,6 @@ public class MyBookingsFragment extends Fragment {
     private void mostrarDialogoFiltros(ProgressBar progressBar, TextView tvError) {
         View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_history_filters, null);
 
-        // We reuse dialog_history_filters as it has the same fields needed
         TextInputEditText etName = dialogView.findViewById(R.id.etName);
         TextInputEditText etLocation = dialogView.findViewById(R.id.etLocation);
         TextInputEditText etGuide = dialogView.findViewById(R.id.etGuide);

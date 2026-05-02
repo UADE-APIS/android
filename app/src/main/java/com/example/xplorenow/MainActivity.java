@@ -39,7 +39,8 @@ public class MainActivity extends AppCompatActivity {
             R.id.homeFragment,
             R.id.myBookingsFragment,
             R.id.favoritesFragment,
-            R.id.profileFragment
+            R.id.profileFragment,
+            R.id.newsFragment
     ));
 
     @Override
@@ -86,7 +87,8 @@ public class MainActivity extends AppCompatActivity {
                 R.id.homeFragment,
                 R.id.myBookingsFragment,
                 R.id.favoritesFragment,
-                R.id.profileFragment
+                R.id.profileFragment,
+                R.id.newsFragment
         ).build();
 
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
