@@ -52,7 +52,12 @@
         android:id="@+id/myBookingsFragment"
         android:name="com.example.xplorenow.bookings.MyBookingsFragment"
         android:label="Mis Reservas"
-        tools:layout="@layout/fragment_my_bookings" />
+        tools:layout="@layout/fragment_my_bookings">
+
+        <action
+            android:id="@+id/action_myBookings_to_activityDetail"
+            app:destination="@id/activityDetailFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/createBookingFragment"
@@ -142,6 +147,10 @@
             android:name="newsId"
             app:argType="integer"
             android:defaultValue="-1" />
+
+        <action
+            android:id="@+id/action_newsDetail_to_activityDetail"
+            app:destination="@id/activityDetailFragment" />
     </fragment>
 
 </navigation>

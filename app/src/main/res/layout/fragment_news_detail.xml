@@ -50,6 +50,14 @@
                 android:textSize="14sp"
                 android:visibility="gone" />
 
+            <Button
+                android:id="@+id/btnVerActividad"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/news_ver_actividad"
+                android:visibility="gone" />
+
         </LinearLayout>
 
     </ScrollView>

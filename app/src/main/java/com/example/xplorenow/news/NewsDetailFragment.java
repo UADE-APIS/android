@@ -5,6 +5,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -52,6 +53,7 @@ public class NewsDetailFragment extends Fragment {
         TextView tvDate = view.findViewById(R.id.tvDate);
         TextView tvDescription = view.findViewById(R.id.tvDescription);
         TextView tvRelatedActivity = view.findViewById(R.id.tvRelatedActivity);
+        Button btnVerActividad = view.findViewById(R.id.btnVerActividad);
 
 
 
@@ -89,6 +91,13 @@ public class NewsDetailFragment extends Fragment {
                     if (news.getRelatedActivity() != null) {
                         tvRelatedActivity.setText(getString(R.string.news_related_activity, news.getRelatedActivity().getTitle()));
                         tvRelatedActivity.setVisibility(View.VISIBLE);
+                        btnVerActividad.setVisibility(View.VISIBLE);
+                        btnVerActividad.setOnClickListener(v -> {
+                            Bundle args = new Bundle();
+                            args.putInt("activityId", news.getRelatedActivity().getId());
+                            Navigation.findNavController(view).navigate(
+                                    R.id.action_newsDetail_to_activityDetail, args);
+                        });
                     }
                 } else {
                     Log.e(TAG, "Error al cargar noticia: " + response.code());

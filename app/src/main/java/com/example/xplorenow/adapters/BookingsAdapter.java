@@ -40,6 +40,7 @@ public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.Bookin
     }
     public interface OnBookingInteractionListener {
         void onCancelClick(Booking booking);
+        void onItemClick(Booking booking);
     }
 
     public BookingsAdapter(OnBookingInteractionListener listener) {
@@ -61,6 +62,13 @@ public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.Bookin
             int position = holder.getAdapterPosition();
             if (position != RecyclerView.NO_POSITION && listener != null) {
                 listener.onCancelClick(bookings.get(position));
+            }
+        });
+
+        holder.itemView.setOnClickListener(v -> {
+            int position = holder.getAdapterPosition();
+            if (position != RecyclerView.NO_POSITION && listener != null) {
+                listener.onItemClick(bookings.get(position));
             }
         });
 
