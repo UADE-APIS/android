@@ -94,6 +94,19 @@ public class MyBookingsFragment extends Fragment {
                 Navigation.findNavController(view).navigate(
                         R.id.action_myBookings_to_activityDetail, args);
             }
+
+            @Override
+            public void onVoucherClick(Booking booking) {
+                com.example.xplorenow.data.model.Activity detail = booking.getActivityDetail();
+                Bundle args = new Bundle();
+                args.putInt("bookingId", booking.getId());
+                args.putString("activityTitle", detail != null ? detail.getTitle() : "");
+                args.putString("date", booking.getDate() != null ? booking.getDate() : "");
+                args.putString("meetingPoint", detail != null ? detail.getMeetingPoint() : "");
+                args.putString("guideName", detail != null ? detail.getAssignedGuide() : "");
+                args.putInt("quantity", booking.getQuantity());
+                Navigation.findNavController(view).navigate(R.id.action_myBookings_to_voucher, args);
+            }
         });
 
         rvBookings.setAdapter(adapter);

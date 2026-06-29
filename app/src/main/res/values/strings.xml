@@ -131,6 +131,16 @@
     <!-- Offline -->
     <string name="offline_banner">Sin conexión — mostrando datos guardados</string>
 
+    <!-- Voucher -->
+    <string name="action_view_voucher">Ver voucher</string>
+    <string name="voucher_booking_number">Reserva #%1$d</string>
+    <string name="voucher_label_date">Fecha</string>
+    <string name="voucher_label_meeting_point">Punto de encuentro</string>
+    <string name="voucher_label_guide">Guía</string>
+    <string name="voucher_label_participants">Participantes</string>
+    <string name="voucher_label_code">Código de reserva</string>
+    <string name="voucher_participants_value">%1$d personas</string>
+
     <!-- Navegación inferior -->
     <string name="nav_explore">Explorar</string>
     <string name="nav_bookings">Reservas</string>

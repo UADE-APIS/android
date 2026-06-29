@@ -28,6 +28,7 @@ public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.Bookin
         TextView tvActivityTitle, tvDate, tvQuantity, tvStatus;
         ImageView ivActivityImage;
         Button btnCancel;
+        Button btnVoucher;
 
         public BookingViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -37,12 +38,14 @@ public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.Bookin
             tvStatus = itemView.findViewById(R.id.tvStatus);
             ivActivityImage = itemView.findViewById(R.id.ivActivityImage);
             btnCancel = itemView.findViewById(R.id.btnCancel);
+            btnVoucher = itemView.findViewById(R.id.btnVoucher);
         }
     }
 
     public interface OnBookingInteractionListener {
         void onCancelClick(Booking booking);
         void onItemClick(Booking booking);
+        void onVoucherClick(Booking booking);
     }
 
     public BookingsAdapter(OnBookingInteractionListener listener) {
@@ -106,6 +109,13 @@ public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.Bookin
         }
 
         holder.btnCancel.setVisibility("CONFIRMED".equals(status) ? View.VISIBLE : View.GONE);
+
+        boolean hasVoucher = "CONFIRMED".equals(status) || "FINISHED".equals(status);
+        holder.btnVoucher.setVisibility(hasVoucher ? View.VISIBLE : View.GONE);
+
+        holder.btnVoucher.setOnClickListener(v -> {
+            if (listener != null) listener.onVoucherClick(booking);
+        });
     }
 
     private String getStatusLabel(String status, Context context) {
