@@ -77,7 +77,9 @@
                 android:id="@+id/etDate"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="YYYY-MM-DD" />
+                android:focusable="false"
+                android:cursorVisible="false"
+                android:inputType="none" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <LinearLayout
@@ -97,7 +99,9 @@
                     android:id="@+id/etDateFrom"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="YYYY-MM-DD" />
+                    android:focusable="false"
+                    android:cursorVisible="false"
+                    android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -111,7 +115,9 @@
                     android:id="@+id/etDateTo"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="YYYY-MM-DD" />
+                    android:focusable="false"
+                    android:cursorVisible="false"
+                    android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
 

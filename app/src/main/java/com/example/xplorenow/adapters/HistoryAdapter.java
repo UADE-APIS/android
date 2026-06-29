@@ -68,23 +68,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
     @Override
     public HistoryViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_history, parent, false);
-        HistoryViewHolder holder = new HistoryViewHolder(view);
-
-        holder.btnReview.setOnClickListener(v -> {
-            int position = holder.getAdapterPosition();
-            if (position != RecyclerView.NO_POSITION && listener != null) {
-                listener.onReviewClick(items.get(position));
-            }
-        });
-
-        holder.itemView.setOnClickListener(v -> {
-            int position = holder.getAdapterPosition();
-            if (position != RecyclerView.NO_POSITION && itemListener != null) {
-                itemListener.onItemClick(items.get(position));
-            }
-        });
-
-        return holder;
+        return new HistoryViewHolder(view);
     }
 
     @Override
@@ -99,13 +83,17 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
         holder.tvGuide.setText(context.getString(R.string.history_guide, item.getAssignedGuide()));
         holder.tvQuantity.setText(context.getString(R.string.history_quantity, item.getQuantity()));
 
-        if (item.getReview() != null && item.getReview().getId() > 0) {
-            holder.btnReview.setVisibility(View.GONE);
-            holder.tvReviewed.setVisibility(View.VISIBLE);
-        } else {
-            holder.btnReview.setVisibility(View.VISIBLE);
-            holder.tvReviewed.setVisibility(View.GONE);
-        }
+        boolean reviewed = item.getReview() != null && item.getReview().getId() > 0;
+        holder.btnReview.setVisibility(reviewed ? View.GONE : View.VISIBLE);
+        holder.tvReviewed.setVisibility(reviewed ? View.VISIBLE : View.GONE);
+
+        holder.btnReview.setOnClickListener(v -> {
+            if (listener != null) listener.onReviewClick(item);
+        });
+
+        holder.itemView.setOnClickListener(v -> {
+            if (itemListener != null) itemListener.onItemClick(item);
+        });
     }
 
     @Override

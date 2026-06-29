@@ -1,6 +1,7 @@
 package com.example.xplorenow.auth;
 
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -41,8 +42,11 @@ public class LoginOtpFragment extends Fragment {
     @Inject
     TokenManager tokenManager;
 
+    private static final long RESEND_COOLDOWN_MS = 30_000;
+
     private TextInputLayout tilCode;
     private ProgressBar progress;
+    private CountDownTimer countDownTimer;
 
     private String email;
 
@@ -66,11 +70,15 @@ public class LoginOtpFragment extends Fragment {
         MaterialButton btnRequest = view.findViewById(R.id.btnRequestOtp);
         MaterialButton btnVerify = view.findViewById(R.id.btnVerify);
 
-        btnRequest.setOnClickListener(v -> requestOtp(view));
+        btnRequest.setOnClickListener(v -> {
+            requestOtp(view);
+            startResendCooldown(btnRequest);
+        });
         btnVerify.setOnClickListener(v -> verifyOtp(view));
 
         if (!TextUtils.isEmpty(email)) {
             requestOtp(view);
+            startResendCooldown(btnRequest);
         }
     }
 
@@ -171,6 +179,35 @@ public class LoginOtpFragment extends Fragment {
             if (!isAdded()) return;
             Navigation.findNavController(rootView).navigate(R.id.action_loginOtp_to_home);
         });
+    }
+
+    private void startResendCooldown(MaterialButton btn) {
+        if (countDownTimer != null) countDownTimer.cancel();
+        btn.setEnabled(false);
+        btn.setAlpha(0.5f);
+
+        countDownTimer = new CountDownTimer(RESEND_COOLDOWN_MS, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                btn.setText("Reenviar en " + (millisUntilFinished / 1000) + "s");
+            }
+
+            @Override
+            public void onFinish() {
+                btn.setEnabled(true);
+                btn.setAlpha(1f);
+                btn.setText("Reenviar código");
+            }
+        }.start();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+            countDownTimer = null;
+        }
     }
 
     private void setLoading(boolean loading) {

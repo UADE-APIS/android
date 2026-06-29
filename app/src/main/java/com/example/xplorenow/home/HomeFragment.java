@@ -1,5 +1,6 @@
 package com.example.xplorenow.home;
 
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -36,8 +37,10 @@ import com.example.xplorenow.databinding.DialogFiltersBinding;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -175,6 +178,28 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
         orderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         filterBinding.spinnerOrdering.setAdapter(orderAdapter);
 
+        if (currentFilters.containsKey("date")) {
+            filterBinding.etDate.setText(currentFilters.get("date"));
+        }
+
+        filterBinding.etDate.setOnClickListener(v -> {
+            Calendar cal = Calendar.getInstance();
+            String existing = filterBinding.etDate.getText() != null
+                    ? filterBinding.etDate.getText().toString() : "";
+            if (!existing.isEmpty()) {
+                try {
+                    String[] parts = existing.split("-");
+                    cal.set(Integer.parseInt(parts[0]),
+                            Integer.parseInt(parts[1]) - 1,
+                            Integer.parseInt(parts[2]));
+                } catch (Exception ignored) {}
+            }
+            new DatePickerDialog(requireContext(), (picker, year, month, day) -> {
+                String formatted = String.format(Locale.US, "%04d-%02d-%02d", year, month + 1, day);
+                filterBinding.etDate.setText(formatted);
+            }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show();
+        });
+
         filterBinding.btnApplyFilters.setOnClickListener(v -> {
             currentFilters.clear();
 
@@ -192,6 +217,10 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
 
             String maxPrice = filterBinding.etMaxPrice.getText().toString().trim();
             if (!maxPrice.isEmpty()) currentFilters.put("max_price", maxPrice);
+
+            String date = filterBinding.etDate.getText() != null
+                    ? filterBinding.etDate.getText().toString().trim() : "";
+            if (!date.isEmpty()) currentFilters.put("date", date);
 
             if (filterBinding.cbIsFeatured.isChecked()) currentFilters.put("is_featured", "true");
 
@@ -305,6 +334,10 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
                 if (response.isSuccessful()) {
                     activity.setFavorited(!activity.isFavorited());
                     adapter.notifyActivityChanged(activity);
+                    int msgRes = activity.isFavorited()
+                            ? R.string.msg_favorite_added
+                            : R.string.msg_favorite_removed;
+                    Snackbar.make(requireView(), msgRes, Snackbar.LENGTH_SHORT).show();
                 } else {
                     Snackbar.make(requireView(), getString(R.string.error_http, response.code()), Snackbar.LENGTH_SHORT).show();
                 }
