@@ -31,6 +31,9 @@ public class Booking {
         this.status = status;
     }
 
+    @SerializedName("review")
+    private Review review;
+
     @SerializedName("created_at")
     private String createdAt;
 
@@ -46,6 +49,8 @@ public class Booking {
     public void setAvailabilityDetail(ActivityAvailability availabilityDetail) { this.availabilityDetail = availabilityDetail; }
     public int getQuantity() { return quantity; }
     public void setQuantity(int quantity) { this.quantity = quantity; }
+    public Review getReview() { return review; }
+    public void setReview(Review review) { this.review = review; }
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
     public String getDate() {

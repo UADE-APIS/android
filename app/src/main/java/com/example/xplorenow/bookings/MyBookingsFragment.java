@@ -1,6 +1,7 @@
 package com.example.xplorenow.bookings;
 
 import android.app.AlertDialog;
+import android.widget.RatingBar;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -106,6 +107,15 @@ public class MyBookingsFragment extends Fragment {
                 args.putString("guideName", detail != null ? detail.getAssignedGuide() : "");
                 args.putInt("quantity", booking.getQuantity());
                 Navigation.findNavController(view).navigate(R.id.action_myBookings_to_voucher, args);
+            }
+
+            @Override
+            public void onCalificarClick(Booking booking) {
+                if (booking.getReview() != null && booking.getReview().getId() > 0) {
+                    mostrarCalificacionExistente(booking.getReview());
+                } else {
+                    mostrarDialogoCalificacion(view, booking.getId(), progressBar, tvError);
+                }
             }
         });
 
@@ -423,6 +433,85 @@ public class MyBookingsFragment extends Fragment {
                         (d, w) -> performApiCancel(view, booking.getId(), pb, err))
                 .setNegativeButton(R.string.action_back, null)
                 .show();
+    }
+
+    private void mostrarCalificacionExistente(com.example.xplorenow.data.model.Review review) {
+        android.view.View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_review, null);
+
+        android.widget.RatingBar ratingActivity = dialogView.findViewById(R.id.ratingActivity);
+        android.widget.RatingBar ratingGuide    = dialogView.findViewById(R.id.ratingGuide);
+        android.widget.EditText etComment       = dialogView.findViewById(R.id.etComment);
+        Button btnSubmit                        = dialogView.findViewById(R.id.btnSubmitReview);
+        TextView tvDialogError                  = dialogView.findViewById(R.id.tvDialogError);
+
+        ratingActivity.setRating(review.getActivityRating());
+        ratingGuide.setRating(review.getGuideRating());
+        ratingActivity.setIsIndicator(true);
+        ratingGuide.setIsIndicator(true);
+        etComment.setText(review.getComment());
+        etComment.setEnabled(false);
+        btnSubmit.setVisibility(View.GONE);
+        tvDialogError.setVisibility(View.GONE);
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle(getString(R.string.history_review_title))
+                .setView(dialogView)
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
+    }
+
+    private void mostrarDialogoCalificacion(View rootView, int bookingId, ProgressBar progressBar, TextView tvError) {
+        android.view.View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_review, null);
+
+        android.widget.RatingBar ratingActivity = dialogView.findViewById(R.id.ratingActivity);
+        android.widget.RatingBar ratingGuide    = dialogView.findViewById(R.id.ratingGuide);
+        android.widget.EditText etComment       = dialogView.findViewById(R.id.etComment);
+        Button btnSubmit                        = dialogView.findViewById(R.id.btnSubmitReview);
+        TextView tvDialogError                  = dialogView.findViewById(R.id.tvDialogError);
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .create();
+
+        btnSubmit.setOnClickListener(v -> {
+            int actRating   = (int) ratingActivity.getRating();
+            int guideRating = (int) ratingGuide.getRating();
+
+            if (actRating == 0 || guideRating == 0) {
+                tvDialogError.setText(R.string.history_review_fill_ratings);
+                tvDialogError.setVisibility(View.VISIBLE);
+                return;
+            }
+
+            tvDialogError.setVisibility(View.GONE);
+            String comment = etComment.getText().toString().trim();
+
+            apiService.createReview(bookingId, new com.example.xplorenow.data.model.ReviewRequest(actRating, guideRating, comment))
+                    .enqueue(new Callback<ApiResponse<com.example.xplorenow.data.model.Review>>() {
+                        @Override
+                        public void onResponse(@NonNull Call<ApiResponse<com.example.xplorenow.data.model.Review>> call,
+                                               @NonNull Response<ApiResponse<com.example.xplorenow.data.model.Review>> response) {
+                            if (!isAdded()) return;
+                            dialog.dismiss();
+                            if (response.isSuccessful()) {
+                                Snackbar.make(rootView, R.string.msg_review_success, Snackbar.LENGTH_SHORT).show();
+                                loadBookings(progressBar, tvError);
+                            } else {
+                                Snackbar.make(rootView, getString(R.string.error_http, response.code()), Snackbar.LENGTH_SHORT).show();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(@NonNull Call<ApiResponse<com.example.xplorenow.data.model.Review>> call,
+                                              @NonNull Throwable t) {
+                            if (!isAdded()) return;
+                            dialog.dismiss();
+                            Snackbar.make(rootView, R.string.error_connection, Snackbar.LENGTH_SHORT).show();
+                        }
+                    });
+        });
+
+        dialog.show();
     }
 
     private void performApiCancel(View view, int bookingId, ProgressBar progressBar, TextView tvError) {

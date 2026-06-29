@@ -131,6 +131,9 @@
     <!-- Offline -->
     <string name="offline_banner">Sin conexión — mostrando datos guardados</string>
 
+    <string name="msg_review_success">¡Gracias por tu calificación!</string>
+    <string name="action_view_review">Ver calificación</string>
+
     <!-- Voucher -->
     <string name="action_view_voucher">Ver voucher</string>
     <string name="voucher_booking_number">Reserva #%1$d</string>
