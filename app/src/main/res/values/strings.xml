@@ -48,6 +48,7 @@
     <string name="error_invalid_quantity">La cantidad debe ser mayor a 0.</string>
     <string name="error_insufficient_slots">No hay suficientes cupos disponibles para esta fecha.</string>
     <string name="error_booking_failed">Ocurrió un error al procesar la reserva.</string>
+    <string name="error_no_future_dates">No hay fechas disponibles para reservar esta actividad.</string>
     <string name="msg_booking_success">¡Reserva realizada con éxito!</string>
     <string name="register_success">Cuenta creada exitosamente. Iniciá sesión.</string>
     <string name="login_otp_option">Ingresar con código OTP</string>
@@ -121,6 +122,11 @@
 
     <string name="profile_save_success">Perfil actualizado</string>
     <string name="session_expired">Sesión vencida. Iniciá sesión de nuevo.</string>
+
+    <string name="msg_cancel_success">Reserva cancelada correctamente</string>
+    <string name="msg_review_success">¡Gracias por tu calificación!</string>
+    <string name="msg_favorite_added">Actividad guardada en favoritos</string>
+    <string name="msg_favorite_removed">Actividad eliminada de favoritos</string>
 
     <!-- Offline -->
     <string name="offline_banner">Sin conexión — mostrando datos guardados</string>

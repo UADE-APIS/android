@@ -222,8 +222,9 @@ public class ProfileFragment extends Fragment {
 
     private void setupSaveButton() {
         btnSave.setOnClickListener(v -> {
-            List<String> preferences = new ArrayList<>();
+            btnSave.setEnabled(false);
 
+            List<String> preferences = new ArrayList<>();
             if (cbAventura.isChecked()) preferences.add("adventure");
             if (cbCultura.isChecked()) preferences.add("guided_tour");
             if (cbGastronomia.isChecked()) preferences.add("gastronomic");
@@ -242,6 +243,8 @@ public class ProfileFragment extends Fragment {
                 @Override
                 public void onResponse(Call<WrappedResponse<MeResponseData>> call,
                                        Response<WrappedResponse<MeResponseData>> response) {
+                    btnSave.setEnabled(true);
+                    if (!isAdded()) return;
 
                     if (response.code() == 401) {
                         handleUnauthorized();
@@ -249,13 +252,24 @@ public class ProfileFragment extends Fragment {
                     }
 
                     if (response.isSuccessful()) {
+                        String firstName = etFirstName.getText().toString().trim();
+                        String lastName = etLastName.getText().toString().trim();
+                        String fullName = (firstName + " " + lastName).trim();
+                        tvName.setText(fullName.isEmpty() ? "-" : fullName);
+                        tvUsername.setText(etUsername.getText().toString().trim());
+                        tvPhone.setText(etPhone.getText().toString().trim());
+
                         Snackbar.make(requireView(), getString(R.string.profile_save_success), Snackbar.LENGTH_SHORT).show();
                         toggleEditMode(false);
+                    } else {
+                        Snackbar.make(requireView(), getString(R.string.error_connection), Snackbar.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<WrappedResponse<MeResponseData>> call, Throwable t) {
+                    if (!isAdded()) return;
+                    btnSave.setEnabled(true);
                     Snackbar.make(requireView(), getString(R.string.error_connection), Snackbar.LENGTH_SHORT).show();
                 }
             });

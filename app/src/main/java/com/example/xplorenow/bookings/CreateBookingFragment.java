@@ -26,9 +26,13 @@ import com.example.xplorenow.data.model.Booking;
 import com.example.xplorenow.data.model.BookingRequest;
 import com.example.xplorenow.data.network.ApiService;
 import com.example.xplorenow.data.local.CachedBooking;
+import com.google.android.material.snackbar.Snackbar;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import javax.inject.Inject;
 
@@ -147,24 +151,36 @@ public class CreateBookingFragment extends Fragment {
                     currentActivity = response.body().getData();
                     tvTitle.setText(currentActivity.getTitle());
 
+                    String today = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+
                     if (currentActivity.getAvailabilities() != null && !currentActivity.getAvailabilities().isEmpty()) {
-                        availabilities = currentActivity.getAvailabilities();
-                        List<String> dateStrings = new ArrayList<>();
-                        for (ActivityAvailability availability : availabilities) {
-                            // Si el modelo tiene un campo getTime() separado, se concatena aquí.
-                            // Si todo viene en getDate(), esto es suficiente.
-                            dateStrings.add(availability.getDate());
+                        List<ActivityAvailability> futuras = new ArrayList<>();
+                        for (ActivityAvailability a : currentActivity.getAvailabilities()) {
+                            if (a.isActive() && a.getDate() != null && a.getDate().compareTo(today) >= 0) {
+                                futuras.add(a);
+                            }
                         }
 
-                        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, dateStrings);
-                        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                        spDate.setAdapter(adapter);
+                        if (!futuras.isEmpty()) {
+                            availabilities = futuras;
+                            List<String> dateStrings = new ArrayList<>();
+                            for (ActivityAvailability a : futuras) {
+                                dateStrings.add(a.getDate());
+                            }
+                            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, dateStrings);
+                            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                            spDate.setAdapter(adapter);
+                            btnBook.setEnabled(true);
+                        } else {
+                            spDate.setVisibility(View.GONE);
+                            err.setText(getString(R.string.error_no_future_dates));
+                            err.setVisibility(View.VISIBLE);
+                        }
                     } else {
                         spDate.setVisibility(View.GONE);
                         tvSlots.setText(getString(R.string.text_available_slots, currentActivity.getAvailableSlots()));
+                        btnBook.setEnabled(true);
                     }
-
-                    btnBook.setEnabled(true);
                 } else {
                     err.setText(getString(R.string.error_loading_data));
                     err.setVisibility(View.VISIBLE);
@@ -191,9 +207,7 @@ public class CreateBookingFragment extends Fragment {
                 pb.setVisibility(View.GONE);
 
                 if (response.isSuccessful() && response.body() != null) {
-                    err.setTextColor(getResources().getColor(android.R.color.holo_green_dark, null));
-                    err.setText(getString(R.string.msg_booking_success));
-                    err.setVisibility(View.VISIBLE);
+                    Snackbar.make(view, R.string.msg_booking_success, Snackbar.LENGTH_SHORT).show();
 
                     Booking createdBooking = response.body().getData();
                     if (createdBooking != null) {
@@ -222,9 +236,10 @@ public class CreateBookingFragment extends Fragment {
                         }).start();
                     }
 
-                    view.postDelayed(() -> Navigation.findNavController(view).popBackStack(), 1500);
+                    view.postDelayed(() -> {
+                        if (isAdded()) Navigation.findNavController(view).popBackStack();
+                    }, 1500);
                 } else {
-                    err.setTextColor(getResources().getColor(android.R.color.holo_red_dark, null));
                     err.setText(getString(R.string.error_booking_failed) + " " + response.code());
                     err.setVisibility(View.VISIBLE);
                     Log.e(TAG, "Error HTTP: " + response.code());

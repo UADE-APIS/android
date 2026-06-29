@@ -421,6 +421,7 @@ public class MyBookingsFragment extends Fragment {
                                    @NonNull Response<ApiResponse<Booking>> response) {
 
                 if (response.isSuccessful()) {
+                    Snackbar.make(view, R.string.msg_cancel_success, Snackbar.LENGTH_SHORT).show();
                     loadBookings(progressBar, tvError);
                 } else {
                     progressBar.setVisibility(View.GONE);

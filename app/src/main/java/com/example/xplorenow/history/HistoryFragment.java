@@ -1,5 +1,6 @@
 package com.example.xplorenow.history;
 
+import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -34,8 +35,10 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -200,6 +203,14 @@ public class HistoryFragment extends Fragment {
             }
         }
 
+        if (currentFilters.containsKey("date")) etDate.setText(currentFilters.get("date"));
+        if (currentFilters.containsKey("date_from")) etDateFrom.setText(currentFilters.get("date_from"));
+        if (currentFilters.containsKey("date_to")) etDateTo.setText(currentFilters.get("date_to"));
+
+        etDate.setOnClickListener(v -> showDatePicker(etDate));
+        etDateFrom.setOnClickListener(v -> showDatePicker(etDateFrom));
+        etDateTo.setOnClickListener(v -> showDatePicker(etDateTo));
+
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
                 .setView(dialogView)
                 .create();
@@ -244,6 +255,20 @@ public class HistoryFragment extends Fragment {
         dialog.show();
     }
 
+    private void showDatePicker(TextInputEditText field) {
+        Calendar cal = Calendar.getInstance();
+        String existing = field.getText() != null ? field.getText().toString() : "";
+        if (!existing.isEmpty()) {
+            try {
+                String[] parts = existing.split("-");
+                cal.set(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]) - 1, Integer.parseInt(parts[2]));
+            } catch (Exception ignored) {}
+        }
+        new DatePickerDialog(requireContext(), (picker, year, month, day) -> {
+            field.setText(String.format(Locale.US, "%04d-%02d-%02d", year, month + 1, day));
+        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show();
+    }
+
     private void mostrarDialogoCalificacion(int bookingId, ProgressBar progressBar, TextView tvError) {
         View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_review, null);
 
@@ -276,6 +301,7 @@ public class HistoryFragment extends Fragment {
                     if (!isAdded()) return;
                     dialog.dismiss();
                     if (response.isSuccessful()) {
+                        Snackbar.make(requireView(), R.string.msg_review_success, Snackbar.LENGTH_SHORT).show();
                         cargarHistorial(1, progressBar, tvError);
                     } else {
                         Snackbar.make(requireView(), getString(R.string.error_http, response.code()), Snackbar.LENGTH_SHORT).show();

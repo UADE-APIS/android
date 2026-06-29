@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.xplorenow.R;
+import com.google.android.material.snackbar.Snackbar;
 import com.example.xplorenow.adapters.GalleryAdapter;
 import com.example.xplorenow.data.model.Activity;
 import com.example.xplorenow.data.model.ActivityAvailability;
@@ -233,6 +234,10 @@ public class ActivityDetailFragment extends Fragment {
                             if (response.isSuccessful()) {
                                 activity.setFavorited(!activity.isFavorited());
                                 updateFavoriteButton(btnFavorite, activity.isFavorited());
+                                int msgRes = activity.isFavorited()
+                                        ? R.string.msg_favorite_added
+                                        : R.string.msg_favorite_removed;
+                                Snackbar.make(view, msgRes, Snackbar.LENGTH_SHORT).show();
                             }
                         }
 

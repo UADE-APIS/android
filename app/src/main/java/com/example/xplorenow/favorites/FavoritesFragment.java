@@ -22,6 +22,7 @@ import com.example.xplorenow.data.model.Pagination;
 import com.example.xplorenow.data.network.ApiService;
 import com.example.xplorenow.data.network.dto.WrappedResponse;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -141,6 +142,7 @@ public class FavoritesFragment extends Fragment implements ActivitiesAdapter.OnA
             public void onResponse(@NonNull Call<WrappedResponse<Void>> call, @NonNull Response<WrappedResponse<Void>> response) {
                 if (!isAdded()) return;
                 if (response.isSuccessful()) {
+                    Snackbar.make(requireView(), R.string.msg_favorite_removed, Snackbar.LENGTH_SHORT).show();
                     cargarFavoritos(1, progressBar, tvError);
                 } else {
                     tvError.setText(getString(R.string.error_http, response.code()));
