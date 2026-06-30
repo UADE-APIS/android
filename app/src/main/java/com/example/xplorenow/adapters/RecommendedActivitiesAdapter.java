@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.xplorenow.R;
 import com.example.xplorenow.data.model.Activity;
+import com.example.xplorenow.payment.PaymentUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,7 +71,12 @@ public class RecommendedActivitiesAdapter extends RecyclerView.Adapter<Recommend
         public void bind(Activity activity) {
             tvTitle.setText(activity.getTitle());
             tvLocation.setText(activity.getLocation());
-            tvPrice.setText(itemView.getContext().getString(R.string.detail_price_format, activity.getPrice()));
+            if (activity.isFree()) {
+                tvPrice.setText(itemView.getContext().getString(R.string.price_free));
+            } else {
+                tvPrice.setText(itemView.getContext().getString(
+                        R.string.detail_price_format, PaymentUtils.formatAmount(activity.getPriceValue())));
+            }
 
             if (activity.getImages() != null && !activity.getImages().isEmpty()) {
                 Glide.with(itemView.getContext())

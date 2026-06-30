@@ -2,7 +2,9 @@ package com.example.xplorenow.data.model;
 
 import com.google.gson.annotations.SerializedName;
 
-public class ActivityAvailability {
+import java.io.Serializable;
+
+public class ActivityAvailability implements Serializable {
 
     @SerializedName("id")
     private int id;

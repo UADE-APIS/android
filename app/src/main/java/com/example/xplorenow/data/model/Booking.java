@@ -2,7 +2,9 @@ package com.example.xplorenow.data.model;
 
 import com.google.gson.annotations.SerializedName;
 
-public class Booking {
+import java.io.Serializable;
+
+public class Booking implements Serializable {
 
     @SerializedName("id")
     private int id;

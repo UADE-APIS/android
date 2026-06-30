@@ -29,6 +29,12 @@ android {
     }
     buildFeatures {
         viewBinding true
+        buildConfig true
+    }
+
+    def apiBaseUrl = project.findProperty("API_BASE_URL") ?: "http://192.168.0.14:8000/"
+    defaultConfig {
+        buildConfigField "String", "API_BASE_URL", "\"${apiBaseUrl}\""
     }
 }
 

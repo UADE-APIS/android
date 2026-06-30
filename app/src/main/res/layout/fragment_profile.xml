@@ -175,6 +175,13 @@
         android:text="@string/profile_change_password" />
 
     <Button
+        android:id="@+id/btnTransactions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/profile_transactions" />
+
+    <Button
         android:id="@+id/btnLogout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

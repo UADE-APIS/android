@@ -1,5 +1,6 @@
 package com.example.xplorenow.di;
 
+import com.example.xplorenow.BuildConfig;
 import com.example.xplorenow.data.network.ApiService;
 import com.example.xplorenow.data.session.TokenManager;
 
@@ -19,7 +20,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 @InstallIn(SingletonComponent.class)
 public final class NetworkModule {
 
-    private static final String BASE_URL = "http://localhost:8000/";
+    private static final String BASE_URL = BuildConfig.API_BASE_URL;
 
     private NetworkModule() {
     }

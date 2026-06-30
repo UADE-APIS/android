@@ -9,26 +9,36 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.example.xplorenow.R;
+import com.example.xplorenow.data.local.CachedBooking;
 import com.example.xplorenow.data.model.Activity;
 import com.example.xplorenow.data.model.ActivityAvailability;
 import com.example.xplorenow.data.model.ApiResponse;
 import com.example.xplorenow.data.model.Booking;
 import com.example.xplorenow.data.model.BookingRequest;
+import com.example.xplorenow.data.model.PaymentCard;
+import com.example.xplorenow.data.model.PaymentRequest;
+import com.example.xplorenow.data.model.PaymentTransaction;
 import com.example.xplorenow.data.network.ApiService;
-import com.example.xplorenow.data.local.CachedBooking;
+import com.example.xplorenow.payment.MockPaymentService;
+import com.example.xplorenow.payment.PaymentStorage;
+import com.example.xplorenow.payment.PaymentUtils;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -42,14 +52,14 @@ public class CreateBookingFragment extends Fragment {
 
     private static final String TAG = "CreateBookingFragment";
 
-    @Inject
-    ApiService apiService;
+    @Inject ApiService apiService;
+    @Inject com.example.xplorenow.data.local.CachedBookingDao cachedBookingDao;
+    @Inject MockPaymentService mockPaymentService;
+    @Inject PaymentStorage paymentStorage;
 
-    @Inject
-    com.example.xplorenow.data.local.CachedBookingDao cachedBookingDao;
-
-    private List<ActivityAvailability> availabilities = new ArrayList<>();
+    private final List<ActivityAvailability> availabilities = new ArrayList<>();
     private Activity currentActivity;
+    private PaymentTransaction pendingApprovedTransaction;
 
     @Nullable
     @Override
@@ -64,77 +74,110 @@ public class CreateBookingFragment extends Fragment {
         TextView tvActivityTitle = view.findViewById(R.id.tvActivityTitle);
         Spinner spDate = view.findViewById(R.id.spDate);
         TextView tvAvailableSlots = view.findViewById(R.id.tvAvailableSlots);
+        TextView tvPriceType = view.findViewById(R.id.tvPriceType);
+        TextView tvTotal = view.findViewById(R.id.tvTotal);
+        LinearLayout layoutPaymentForm = view.findViewById(R.id.layoutPaymentForm);
         EditText etQuantity = view.findViewById(R.id.etQuantity);
+        EditText etCardHolder = view.findViewById(R.id.etCardHolder);
+        EditText etCardNumber = view.findViewById(R.id.etCardNumber);
+        EditText etCardExpiry = view.findViewById(R.id.etCardExpiry);
+        EditText etCardCvv = view.findViewById(R.id.etCardCvv);
         Button btnBook = view.findViewById(R.id.btnBook);
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
         TextView tvError = view.findViewById(R.id.tvError);
 
         int activityId = getArguments() != null ? getArguments().getInt("activityId", -1) : -1;
-
         if (activityId == -1) {
-            tvError.setText(getString(R.string.error_invalid_activity));
-            tvError.setVisibility(View.VISIBLE);
+            showError(tvError, getString(R.string.error_invalid_activity));
             btnBook.setEnabled(false);
             return;
         }
 
-        fetchActivityDetails(activityId, tvActivityTitle, spDate, tvAvailableSlots, progressBar, tvError, btnBook);
+        fetchActivityDetails(activityId, tvActivityTitle, spDate, tvAvailableSlots, tvPriceType, tvTotal,
+                layoutPaymentForm, progressBar, tvError, btnBook);
 
         spDate.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            public void onItemSelected(AdapterView<?> parent, View selectedView, int position, long id) {
                 if (!availabilities.isEmpty()) {
                     int slots = availabilities.get(position).getAvailableSlots();
                     tvAvailableSlots.setText(getString(R.string.text_available_slots, slots));
                 } else if (currentActivity != null) {
                     tvAvailableSlots.setText(getString(R.string.text_available_slots, currentActivity.getAvailableSlots()));
                 }
+                updateTotal(tvTotal, etQuantity.getText().toString().trim());
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
         });
+
+        etQuantity.setText("1");
 
         btnBook.setOnClickListener(v -> {
             tvError.setVisibility(View.GONE);
-            String quantityStr = etQuantity.getText().toString().trim();
 
+            String quantityStr = etQuantity.getText().toString().trim();
             if (quantityStr.isEmpty()) {
-                tvError.setText(getString(R.string.error_fill_quantity));
-                tvError.setVisibility(View.VISIBLE);
+                showError(tvError, getString(R.string.error_fill_quantity));
                 return;
             }
 
-            int requestedQuantity = Integer.parseInt(quantityStr);
+            int requestedQuantity;
+            try {
+                requestedQuantity = Integer.parseInt(quantityStr);
+            } catch (NumberFormatException e) {
+                showError(tvError, getString(R.string.error_invalid_quantity));
+                return;
+            }
 
             if (requestedQuantity <= 0) {
-                tvError.setText(getString(R.string.error_invalid_quantity));
-                tvError.setVisibility(View.VISIBLE);
+                showError(tvError, getString(R.string.error_invalid_quantity));
                 return;
             }
 
             int availableSlots;
             Integer availabilityId = null;
-
             if (!availabilities.isEmpty()) {
                 ActivityAvailability selectedAvailability = availabilities.get(spDate.getSelectedItemPosition());
                 availableSlots = selectedAvailability.getAvailableSlots();
                 availabilityId = selectedAvailability.getId();
             } else {
-                availableSlots = currentActivity.getAvailableSlots();
+                availableSlots = currentActivity != null ? currentActivity.getAvailableSlots() : 0;
             }
 
             if (requestedQuantity > availableSlots) {
-                tvError.setText(getString(R.string.error_insufficient_slots));
-                tvError.setVisibility(View.VISIBLE);
+                showError(tvError, getString(R.string.error_insufficient_slots));
                 return;
             }
 
-            executeBooking(view, new BookingRequest(activityId, availabilityId, requestedQuantity), progressBar, tvError);
+            String selectedDate = getSelectedDate(spDate);
+            double totalAmount = currentActivity != null ? currentActivity.getPriceValue() * requestedQuantity : 0d;
+            BookingRequest bookingRequest = new BookingRequest(activityId, availabilityId, requestedQuantity);
+
+            if (currentActivity != null && !currentActivity.isFree()) {
+                PaymentCard card = validateCardFields(etCardHolder, etCardNumber, etCardExpiry, etCardCvv, tvError);
+                if (card == null) {
+                    return;
+                }
+
+                showPaymentSummary(currentActivity.getTitle(), selectedDate, requestedQuantity, totalAmount, () -> {
+                    showInfo(tvError, getString(R.string.payment_processing));
+                    processPaymentAndBooking(view, bookingRequest, progressBar, tvError, card,
+                            selectedDate, requestedQuantity, totalAmount, activityId);
+                });
+            } else {
+                showPaymentSummary(currentActivity != null ? currentActivity.getTitle() : "",
+                        selectedDate, requestedQuantity, totalAmount,
+                        () -> executeBooking(view, bookingRequest, progressBar, tvError));
+            }
         });
     }
 
-    private void fetchActivityDetails(int activityId, TextView tvTitle, Spinner spDate, TextView tvSlots, ProgressBar pb, TextView err, Button btnBook) {
+    private void fetchActivityDetails(int activityId, TextView tvTitle, Spinner spDate, TextView tvSlots,
+                                      TextView tvPriceType, TextView tvTotal, LinearLayout layoutPaymentForm,
+                                      ProgressBar pb, TextView err, Button btnBook) {
         pb.setVisibility(View.VISIBLE);
         btnBook.setEnabled(false);
 
@@ -147,16 +190,25 @@ public class CreateBookingFragment extends Fragment {
                     currentActivity = response.body().getData();
                     tvTitle.setText(currentActivity.getTitle());
 
+                    if (currentActivity.isFree()) {
+                        tvPriceType.setText(getString(R.string.price_free));
+                        layoutPaymentForm.setVisibility(View.GONE);
+                    } else {
+                        tvPriceType.setText(getString(R.string.price_paid,
+                                PaymentUtils.formatAmount(currentActivity.getPriceValue())));
+                        layoutPaymentForm.setVisibility(View.VISIBLE);
+                    }
+
                     if (currentActivity.getAvailabilities() != null && !currentActivity.getAvailabilities().isEmpty()) {
-                        availabilities = currentActivity.getAvailabilities();
+                        availabilities.clear();
+                        availabilities.addAll(currentActivity.getAvailabilities());
                         List<String> dateStrings = new ArrayList<>();
                         for (ActivityAvailability availability : availabilities) {
-                            // Si el modelo tiene un campo getTime() separado, se concatena aquí.
-                            // Si todo viene en getDate(), esto es suficiente.
                             dateStrings.add(availability.getDate());
                         }
 
-                        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, dateStrings);
+                        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
+                                android.R.layout.simple_spinner_item, dateStrings);
                         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                         spDate.setAdapter(adapter);
                     } else {
@@ -164,19 +216,67 @@ public class CreateBookingFragment extends Fragment {
                         tvSlots.setText(getString(R.string.text_available_slots, currentActivity.getAvailableSlots()));
                     }
 
+                    updateTotal(tvTotal, "1");
                     btnBook.setEnabled(true);
                 } else {
-                    err.setText(getString(R.string.error_loading_data));
-                    err.setVisibility(View.VISIBLE);
+                    showError(err, getString(R.string.error_loading_data));
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<ApiResponse<Activity>> call, @NonNull Throwable t) {
                 pb.setVisibility(View.GONE);
-                err.setText(getString(R.string.error_connection));
-                err.setVisibility(View.VISIBLE);
+                showError(err, getString(R.string.error_connection));
                 Log.e(TAG, "onFailure: " + t.getMessage());
+            }
+        });
+    }
+
+    private void processPaymentAndBooking(View view, BookingRequest bookingRequest, ProgressBar progressBar,
+                                          TextView tvError, PaymentCard card, String selectedDate,
+                                          int requestedQuantity, double totalAmount, int activityId) {
+        PaymentRequest paymentRequest = new PaymentRequest(
+                currentActivity.getTitle(),
+                selectedDate,
+                requestedQuantity,
+                totalAmount,
+                card
+        );
+
+        mockPaymentService.processPayment(paymentRequest, result -> {
+            if (!isAdded()) return;
+
+            if (result.isApproved()) {
+                pendingApprovedTransaction = new PaymentTransaction(
+                        UUID.randomUUID().toString(),
+                        null,
+                        activityId,
+                        currentActivity.getTitle(),
+                        selectedDate,
+                        requestedQuantity,
+                        totalAmount,
+                        LocalDateTime.now().toString(),
+                        result.getMaskedCard(),
+                        result.getStatus(),
+                        null
+                );
+                showInfo(tvError, getString(R.string.payment_approved));
+                executeBooking(view, bookingRequest, progressBar, tvError);
+            } else {
+                paymentStorage.saveTransaction(new PaymentTransaction(
+                        UUID.randomUUID().toString(),
+                        null,
+                        activityId,
+                        currentActivity.getTitle(),
+                        selectedDate,
+                        requestedQuantity,
+                        totalAmount,
+                        LocalDateTime.now().toString(),
+                        result.getMaskedCard(),
+                        result.getStatus(),
+                        result.getMessage()
+                ));
+                showError(tvError, getString(R.string.payment_rejected, result.getMessage()));
             }
         });
     }
@@ -191,12 +291,16 @@ public class CreateBookingFragment extends Fragment {
                 pb.setVisibility(View.GONE);
 
                 if (response.isSuccessful() && response.body() != null) {
-                    err.setTextColor(getResources().getColor(android.R.color.holo_green_dark, null));
-                    err.setText(getString(R.string.msg_booking_success));
-                    err.setVisibility(View.VISIBLE);
+                    showInfo(err, getString(R.string.msg_booking_success));
 
                     Booking createdBooking = response.body().getData();
                     if (createdBooking != null) {
+                        if (pendingApprovedTransaction != null) {
+                            pendingApprovedTransaction.setBookingId(createdBooking.getId());
+                            paymentStorage.saveTransaction(pendingApprovedTransaction);
+                            pendingApprovedTransaction = null;
+                        }
+
                         new Thread(() -> {
                             String imgUrl = "";
                             if (createdBooking.getActivityDetail() != null &&
@@ -204,7 +308,7 @@ public class CreateBookingFragment extends Fragment {
                                     !createdBooking.getActivityDetail().getImages().isEmpty()) {
                                 imgUrl = createdBooking.getActivityDetail().getImages().get(0).getImageUrl();
                             }
-                            
+
                             CachedBooking cb = new CachedBooking(
                                     String.valueOf(createdBooking.getId()),
                                     createdBooking.getActivityDetail() != null ? createdBooking.getActivityDetail().getTitle() : "",
@@ -212,9 +316,9 @@ public class CreateBookingFragment extends Fragment {
                                     createdBooking.getActivityDetail() != null ? createdBooking.getActivityDetail().getMeetingPoint() : "",
                                     createdBooking.getStatus() != null ? createdBooking.getStatus() : "CONFIRMED",
                                     imgUrl,
-                                    "VOUCHER-" + createdBooking.getId(),   // voucher único (req. 19)
-                                    createdBooking.getQuantity(),           // participantes (req. 19)
-                                    createdBooking.getActivityId()          // para navegar al detalle offline
+                                    "VOUCHER-" + createdBooking.getId(),
+                                    createdBooking.getQuantity(),
+                                    createdBooking.getActivityId()
                             );
                             List<CachedBooking> list = new ArrayList<>();
                             list.add(cb);
@@ -224,9 +328,8 @@ public class CreateBookingFragment extends Fragment {
 
                     view.postDelayed(() -> Navigation.findNavController(view).popBackStack(), 1500);
                 } else {
-                    err.setTextColor(getResources().getColor(android.R.color.holo_red_dark, null));
-                    err.setText(getString(R.string.error_booking_failed) + " " + response.code());
-                    err.setVisibility(View.VISIBLE);
+                    pendingApprovedTransaction = null;
+                    showError(err, getString(R.string.error_booking_failed) + " " + response.code());
                     Log.e(TAG, "Error HTTP: " + response.code());
                 }
             }
@@ -234,11 +337,80 @@ public class CreateBookingFragment extends Fragment {
             @Override
             public void onFailure(@NonNull Call<ApiResponse<Booking>> call, @NonNull Throwable t) {
                 pb.setVisibility(View.GONE);
-                err.setTextColor(getResources().getColor(android.R.color.holo_red_dark, null));
-                err.setText(getString(R.string.error_connection));
-                err.setVisibility(View.VISIBLE);
+                pendingApprovedTransaction = null;
+                showError(err, getString(R.string.error_connection));
                 Log.e(TAG, "onFailure: " + t.getMessage());
             }
         });
+    }
+
+    private void updateTotal(TextView tvTotal, String quantityText) {
+        int quantity = 1;
+        try {
+            if (quantityText != null && !quantityText.trim().isEmpty()) {
+                quantity = Integer.parseInt(quantityText.trim());
+            }
+        } catch (Exception ignored) {
+        }
+
+        double total = currentActivity != null ? currentActivity.getPriceValue() * Math.max(quantity, 1) : 0d;
+        tvTotal.setText(getString(R.string.price_total, PaymentUtils.formatAmount(total)));
+    }
+
+    private String getSelectedDate(Spinner spDate) {
+        if (spDate.getVisibility() == View.GONE) {
+            return "-";
+        }
+        return spDate.getSelectedItem() != null ? spDate.getSelectedItem().toString() : "-";
+    }
+
+    private PaymentCard validateCardFields(EditText etCardHolder, EditText etCardNumber, EditText etCardExpiry,
+                                           EditText etCardCvv, TextView tvError) {
+        String holder = etCardHolder.getText().toString().trim();
+        String number = PaymentUtils.normalizeCardNumber(etCardNumber.getText().toString());
+        String expiry = etCardExpiry.getText().toString().trim();
+        String cvv = etCardCvv.getText().toString().trim();
+
+        if (holder.isEmpty()) {
+            showError(tvError, getString(R.string.payment_invalid_holder));
+            return null;
+        }
+        if (!number.matches("\\d{13,19}")) {
+            showError(tvError, getString(R.string.payment_invalid_number));
+            return null;
+        }
+        if (!PaymentUtils.isValidExpiryDate(expiry)) {
+            showError(tvError, getString(R.string.payment_invalid_expiry));
+            return null;
+        }
+        if (!cvv.matches("\\d{3,4}")) {
+            showError(tvError, getString(R.string.payment_invalid_cvv));
+            return null;
+        }
+
+        return new PaymentCard(holder, number, expiry, cvv);
+    }
+
+    private void showPaymentSummary(String title, String selectedDate, int quantity, double totalAmount,
+                                    Runnable onConfirm) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.payment_summary_title)
+                .setMessage(getString(R.string.payment_summary_message, title, selectedDate,
+                        quantity, PaymentUtils.formatAmount(totalAmount)))
+                .setPositiveButton(R.string.action_confirm, (dialog, which) -> onConfirm.run())
+                .setNegativeButton(R.string.action_back, null)
+                .show();
+    }
+
+    private void showError(TextView tvError, String message) {
+        tvError.setTextColor(getResources().getColor(android.R.color.holo_red_dark, null));
+        tvError.setText(message);
+        tvError.setVisibility(View.VISIBLE);
+    }
+
+    private void showInfo(TextView tvError, String message) {
+        tvError.setTextColor(getResources().getColor(android.R.color.holo_green_dark, null));
+        tvError.setText(message);
+        tvError.setVisibility(View.VISIBLE);
     }
 }

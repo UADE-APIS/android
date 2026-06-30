@@ -32,7 +32,9 @@ import com.example.xplorenow.data.model.Activity;
 import com.example.xplorenow.data.model.ApiResponse;
 import com.example.xplorenow.data.model.Booking;
 import com.example.xplorenow.data.model.BookingsListResponse;
+import com.example.xplorenow.data.model.PaymentTransaction;
 import com.example.xplorenow.data.network.ApiService;
+import com.example.xplorenow.payment.PaymentStorage;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -61,8 +63,11 @@ public class MyBookingsFragment extends Fragment {
     private static final int BOOKINGS_PAGE_SIZE = 1000;
 
     @Inject ApiService apiService;
+    @Inject PaymentStorage paymentStorage;
+    @Inject CachedBookingDao cachedBookingDao;
 
     private BookingsAdapter adapter;
+    private TextView tvOfflineMode;
     private final Map<String, String> currentFilters = new HashMap<>();
 
     @Nullable
@@ -95,9 +100,23 @@ public class MyBookingsFragment extends Fragment {
             @Override
             public void onItemClick(Booking booking) {
                 Bundle args = new Bundle();
-                args.putInt("activityId", booking.getActivityId());
+                args.putSerializable("booking", booking);
                 Navigation.findNavController(view).navigate(
-                        R.id.action_myBookings_to_activityDetail, args);
+                        R.id.action_myBookings_to_bookingDetail, args);
+            }
+
+            @Override
+            public void onTransactionClick(Booking booking) {
+                PaymentTransaction transaction = paymentStorage.getTransactionByBookingId(booking.getId());
+                if (transaction == null) {
+                    Snackbar.make(view, "No hay transacción asociada", Snackbar.LENGTH_SHORT).show();
+                    return;
+                }
+                Bundle args = new Bundle();
+                args.putString("transactionId", transaction.getId());
+                args.putSerializable("booking", booking);
+                Navigation.findNavController(view).navigate(
+                        R.id.transactionDetailFragment, args);
             }
         });
 
@@ -111,6 +130,7 @@ public class MyBookingsFragment extends Fragment {
     private void loadBookings(ProgressBar progressBar, TextView tvError) {
         TextView tvEmpty = getView() != null ? getView().findViewById(R.id.tvEmpty) : null;
         if (tvEmpty != null) tvEmpty.setVisibility(View.GONE);
+        if (tvOfflineMode != null) tvOfflineMode.setVisibility(View.GONE);
         progressBar.setVisibility(View.VISIBLE);
         tvError.setVisibility(View.GONE);
 
@@ -148,6 +168,61 @@ public class MyBookingsFragment extends Fragment {
                 loadFromCache(tvError, tvEmpty);
             }
         });
+    }
+
+    private void loadFromCache(TextView tvError, TextView tvEmpty) {
+        new Thread(() -> {
+            List<CachedBooking> cachedBookings = cachedBookingDao.getAllBookings();
+            List<Booking> bookings = new ArrayList<>();
+
+            for (CachedBooking cachedBooking : cachedBookings) {
+                bookings.add(toBooking(cachedBooking));
+            }
+
+            if (!isAdded()) {
+                return;
+            }
+
+            requireActivity().runOnUiThread(() -> {
+                if (!isAdded()) {
+                    return;
+                }
+
+                adapter.setBookings(applyFilters(bookings));
+                tvError.setVisibility(View.GONE);
+                if (tvOfflineMode != null) {
+                    tvOfflineMode.setVisibility(View.VISIBLE);
+                }
+                if (tvEmpty != null) {
+                    tvEmpty.setVisibility(bookings.isEmpty() ? View.VISIBLE : View.GONE);
+                }
+            });
+        }).start();
+    }
+
+    private Booking toBooking(CachedBooking cachedBooking) {
+        Booking booking = new Booking();
+        booking.setId(parseBookingId(cachedBooking.getId()));
+        booking.setActivityId(cachedBooking.getActivityId());
+        booking.setQuantity(cachedBooking.getQuantity());
+        booking.setStatus(cachedBooking.getStatus());
+        booking.setCreatedAt(cachedBooking.getDate());
+
+        Activity activity = new Activity();
+        activity.setId(cachedBooking.getActivityId());
+        activity.setTitle(cachedBooking.getActivityTitle());
+        activity.setMeetingPoint(cachedBooking.getMeetingPoint());
+        booking.setActivityDetail(activity);
+
+        return booking;
+    }
+
+    private int parseBookingId(String id) {
+        try {
+            return Integer.parseInt(id);
+        } catch (Exception ignored) {
+            return 0;
+        }
     }
 
     private List<Booking> applyFilters(List<Booking> source) {

@@ -57,6 +57,10 @@
         <action
             android:id="@+id/action_myBookings_to_activityDetail"
             app:destination="@id/activityDetailFragment" />
+
+        <action
+            android:id="@+id/action_myBookings_to_bookingDetail"
+            app:destination="@id/bookingDetailFragment" />
     </fragment>
 
     <fragment
@@ -80,6 +84,10 @@
         <action
             android:id="@+id/action_profileFragment_to_changePasswordFragment"
             app:destination="@id/changePasswordFragment" />
+
+        <action
+            android:id="@+id/action_profileFragment_to_transactionsFragment"
+            app:destination="@id/transactionsFragment" />
     </fragment>
 
     <fragment
@@ -151,6 +159,47 @@
         <action
             android:id="@+id/action_newsDetail_to_activityDetail"
             app:destination="@id/activityDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/transactionsFragment"
+        android:name="com.example.xplorenow.transactions.TransactionsFragment"
+        android:label="Mis Transacciones"
+        tools:layout="@layout/fragment_transactions">
+
+        <action
+            android:id="@+id/action_transactions_to_transactionDetail"
+            app:destination="@id/transactionDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/transactionDetailFragment"
+        android:name="com.example.xplorenow.transactions.TransactionDetailFragment"
+        android:label="Detalle de Transacción"
+        tools:layout="@layout/fragment_transaction_detail">
+
+        <argument
+            android:name="transactionId"
+            app:argType="string" />
+
+        <action
+            android:id="@+id/action_transactionDetail_to_bookingDetail"
+            app:destination="@id/bookingDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/bookingDetailFragment"
+        android:name="com.example.xplorenow.bookings.BookingDetailFragment"
+        android:label="Detalle de Reserva"
+        tools:layout="@layout/fragment_booking_detail">
+
+        <argument
+            android:name="booking"
+            app:argType="com.example.xplorenow.data.model.Booking" />
+
+        <action
+            android:id="@+id/action_bookingDetail_to_transactionDetail"
+            app:destination="@id/transactionDetailFragment" />
     </fragment>
 
 </navigation>

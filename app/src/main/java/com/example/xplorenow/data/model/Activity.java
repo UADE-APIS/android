@@ -76,6 +76,19 @@ public class Activity implements Serializable {
         return price;
     }
 
+    public double getPriceValue() {
+        if (price == null) return 0d;
+        try {
+            return Double.parseDouble(price.replace(",", ".").trim());
+        } catch (Exception e) {
+            return 0d;
+        }
+    }
+
+    public boolean isFree() {
+        return getPriceValue() <= 0d;
+    }
+
     public int getDuration() {
         return duration;
     }

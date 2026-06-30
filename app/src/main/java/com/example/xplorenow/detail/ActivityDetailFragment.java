@@ -32,6 +32,7 @@ import com.example.xplorenow.data.model.ActivityAvailability;
 import com.example.xplorenow.data.model.ApiResponse;
 import com.example.xplorenow.data.network.ApiService;
 import com.example.xplorenow.data.network.dto.WrappedResponse;
+import com.example.xplorenow.payment.PaymentUtils;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
@@ -160,7 +161,12 @@ public class ActivityDetailFragment extends Fragment {
                 tvTitle.setText(activity.getTitle());
                 tvLocation.setText(activity.getLocation());
                 tvCategory.setText(activity.getCategory());
-                tvPrice.setText(getString(R.string.detail_price_format, activity.getPrice()));
+                if (activity.isFree()) {
+                    tvPrice.setText(getString(R.string.price_free));
+                } else {
+                    tvPrice.setText(getString(R.string.detail_price_format,
+                            PaymentUtils.formatAmount(activity.getPriceValue())));
+                }
                 tvDuration.setText(getString(R.string.detail_duration_format, activity.getDuration()));
                 tvDescription.setText(activity.getDescription());
                 tvIncludes.setText(activity.getIncludes());

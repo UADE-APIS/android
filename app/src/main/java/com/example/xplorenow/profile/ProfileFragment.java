@@ -97,6 +97,7 @@ public class ProfileFragment extends Fragment {
         btnSave = view.findViewById(R.id.btnSave);
         btnEditProfile = view.findViewById(R.id.btnEditProfile);
         Button btnGoToChangePassword = view.findViewById(R.id.btnGoToChangePassword);
+        Button btnTransactions = view.findViewById(R.id.btnTransactions);
 
         editContainer = view.findViewById(R.id.editContainer);
 
@@ -109,6 +110,10 @@ public class ProfileFragment extends Fragment {
         btnGoToChangePassword.setOnClickListener(v ->
                 NavHostFragment.findNavController(this)
                         .navigate(R.id.action_profileFragment_to_changePasswordFragment));
+
+        btnTransactions.setOnClickListener(v ->
+                NavHostFragment.findNavController(this)
+                        .navigate(R.id.action_profileFragment_to_transactionsFragment));
 
         setupSaveButton();
         loadProfile();

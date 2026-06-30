@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.xplorenow.R;
 import com.example.xplorenow.data.model.Activity;
+import com.example.xplorenow.payment.PaymentUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +75,12 @@ public class ActivitiesAdapter extends RecyclerView.Adapter<ActivitiesAdapter.Ac
         holder.tvLocation.setText(activity.getLocation());
         holder.tvCategory.setText(activity.getCategory().toUpperCase().replace("_", " "));
         holder.tvDuration.setText(holder.itemView.getContext().getString(R.string.item_duration_format, activity.getDuration()));
-        holder.tvPrice.setText(holder.itemView.getContext().getString(R.string.item_price_format, activity.getPrice()));
+        if (activity.isFree()) {
+            holder.tvPrice.setText(holder.itemView.getContext().getString(R.string.price_free));
+        } else {
+            holder.tvPrice.setText(holder.itemView.getContext().getString(
+                    R.string.item_price_format, PaymentUtils.formatAmount(activity.getPriceValue())));
+        }
         holder.tvSlots.setText(holder.itemView.getContext().getString(R.string.item_slots_format, activity.getAvailableSlots()));
 
         if (activity.getImages() != null && !activity.getImages().isEmpty()) {

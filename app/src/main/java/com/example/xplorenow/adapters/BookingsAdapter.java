@@ -15,6 +15,7 @@ import com.bumptech.glide.Glide;
 import com.example.xplorenow.R;
 import com.example.xplorenow.data.model.Activity;
 import com.example.xplorenow.data.model.Booking;
+import com.example.xplorenow.payment.PaymentUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +28,7 @@ public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.Bookin
     public static class BookingViewHolder extends RecyclerView.ViewHolder {
         TextView tvActivityTitle, tvDate, tvQuantity, tvStatus;
         ImageView ivActivityImage;
-        Button btnCancel;
+        Button btnCancel, btnTransaction;
 
         public BookingViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -37,12 +38,14 @@ public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.Bookin
             tvStatus = itemView.findViewById(R.id.tvStatus);
             ivActivityImage = itemView.findViewById(R.id.ivActivityImage);
             btnCancel = itemView.findViewById(R.id.btnCancel);
+            btnTransaction = itemView.findViewById(R.id.btnTransaction);
         }
     }
 
     public interface OnBookingInteractionListener {
         void onCancelClick(Booking booking);
         void onItemClick(Booking booking);
+        void onTransactionClick(Booking booking);
     }
 
     public BookingsAdapter(OnBookingInteractionListener listener) {
@@ -64,6 +67,13 @@ public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.Bookin
             int position = holder.getAdapterPosition();
             if (position != RecyclerView.NO_POSITION && listener != null) {
                 listener.onCancelClick(bookings.get(position));
+            }
+        });
+
+        holder.btnTransaction.setOnClickListener(v -> {
+            int position = holder.getAdapterPosition();
+            if (position != RecyclerView.NO_POSITION && listener != null) {
+                listener.onTransactionClick(bookings.get(position));
             }
         });
 
@@ -106,6 +116,8 @@ public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.Bookin
         }
 
         holder.btnCancel.setVisibility("CONFIRMED".equals(status) ? View.VISIBLE : View.GONE);
+        boolean isPaid = activity != null && !activity.isFree();
+        holder.btnTransaction.setVisibility(isPaid ? View.VISIBLE : View.GONE);
     }
 
     private String getStatusLabel(String status, Context context) {
