@@ -49,8 +49,12 @@ public class Activity implements Serializable {
 
     @SerializedName("reserved_slots")
     private int reservedSlots;
+
     @SerializedName("availabilities")
     private List<ActivityAvailability> availabilities;
+
+    private transient boolean favoriteHasNews;
+    private transient String favoriteNewsText;
 
     public int getId() {
         return id;
@@ -116,25 +120,77 @@ public class Activity implements Serializable {
         return images;
     }
 
-    public int getAvailableSlots() { return availableSlots; }
-    public void setAvailableSlots(int availableSlots) { this.availableSlots = availableSlots; }
+    public int getAvailableSlots() {
+        return availableSlots;
+    }
 
-    public int getReservedSlots() { return reservedSlots; }
-    public void setReservedSlots(int reservedSlots) { this.reservedSlots = reservedSlots; }
+    public void setAvailableSlots(int availableSlots) {
+        this.availableSlots = availableSlots;
+    }
 
-    public List<ActivityAvailability> getAvailabilities() { return availabilities; }
-    public void setAvailabilities(List<ActivityAvailability> availabilities) { this.availabilities = availabilities; }
+    public int getReservedSlots() {
+        return reservedSlots;
+    }
 
-    public void setId(int id) { this.id = id; }
-    public void setTitle(String title) { this.title = title; }
-    public void setMeetingPoint(String meetingPoint) { this.meetingPoint = meetingPoint; }
-    public void setImages(List<ActivityImage> images) { this.images = images; }
+    public void setReservedSlots(int reservedSlots) {
+        this.reservedSlots = reservedSlots;
+    }
 
-    public Double getLatitude() { return latitude; }
+    public List<ActivityAvailability> getAvailabilities() {
+        return availabilities;
+    }
 
-    public Double getLongitude() { return longitude; }
+    public void setAvailabilities(List<ActivityAvailability> availabilities) {
+        this.availabilities = availabilities;
+    }
 
-    public boolean isFavorited() { return isFavorited; }
+    public void setId(int id) {
+        this.id = id;
+    }
 
-    public void setFavorited(boolean favorited) { isFavorited = favorited; }
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setMeetingPoint(String meetingPoint) {
+        this.meetingPoint = meetingPoint;
+    }
+
+    public void setImages(List<ActivityImage> images) {
+        this.images = images;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public boolean isFavorited() {
+        return isFavorited;
+    }
+
+    public void setFavorited(boolean favorited) {
+        isFavorited = favorited;
+    }
+
+
+    public boolean hasFavoriteNews() {
+        return favoriteHasNews;
+    }
+
+    public void setFavoriteHasNews(boolean favoriteHasNews) {
+        this.favoriteHasNews = favoriteHasNews;
+    }
+
+    public String getFavoriteNewsText() {
+        return favoriteNewsText;
+    }
+
+    public void setFavoriteNewsText(String favoriteNewsText) {
+        this.favoriteNewsText = favoriteNewsText;
+    }
+
 }

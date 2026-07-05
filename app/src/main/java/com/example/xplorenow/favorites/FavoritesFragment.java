@@ -16,18 +16,21 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.xplorenow.R;
 import com.example.xplorenow.adapters.ActivitiesAdapter;
+import com.example.xplorenow.data.local.CachedFavorite;
+import com.example.xplorenow.data.local.CachedFavoriteDao;
 import com.example.xplorenow.data.model.ActivitiesListResponse;
 import com.example.xplorenow.data.model.Activity;
 import com.example.xplorenow.data.model.Pagination;
 import com.example.xplorenow.data.network.ApiService;
 import com.example.xplorenow.data.network.dto.WrappedResponse;
-import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
@@ -40,12 +43,15 @@ import retrofit2.Response;
 public class FavoritesFragment extends Fragment implements ActivitiesAdapter.OnActivityClickListener {
 
     @Inject ApiService apiService;
+    @Inject CachedFavoriteDao cachedFavoriteDao;
 
     private ActivitiesAdapter adapter;
     private int currentPage = 1;
     private int totalPages = 1;
     private boolean isLoading = false;
     private final int pageSize = 10;
+
+    private final ExecutorService databaseExecutor = Executors.newSingleThreadExecutor();
 
     @Nullable
     @Override
@@ -61,8 +67,6 @@ public class FavoritesFragment extends Fragment implements ActivitiesAdapter.OnA
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
         RecyclerView rvFavorites = view.findViewById(R.id.rvFavorites);
 
-
-
         adapter = new ActivitiesAdapter(this);
         adapter.setOnFavoriteClickListener(activity -> toggleFavorite(activity, progressBar, tvError));
 
@@ -74,6 +78,7 @@ public class FavoritesFragment extends Fragment implements ActivitiesAdapter.OnA
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
+
                 int visibleItemCount = layoutManager.getChildCount();
                 int totalItemCount = layoutManager.getItemCount();
                 int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
@@ -114,10 +119,12 @@ public class FavoritesFragment extends Fragment implements ActivitiesAdapter.OnA
                         totalPages = pagination.getTotalPages();
                     }
 
+                    List<Activity> safeActivities = activities != null ? activities : new ArrayList<>();
+
                     if (page == 1) {
-                        adapter.setActivities(activities != null ? activities : new ArrayList<>());
-                    } else if (activities != null) {
-                        adapter.addActivities(activities);
+                        procesarNovedadesFavoritos(safeActivities, () -> adapter.setActivities(safeActivities));
+                    } else {
+                        procesarNovedadesFavoritos(safeActivities, () -> adapter.addActivities(safeActivities));
                     }
                 } else {
                     tvError.setText(getString(R.string.error_http, response.code()));
@@ -130,10 +137,68 @@ public class FavoritesFragment extends Fragment implements ActivitiesAdapter.OnA
                 isLoading = false;
                 progressBar.setVisibility(View.GONE);
                 if (!isAdded()) return;
+
                 tvError.setText(R.string.error_connection);
                 tvError.setVisibility(View.VISIBLE);
             }
         });
+    }
+
+    private void procesarNovedadesFavoritos(List<Activity> activities, Runnable onFinish) {
+        databaseExecutor.execute(() -> {
+            for (Activity activity : activities) {
+                double currentPrice = parsePrice(activity.getPrice());
+                int currentSlots = activity.getAvailableSlots();
+
+                CachedFavorite cached = cachedFavoriteDao.getFavoriteByActivityId(activity.getId());
+
+                if (cached != null) {
+                    boolean priceDropped = currentPrice < cached.getLastSeenPrice();
+                    boolean slotsReleased = currentSlots > cached.getLastSeenSlots();
+
+                    if (priceDropped) {
+                        activity.setFavoriteHasNews(true);
+                        activity.setFavoriteNewsText("¡Precio actualizado!");
+                    } else if (slotsReleased) {
+                        activity.setFavoriteHasNews(true);
+                        activity.setFavoriteNewsText("¡Hay nuevos cupos!");
+                    } else {
+                        activity.setFavoriteHasNews(false);
+                        activity.setFavoriteNewsText(null);
+                    }
+                }
+
+                cachedFavoriteDao.insertFavorite(new CachedFavorite(
+                        activity.getId(),
+                        currentPrice,
+                        currentSlots
+                ));
+            }
+
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (!isAdded()) return;
+                    onFinish.run();
+                });
+            }
+        });
+    }
+
+    private double parsePrice(String price) {
+        if (price == null) return 0.0;
+
+        try {
+            String normalized = price
+                    .replaceAll("[^0-9,.-]", "")
+                    .replace(".", "")
+                    .replace(",", ".");
+
+            if (normalized.isEmpty()) return 0.0;
+
+            return Double.parseDouble(normalized);
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
     }
 
     private void toggleFavorite(Activity activity, ProgressBar progressBar, TextView tvError) {
@@ -141,7 +206,10 @@ public class FavoritesFragment extends Fragment implements ActivitiesAdapter.OnA
             @Override
             public void onResponse(@NonNull Call<WrappedResponse<Void>> call, @NonNull Response<WrappedResponse<Void>> response) {
                 if (!isAdded()) return;
+
                 if (response.isSuccessful()) {
+                    databaseExecutor.execute(() -> cachedFavoriteDao.deleteFavorite(activity.getId()));
+
                     Snackbar.make(requireView(), R.string.msg_favorite_removed, Snackbar.LENGTH_SHORT).show();
                     cargarFavoritos(1, progressBar, tvError);
                 } else {
@@ -153,6 +221,7 @@ public class FavoritesFragment extends Fragment implements ActivitiesAdapter.OnA
             @Override
             public void onFailure(@NonNull Call<WrappedResponse<Void>> call, @NonNull Throwable t) {
                 if (!isAdded()) return;
+
                 tvError.setText(R.string.error_connection);
                 tvError.setVisibility(View.VISIBLE);
             }
@@ -164,5 +233,11 @@ public class FavoritesFragment extends Fragment implements ActivitiesAdapter.OnA
         Bundle args = new Bundle();
         args.putInt("activityId", activity.getId());
         Navigation.findNavController(requireView()).navigate(R.id.action_favorites_to_activityDetail, args);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        databaseExecutor.shutdown();
     }
 }
