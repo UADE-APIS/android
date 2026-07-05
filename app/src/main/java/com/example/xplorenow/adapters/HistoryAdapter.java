@@ -20,10 +20,11 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
 
     private List<HistoryItem> items = new ArrayList<>();
     private final OnHistoryClickListener listener;
+    private final OnViewReviewClickListener viewReviewListener;
 
     public static class HistoryViewHolder extends RecyclerView.ViewHolder {
-        TextView tvActivityTitle, tvLocation, tvDate, tvDuration, tvGuide, tvQuantity, tvReviewed;
-        Button btnReview;
+        TextView tvActivityTitle, tvLocation, tvDate, tvDuration, tvGuide, tvQuantity;
+        Button btnReview, tvReviewed;
 
         public HistoryViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -44,12 +45,19 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
         void onReviewClick(HistoryItem item);
     }
 
+    public interface OnViewReviewClickListener {
+        void onViewReviewClick(HistoryItem item);
+    }
+
     public interface OnItemClickListener {
         void onItemClick(HistoryItem item);
     }
 
-    public HistoryAdapter(OnHistoryClickListener listener, OnItemClickListener itemListener) {
+    public HistoryAdapter(OnHistoryClickListener listener,
+                          OnViewReviewClickListener viewReviewListener,
+                          OnItemClickListener itemListener) {
         this.listener = listener;
+        this.viewReviewListener = viewReviewListener;
         this.itemListener = itemListener;
     }
 
@@ -68,7 +76,30 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
     @Override
     public HistoryViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_history, parent, false);
-        return new HistoryViewHolder(view);
+        HistoryViewHolder holder = new HistoryViewHolder(view);
+
+        holder.btnReview.setOnClickListener(v -> {
+            int position = holder.getAdapterPosition();
+            if (position != RecyclerView.NO_POSITION && listener != null) {
+                listener.onReviewClick(items.get(position));
+            }
+        });
+
+        holder.tvReviewed.setOnClickListener(v -> {
+            int position = holder.getAdapterPosition();
+            if (position != RecyclerView.NO_POSITION && viewReviewListener != null) {
+                viewReviewListener.onViewReviewClick(items.get(position));
+            }
+        });
+
+        holder.itemView.setOnClickListener(v -> {
+            int position = holder.getAdapterPosition();
+            if (position != RecyclerView.NO_POSITION && itemListener != null) {
+                itemListener.onItemClick(items.get(position));
+            }
+        });
+
+        return holder;
     }
 
     @Override

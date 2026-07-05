@@ -21,16 +21,16 @@ public class CachedBooking {
     private String meetingPoint;
     private String status;
     private String activityImageUrl;
-    /** Código de voucher de confirmación (req. 19) */
+
     private String voucherCode;
-    /** Cantidad de participantes (req. 19) */
+
     private int quantity;
-    /** ID de la actividad para navegar al detalle en modo offline (req. 18) */
+
     private int activityId;
 
     public CachedBooking(@NonNull String id, String activityTitle, String date,
-                         String meetingPoint, String status, String activityImageUrl,
-                         String voucherCode, int quantity, int activityId) {
+            String meetingPoint, String status, String activityImageUrl,
+            String voucherCode, int quantity, int activityId) {
         this.id = id;
         this.activityTitle = activityTitle;
         this.date = date;
@@ -71,30 +71,75 @@ public class CachedBooking {
     }
 
     @NonNull
-    public String getId() { return id; }
-    public void setId(@NonNull String id) { this.id = id; }
+    public String getId() {
+        return id;
+    }
 
-    public String getActivityTitle() { return activityTitle; }
-    public void setActivityTitle(String activityTitle) { this.activityTitle = activityTitle; }
+    public void setId(@NonNull String id) {
+        this.id = id;
+    }
 
-    public String getDate() { return date; }
-    public void setDate(String date) { this.date = date; }
+    public String getActivityTitle() {
+        return activityTitle;
+    }
 
-    public String getMeetingPoint() { return meetingPoint; }
-    public void setMeetingPoint(String meetingPoint) { this.meetingPoint = meetingPoint; }
+    public void setActivityTitle(String activityTitle) {
+        this.activityTitle = activityTitle;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public String getDate() {
+        return date;
+    }
 
-    public String getActivityImageUrl() { return activityImageUrl; }
-    public void setActivityImageUrl(String activityImageUrl) { this.activityImageUrl = activityImageUrl; }
+    public void setDate(String date) {
+        this.date = date;
+    }
 
-    public String getVoucherCode() { return voucherCode; }
-    public void setVoucherCode(String voucherCode) { this.voucherCode = voucherCode; }
+    public String getMeetingPoint() {
+        return meetingPoint;
+    }
 
-    public int getQuantity() { return quantity; }
-    public void setQuantity(int quantity) { this.quantity = quantity; }
+    public void setMeetingPoint(String meetingPoint) {
+        this.meetingPoint = meetingPoint;
+    }
 
-    public int getActivityId() { return activityId; }
-    public void setActivityId(int activityId) { this.activityId = activityId; }
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getActivityImageUrl() {
+        return activityImageUrl;
+    }
+
+    public void setActivityImageUrl(String activityImageUrl) {
+        this.activityImageUrl = activityImageUrl;
+    }
+
+    public String getVoucherCode() {
+        return voucherCode;
+    }
+
+    public void setVoucherCode(String voucherCode) {
+        this.voucherCode = voucherCode;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    public int getActivityId() {
+        return activityId;
+    }
+
+    public void setActivityId(int activityId) {
+        this.activityId = activityId;
+    }
 }
