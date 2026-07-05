@@ -86,6 +86,14 @@
     <string name="history_review_comment_hint">Comentario (opcional)</string>
     <string name="history_review_submit">Enviar calificación</string>
     <string name="history_review_fill_ratings">Debés calificar tanto la actividad como el guía</string>
+    <string name="history_ver_calificacion">Ver calificación</string>
+    <string name="history_view_review_title">Calificación enviada</string>
+    <string name="history_view_review_activity_label">Actividad</string>
+    <string name="history_view_review_guide_label">Guía</string>
+    <string name="history_view_review_comment_label">Comentario</string>
+    <string name="history_view_review_no_comment">Sin comentario</string>
+    <string name="history_view_review_close">Cerrar</string>
+    <string name="history_view_review_error">No se pudo obtener la calificación</string>
     <string name="action_favorites">Mis Favoritos</string>
     <string name="favorites_title">Mis Favoritos</string>
     <string name="favorite_toggle">Favorito</string>

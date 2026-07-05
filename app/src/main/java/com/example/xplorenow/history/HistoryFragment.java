@@ -78,6 +78,7 @@ public class HistoryFragment extends Fragment {
 
         adapter = new HistoryAdapter(
                 item -> mostrarDialogoCalificacion(item.getId(), progressBar, tvError),
+                item -> mostrarDialogoVerCalificacion(item.getId(), progressBar, tvError),
                 item -> {
                     Bundle args = new Bundle();
                     args.putInt("activityId", item.getActivityId());
@@ -316,6 +317,58 @@ public class HistoryFragment extends Fragment {
                 }
             });
         });
+
+        dialog.show();
+    }
+
+    private void mostrarDialogoVerCalificacion(int bookingId, ProgressBar progressBar, TextView tvError) {
+        apiService.getReview(bookingId).enqueue(new Callback<ApiResponse<Review>>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<Review>> call, @NonNull Response<ApiResponse<Review>> response) {
+                if (!isAdded()) return;
+
+                if (!response.isSuccessful() || response.body() == null || response.body().getData() == null) {
+                    tvError.setText(R.string.history_view_review_error);
+                    tvError.setVisibility(View.VISIBLE);
+                    Log.e(TAG, "getReview error HTTP: " + response.code());
+                    return;
+                }
+
+                Review review = response.body().getData();
+                mostrarDialogoCalificacionExistente(review);
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<Review>> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                tvError.setText(R.string.error_connection);
+                tvError.setVisibility(View.VISIBLE);
+                Log.e(TAG, "getReview onFailure: " + t.getMessage());
+            }
+        });
+    }
+
+    private void mostrarDialogoCalificacionExistente(Review review) {
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_view_review, null);
+
+        RatingBar ratingActivityView = dialogView.findViewById(R.id.ratingActivityView);
+        RatingBar ratingGuideView = dialogView.findViewById(R.id.ratingGuideView);
+        TextView tvCommentView = dialogView.findViewById(R.id.tvCommentView);
+        Button btnCloseReview = dialogView.findViewById(R.id.btnCloseReview);
+
+        ratingActivityView.setRating(review.getActivityRating());
+        ratingGuideView.setRating(review.getGuideRating());
+
+        String comment = review.getComment();
+        tvCommentView.setText(comment != null && !comment.trim().isEmpty()
+                ? comment
+                : getString(R.string.history_view_review_no_comment));
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .create();
+
+        btnCloseReview.setOnClickListener(v -> dialog.dismiss());
 
         dialog.show();
     }
