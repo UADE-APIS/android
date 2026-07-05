@@ -1,7 +1,6 @@
 package com.example.xplorenow.bookings;
 
 import android.app.AlertDialog;
-import android.widget.RatingBar;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -9,7 +8,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.RatingBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -24,9 +25,12 @@ import com.example.xplorenow.R;
 import com.example.xplorenow.adapters.BookingsAdapter;
 import com.example.xplorenow.data.local.CachedBooking;
 import com.example.xplorenow.data.local.CachedBookingDao;
+import com.example.xplorenow.data.model.Activity;
 import com.example.xplorenow.data.model.ApiResponse;
 import com.example.xplorenow.data.model.Booking;
 import com.example.xplorenow.data.model.BookingsListResponse;
+import com.example.xplorenow.data.model.Review;
+import com.example.xplorenow.data.model.ReviewRequest;
 import com.example.xplorenow.data.network.ApiService;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
@@ -98,7 +102,7 @@ public class MyBookingsFragment extends Fragment {
 
             @Override
             public void onVoucherClick(Booking booking) {
-                com.example.xplorenow.data.model.Activity detail = booking.getActivityDetail();
+                Activity detail = booking.getActivityDetail();
                 Bundle args = new Bundle();
                 args.putInt("bookingId", booking.getId());
                 args.putString("activityTitle", detail != null ? detail.getTitle() : "");
@@ -435,14 +439,14 @@ public class MyBookingsFragment extends Fragment {
                 .show();
     }
 
-    private void mostrarCalificacionExistente(com.example.xplorenow.data.model.Review review) {
-        android.view.View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_review, null);
+    private void mostrarCalificacionExistente(Review review) {
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_review, null);
 
-        android.widget.RatingBar ratingActivity = dialogView.findViewById(R.id.ratingActivity);
-        android.widget.RatingBar ratingGuide    = dialogView.findViewById(R.id.ratingGuide);
-        android.widget.EditText etComment       = dialogView.findViewById(R.id.etComment);
-        Button btnSubmit                        = dialogView.findViewById(R.id.btnSubmitReview);
-        TextView tvDialogError                  = dialogView.findViewById(R.id.tvDialogError);
+        RatingBar ratingActivity = dialogView.findViewById(R.id.ratingActivity);
+        RatingBar ratingGuide    = dialogView.findViewById(R.id.ratingGuide);
+        EditText  etComment      = dialogView.findViewById(R.id.etComment);
+        Button    btnSubmit      = dialogView.findViewById(R.id.btnSubmitReview);
+        TextView  tvDialogError  = dialogView.findViewById(R.id.tvDialogError);
 
         ratingActivity.setRating(review.getActivityRating());
         ratingGuide.setRating(review.getGuideRating());
@@ -454,22 +458,23 @@ public class MyBookingsFragment extends Fragment {
         tvDialogError.setVisibility(View.GONE);
 
         new AlertDialog.Builder(requireContext())
-                .setTitle(getString(R.string.history_review_title))
+                .setTitle(getString(R.string.action_view_review))
                 .setView(dialogView)
                 .setPositiveButton(android.R.string.ok, null)
                 .show();
     }
 
     private void mostrarDialogoCalificacion(View rootView, int bookingId, ProgressBar progressBar, TextView tvError) {
-        android.view.View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_review, null);
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_review, null);
 
-        android.widget.RatingBar ratingActivity = dialogView.findViewById(R.id.ratingActivity);
-        android.widget.RatingBar ratingGuide    = dialogView.findViewById(R.id.ratingGuide);
-        android.widget.EditText etComment       = dialogView.findViewById(R.id.etComment);
-        Button btnSubmit                        = dialogView.findViewById(R.id.btnSubmitReview);
-        TextView tvDialogError                  = dialogView.findViewById(R.id.tvDialogError);
+        RatingBar ratingActivity = dialogView.findViewById(R.id.ratingActivity);
+        RatingBar ratingGuide    = dialogView.findViewById(R.id.ratingGuide);
+        EditText  etComment      = dialogView.findViewById(R.id.etComment);
+        Button    btnSubmit      = dialogView.findViewById(R.id.btnSubmitReview);
+        TextView  tvDialogError  = dialogView.findViewById(R.id.tvDialogError);
 
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setTitle(getString(R.string.history_review_title))
                 .setView(dialogView)
                 .create();
 
@@ -484,27 +489,30 @@ public class MyBookingsFragment extends Fragment {
             }
 
             tvDialogError.setVisibility(View.GONE);
+            btnSubmit.setEnabled(false);
             String comment = etComment.getText().toString().trim();
 
-            apiService.createReview(bookingId, new com.example.xplorenow.data.model.ReviewRequest(actRating, guideRating, comment))
-                    .enqueue(new Callback<ApiResponse<com.example.xplorenow.data.model.Review>>() {
+            apiService.createReview(bookingId, new ReviewRequest(actRating, guideRating, comment))
+                    .enqueue(new Callback<ApiResponse<Review>>() {
                         @Override
-                        public void onResponse(@NonNull Call<ApiResponse<com.example.xplorenow.data.model.Review>> call,
-                                               @NonNull Response<ApiResponse<com.example.xplorenow.data.model.Review>> response) {
+                        public void onResponse(@NonNull Call<ApiResponse<Review>> call,
+                                               @NonNull Response<ApiResponse<Review>> response) {
                             if (!isAdded()) return;
                             dialog.dismiss();
                             if (response.isSuccessful()) {
                                 Snackbar.make(rootView, R.string.msg_review_success, Snackbar.LENGTH_SHORT).show();
                                 loadBookings(progressBar, tvError);
                             } else {
+                                btnSubmit.setEnabled(true);
                                 Snackbar.make(rootView, getString(R.string.error_http, response.code()), Snackbar.LENGTH_SHORT).show();
                             }
                         }
 
                         @Override
-                        public void onFailure(@NonNull Call<ApiResponse<com.example.xplorenow.data.model.Review>> call,
+                        public void onFailure(@NonNull Call<ApiResponse<Review>> call,
                                               @NonNull Throwable t) {
                             if (!isAdded()) return;
+                            btnSubmit.setEnabled(true);
                             dialog.dismiss();
                             Snackbar.make(rootView, R.string.error_connection, Snackbar.LENGTH_SHORT).show();
                         }
