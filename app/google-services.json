@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "662070747428",
+    "project_id": "xplorenow-8237c",
+    "storage_bucket": "xplorenow-8237c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:662070747428:android:88f86f3dd59975d6b893b1",
+        "android_client_info": {
+          "package_name": "com.example.xplorenow"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_g68SX6NeD-fSXgvDkm-OwOTg4sigxX4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

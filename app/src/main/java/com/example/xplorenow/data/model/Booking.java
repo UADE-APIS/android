@@ -34,6 +34,9 @@ public class Booking {
     @SerializedName("created_at")
     private String createdAt;
 
+    @SerializedName("voucher_code")
+    private String voucherCode;
+
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     public int getActivityId() { return activityId; }
@@ -48,6 +51,13 @@ public class Booking {
     public void setQuantity(int quantity) { this.quantity = quantity; }
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+    public String getVoucherCode() {
+        if (voucherCode != null && !voucherCode.trim().isEmpty()) {
+            return voucherCode;
+        }
+        return id > 0 ? "VOUCHER-" + id : "";
+    }
+    public void setVoucherCode(String voucherCode) { this.voucherCode = voucherCode; }
     public String getDate() {
         if (availabilityDetail != null && availabilityDetail.getDate() != null) {
             return availabilityDetail.getDate();

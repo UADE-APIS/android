@@ -77,6 +77,22 @@
             app:layout_constraintTop_toBottomOf="@id/tvDate"
             tools:text="Participantes: 2" />
 
+        <TextView
+            android:id="@+id/tvVoucher"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginTop="4dp"
+            android:drawableStart="@android:drawable/ic_menu_info_details"
+            android:drawablePadding="4dp"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvQuantity"
+            tools:text="Voucher: VOUCHER-12" />
+
         <Button
             android:id="@+id/btnCancel"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
@@ -90,7 +106,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvQuantity" />
+            app:layout_constraintTop_toBottomOf="@id/tvVoucher" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

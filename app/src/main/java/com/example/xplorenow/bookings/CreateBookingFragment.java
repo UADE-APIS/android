@@ -26,6 +26,7 @@ import com.example.xplorenow.data.model.Booking;
 import com.example.xplorenow.data.model.BookingRequest;
 import com.example.xplorenow.data.network.ApiService;
 import com.example.xplorenow.data.local.CachedBooking;
+import com.example.xplorenow.notifications.BookingReminderScheduler;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.text.SimpleDateFormat;
@@ -119,11 +120,13 @@ public class CreateBookingFragment extends Fragment {
 
             int availableSlots;
             Integer availabilityId = null;
+            String selectedActivityDate = null;
 
             if (!availabilities.isEmpty()) {
                 ActivityAvailability selectedAvailability = availabilities.get(spDate.getSelectedItemPosition());
                 availableSlots = selectedAvailability.getAvailableSlots();
                 availabilityId = selectedAvailability.getId();
+                selectedActivityDate = selectedAvailability.getDate();
             } else {
                 availableSlots = currentActivity.getAvailableSlots();
             }
@@ -134,7 +137,11 @@ public class CreateBookingFragment extends Fragment {
                 return;
             }
 
-            executeBooking(view, new BookingRequest(activityId, availabilityId, requestedQuantity), progressBar, tvError);
+            executeBooking(view,
+                    new BookingRequest(activityId, availabilityId, requestedQuantity),
+                    selectedActivityDate,
+                    progressBar,
+                    tvError);
         });
     }
 
@@ -197,7 +204,8 @@ public class CreateBookingFragment extends Fragment {
         });
     }
 
-    private void executeBooking(View view, BookingRequest request, ProgressBar pb, TextView err) {
+    private void executeBooking(View view, BookingRequest request, String selectedActivityDate,
+                                ProgressBar pb, TextView err) {
         pb.setVisibility(View.VISIBLE);
         err.setVisibility(View.GONE);
 
@@ -211,6 +219,10 @@ public class CreateBookingFragment extends Fragment {
 
                     Booking createdBooking = response.body().getData();
                     if (createdBooking != null) {
+                        String fallbackTitle = currentActivity != null ? currentActivity.getTitle() : "";
+                        BookingReminderScheduler.schedule(requireContext(), createdBooking,
+                                selectedActivityDate,
+                                fallbackTitle);
                         new Thread(() -> {
                             String imgUrl = "";
                             if (createdBooking.getActivityDetail() != null &&

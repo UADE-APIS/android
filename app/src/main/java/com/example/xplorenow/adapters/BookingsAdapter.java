@@ -25,7 +25,7 @@ public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.Bookin
     private final OnBookingInteractionListener listener;
 
     public static class BookingViewHolder extends RecyclerView.ViewHolder {
-        TextView tvActivityTitle, tvDate, tvQuantity, tvStatus;
+        TextView tvActivityTitle, tvDate, tvQuantity, tvVoucher, tvStatus;
         ImageView ivActivityImage;
         Button btnCancel;
 
@@ -34,6 +34,7 @@ public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.Bookin
             tvActivityTitle = itemView.findViewById(R.id.tvActivityTitle);
             tvDate = itemView.findViewById(R.id.tvDate);
             tvQuantity = itemView.findViewById(R.id.tvQuantity);
+            tvVoucher = itemView.findViewById(R.id.tvVoucher);
             tvStatus = itemView.findViewById(R.id.tvStatus);
             ivActivityImage = itemView.findViewById(R.id.ivActivityImage);
             btnCancel = itemView.findViewById(R.id.btnCancel);
@@ -87,6 +88,7 @@ public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.Bookin
 
         holder.tvActivityTitle.setText(title);
         holder.tvQuantity.setText("Participantes: " + booking.getQuantity());
+        holder.tvVoucher.setText(context.getString(R.string.booking_voucher_code, booking.getVoucherCode()));
 
         String date = booking.getDate() != null ? booking.getDate() : "-";
         holder.tvDate.setText("Fecha: " + date);
