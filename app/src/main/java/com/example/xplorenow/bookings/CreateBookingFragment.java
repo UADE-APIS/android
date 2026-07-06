@@ -55,6 +55,7 @@ public class CreateBookingFragment extends Fragment {
 
     private List<ActivityAvailability> availabilities = new ArrayList<>();
     private Activity currentActivity;
+    private TextView tvAvailableSlots;
 
     @Nullable
     @Override
@@ -68,7 +69,7 @@ public class CreateBookingFragment extends Fragment {
 
         TextView tvActivityTitle = view.findViewById(R.id.tvActivityTitle);
         Spinner spDate = view.findViewById(R.id.spDate);
-        TextView tvAvailableSlots = view.findViewById(R.id.tvAvailableSlots);
+        tvAvailableSlots = view.findViewById(R.id.tvAvailableSlots);
         EditText etQuantity = view.findViewById(R.id.etQuantity);
         Button btnBook = view.findViewById(R.id.btnBook);
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
@@ -83,22 +84,17 @@ public class CreateBookingFragment extends Fragment {
             return;
         }
 
-        fetchActivityDetails(activityId, tvActivityTitle, spDate, tvAvailableSlots, progressBar, tvError, btnBook);
-
         spDate.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (!availabilities.isEmpty()) {
-                    int slots = availabilities.get(position).getAvailableSlots();
-                    tvAvailableSlots.setText(getString(R.string.text_available_slots, slots));
-                } else if (currentActivity != null) {
-                    tvAvailableSlots.setText(getString(R.string.text_available_slots, currentActivity.getAvailableSlots()));
-                }
+            public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
+                refreshSlotsDisplay(position);
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {}
         });
+
+        fetchActivityDetails(activityId, tvActivityTitle, spDate, progressBar, tvError, btnBook);
 
         btnBook.setOnClickListener(v -> {
             tvError.setVisibility(View.GONE);
@@ -145,14 +141,18 @@ public class CreateBookingFragment extends Fragment {
         });
     }
 
-    private void fetchActivityDetails(int activityId, TextView tvTitle, Spinner spDate, TextView tvSlots, ProgressBar pb, TextView err, Button btnBook) {
+    private void fetchActivityDetails(int activityId, TextView tvTitle, Spinner spDate,
+                                      ProgressBar pb, TextView err, Button btnBook) {
         pb.setVisibility(View.VISIBLE);
         btnBook.setEnabled(false);
 
         apiService.getActivity(activityId).enqueue(new Callback<ApiResponse<Activity>>() {
             @Override
-            public void onResponse(@NonNull Call<ApiResponse<Activity>> call, @NonNull Response<ApiResponse<Activity>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<Activity>> call,
+                                   @NonNull Response<ApiResponse<Activity>> response) {
                 pb.setVisibility(View.GONE);
+
+                if (!isAdded()) return;
 
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
                     currentActivity = response.body().getData();
@@ -170,13 +170,19 @@ public class CreateBookingFragment extends Fragment {
 
                         if (!futuras.isEmpty()) {
                             availabilities = futuras;
-                            List<String> dateStrings = new ArrayList<>();
+
+                            List<String> labels = new ArrayList<>();
                             for (ActivityAvailability a : futuras) {
-                                dateStrings.add(a.getDate());
+                                labels.add(a.getDate() + "  (" + a.getAvailableSlots() + " cupos)");
                             }
-                            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, dateStrings);
+                            ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                                    requireContext(), android.R.layout.simple_spinner_item, labels);
                             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                             spDate.setAdapter(adapter);
+
+                            // Actualizar cupos para la primera fecha explicitamente,
+                            // sin depender de que onItemSelected se dispare.
+                            refreshSlotsDisplay(0);
                             btnBook.setEnabled(true);
                         } else {
                             spDate.setVisibility(View.GONE);
@@ -185,7 +191,7 @@ public class CreateBookingFragment extends Fragment {
                         }
                     } else {
                         spDate.setVisibility(View.GONE);
-                        tvSlots.setText(getString(R.string.text_available_slots, currentActivity.getAvailableSlots()));
+                        refreshSlotsDisplay(-1);
                         btnBook.setEnabled(true);
                     }
                 } else {
@@ -197,11 +203,22 @@ public class CreateBookingFragment extends Fragment {
             @Override
             public void onFailure(@NonNull Call<ApiResponse<Activity>> call, @NonNull Throwable t) {
                 pb.setVisibility(View.GONE);
+                if (!isAdded()) return;
                 err.setText(getString(R.string.error_connection));
                 err.setVisibility(View.VISIBLE);
                 Log.e(TAG, "onFailure: " + t.getMessage());
             }
         });
+    }
+
+    private void refreshSlotsDisplay(int position) {
+        if (tvAvailableSlots == null) return;
+        if (position >= 0 && position < availabilities.size()) {
+            int slots = availabilities.get(position).getAvailableSlots();
+            tvAvailableSlots.setText(getString(R.string.text_available_slots, slots));
+        } else if (currentActivity != null) {
+            tvAvailableSlots.setText(getString(R.string.text_available_slots, currentActivity.getAvailableSlots()));
+        }
     }
 
     private void executeBooking(View view, BookingRequest request, String selectedActivityDate,
