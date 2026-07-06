@@ -172,6 +172,16 @@ public class QrScannerFragment extends Fragment {
                         layoutResult.setVisibility(View.VISIBLE);
                         tvResultMessage.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.success_green));
                         tvResultMessage.setText("Asistencia confirmada");
+
+                        // Agregar el retraso y la navegación hacia atrás
+                        if (getView() != null) {
+                            getView().postDelayed(() -> {
+                                if (isAdded()) {
+                                    androidx.navigation.Navigation.findNavController(getView()).popBackStack();
+                                }
+                            }, 2000); // Retraso de 2 segundos
+                        }
+
                     } else {
                         showError("Error: Reserva no válida o inexistente", layoutResult, tvResultMessage, progressBar);
                     }
