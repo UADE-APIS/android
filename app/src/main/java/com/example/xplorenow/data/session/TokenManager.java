@@ -74,8 +74,6 @@ public class TokenManager {
         prefs.edit()
                 .remove(KEY_ACCESS)
                 .remove(KEY_REFRESH)
-                .remove(KEY_BIOMETRIC)
-                .remove(KEY_BIOMETRIC_ASKED)
                 .apply();
     }
 

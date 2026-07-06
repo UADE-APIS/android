@@ -62,6 +62,24 @@
         <action
             android:id="@+id/action_myBookings_to_activityDetail"
             app:destination="@id/activityDetailFragment" />
+
+        <action
+            android:id="@+id/action_myBookings_to_voucher"
+            app:destination="@id/voucherFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/voucherFragment"
+        android:name="com.example.xplorenow.bookings.VoucherFragment"
+        android:label="Voucher"
+        tools:layout="@layout/fragment_voucher">
+
+        <argument android:name="bookingId"      app:argType="integer" android:defaultValue="-1" />
+        <argument android:name="activityTitle"  app:argType="string"  android:defaultValue="" />
+        <argument android:name="date"           app:argType="string"  android:defaultValue="" />
+        <argument android:name="meetingPoint"   app:argType="string"  android:defaultValue="" />
+        <argument android:name="guideName"      app:argType="string"  android:defaultValue="" />
+        <argument android:name="quantity"       app:argType="integer" android:defaultValue="1" />
     </fragment>
 
     <fragment

@@ -100,6 +100,14 @@
     <string name="history_review_comment_hint">Comentario (opcional)</string>
     <string name="history_review_submit">Enviar calificación</string>
     <string name="history_review_fill_ratings">Debés calificar tanto la actividad como el guía</string>
+    <string name="history_ver_calificacion">Ver calificación</string>
+    <string name="history_view_review_title">Calificación enviada</string>
+    <string name="history_view_review_activity_label">Actividad</string>
+    <string name="history_view_review_guide_label">Guía</string>
+    <string name="history_view_review_comment_label">Comentario</string>
+    <string name="history_view_review_no_comment">Sin comentario</string>
+    <string name="history_view_review_close">Cerrar</string>
+    <string name="history_view_review_error">No se pudo obtener la calificación</string>
     <string name="action_favorites">Mis Favoritos</string>
     <string name="favorites_title">Mis Favoritos</string>
     <string name="favorite_toggle">Favorito</string>
@@ -145,10 +153,25 @@
     <!-- Offline -->
     <string name="offline_banner">Sin conexión — mostrando datos guardados</string>
 
+    <string name="msg_review_success">¡Gracias por tu calificación!</string>
+    <string name="action_view_review">Ver calificación</string>
+
+    <!-- Voucher -->
+    <string name="action_view_voucher">Ver voucher</string>
+    <string name="voucher_booking_number">Reserva #%1$d</string>
+    <string name="voucher_label_date">Fecha</string>
+    <string name="voucher_label_meeting_point">Punto de encuentro</string>
+    <string name="voucher_label_guide">Guía</string>
+    <string name="voucher_label_participants">Participantes</string>
+    <string name="voucher_label_code">Código de reserva</string>
+    <string name="voucher_participants_value">%1$d personas</string>
+
     <!-- Navegación inferior -->
     <string name="nav_explore">Explorar</string>
     <string name="nav_bookings">Reservas</string>
     <string name="nav_favorites">Favoritos</string>
     <string name="nav_profile">Perfil</string>
 
+    <string name="favorite_news_price">¡Precio actualizado!</string>
+    <string name="favorite_news_slots">¡Hay nuevos cupos!</string>
 </resources>

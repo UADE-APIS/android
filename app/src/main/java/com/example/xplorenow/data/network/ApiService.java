@@ -105,6 +105,9 @@ public interface ApiService {
     @GET("api/activities/history/")
     Call<HistoryListResponse> getHistory(@QueryMap Map<String, String> query);
 
+    @GET("api/activities/history/{booking_id}/review/")
+    Call<ApiResponse<Review>> getReview(@Path("booking_id") int bookingId);
+
     @POST("api/activities/history/{booking_id}/review/")
     Call<ApiResponse<Review>> createReview(@Path("booking_id") int bookingId, @Body ReviewRequest body);
 

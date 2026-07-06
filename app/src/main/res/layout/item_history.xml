@@ -78,15 +78,13 @@
             android:textColor="#1976D2"
             app:strokeColor="#1976D2" />
 
-        <TextView
+        <Button
             android:id="@+id/tvReviewed"
-            android:layout_width="match_parent"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:gravity="center"
-            android:text="@string/history_calificado"
-            android:textColor="#2E7D32"
-            android:textStyle="bold"
+            android:layout_marginTop="4dp"
+            android:text="@string/history_ver_calificacion"
             android:visibility="gone" />
 
     </LinearLayout>
