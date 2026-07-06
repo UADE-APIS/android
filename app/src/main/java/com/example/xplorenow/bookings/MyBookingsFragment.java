@@ -76,6 +76,10 @@ public class MyBookingsFragment extends Fragment {
         TextView tvError = view.findViewById(R.id.tvError);
         RecyclerView rvBookings = view.findViewById(R.id.rvBookings);
         TextView tvOfflineMode = view.findViewById(R.id.tvOfflineMode);
+        Button btnScanQr = view.findViewById(R.id.btnScanQr);
+        btnScanQr.setOnClickListener(v ->
+                Navigation.findNavController(view).navigate(R.id.action_myBookings_to_qrScanner)
+        );
 
         // Req. 21: banner empieza oculto
         tvOfflineMode.setVisibility(View.GONE);

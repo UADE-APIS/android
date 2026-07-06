@@ -61,6 +61,11 @@ dependencies {
     implementation libs.security.crypto
     implementation 'org.osmdroid:osmdroid-android:6.1.18'
 
+    implementation libs.camera.camera2
+    implementation libs.camera.lifecycle
+    implementation libs.camera.view
+    implementation libs.mlkit.barcode
+
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
