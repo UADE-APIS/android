@@ -1,6 +1,7 @@
 package com.example.xplorenow.bookings;
 
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -115,10 +116,10 @@ public class MyBookingsFragment extends Fragment {
                 Activity detail = booking.getActivityDetail();
                 Bundle args = new Bundle();
                 args.putInt("bookingId", booking.getId());
-                args.putString("activityTitle", detail != null ? detail.getTitle() : "");
+                args.putString("activityTitle", detail != null && detail.getTitle() != null ? detail.getTitle() : "");
                 args.putString("date", booking.getDate() != null ? booking.getDate() : "");
-                args.putString("meetingPoint", detail != null ? detail.getMeetingPoint() : "");
-                args.putString("guideName", detail != null ? detail.getAssignedGuide() : "");
+                args.putString("meetingPoint", detail != null && detail.getMeetingPoint() != null ? detail.getMeetingPoint() : "");
+                args.putString("guideName", detail != null && detail.getAssignedGuide() != null ? detail.getAssignedGuide() : "");
                 args.putInt("quantity", booking.getQuantity());
                 Navigation.findNavController(view).navigate(R.id.action_myBookings_to_voucher, args);
             }
@@ -281,25 +282,56 @@ public class MyBookingsFragment extends Fragment {
     }
 
     private void sortBookings(List<Booking> bookings, String ordering) {
-        if (bookings == null || bookings.size() < 2) {
-            return;
-        }
+        if (bookings == null || bookings.size() < 2) return;
 
         Comparator<Booking> comparator;
-        if ("created_at".equals(ordering)) {
-            comparator = Comparator.comparing(this::extractCreationDateTime,
-                    Comparator.nullsLast(Comparator.naturalOrder()));
-        } else if ("activity__duration".equals(ordering)) {
-            comparator = Comparator.comparingInt(this::extractDurationValue);
-        } else if ("activity__name".equals(ordering)) {
-            comparator = Comparator.comparing(this::getActivityTitle,
-                    String.CASE_INSENSITIVE_ORDER);
-        } else {
-            comparator = Comparator.comparing(this::extractCreationDateTime,
-                    Comparator.nullsLast(Comparator.reverseOrder()));
+        switch (ordering != null ? ordering : "") {
+            case "created_at":
+                comparator = Comparator.comparing(this::extractCreationDateTime,
+                        Comparator.nullsLast(Comparator.naturalOrder()));
+                break;
+            case "activity_date_asc":
+                comparator = Comparator.comparing(
+                        b -> parseDate(b.getDate()),
+                        Comparator.nullsLast(Comparator.naturalOrder()));
+                break;
+            case "activity_date_desc":
+                comparator = Comparator.comparing(
+                        b -> parseDate(b.getDate()),
+                        Comparator.nullsLast(Comparator.reverseOrder()));
+                break;
+            case "activity__duration":
+                comparator = Comparator.comparingInt(this::extractDurationValue);
+                break;
+            case "activity__name":
+                comparator = Comparator.comparing(this::getActivityTitle,
+                        String.CASE_INSENSITIVE_ORDER);
+                break;
+            default:
+                comparator = Comparator.comparing(this::extractCreationDateTime,
+                        Comparator.nullsLast(Comparator.reverseOrder()));
+                break;
         }
 
         Collections.sort(bookings, comparator);
+    }
+
+    private void attachDatePicker(TextInputEditText field) {
+        field.setOnClickListener(v -> {
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            String current = field.getText() != null ? field.getText().toString().trim() : "";
+            if (current.length() == 10) {
+                try {
+                    String[] parts = current.split("-");
+                    cal.set(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]) - 1, Integer.parseInt(parts[2]));
+                } catch (Exception ignored) {}
+            }
+            new DatePickerDialog(requireContext(), (picker, year, month, day) -> {
+                field.setText(String.format(Locale.US, "%04d-%02d-%02d", year, month + 1, day));
+            }, cal.get(java.util.Calendar.YEAR),
+               cal.get(java.util.Calendar.MONTH),
+               cal.get(java.util.Calendar.DAY_OF_MONTH)).show();
+        });
     }
 
     private String getActivityTitle(Booking booking) {
@@ -404,8 +436,12 @@ public class MyBookingsFragment extends Fragment {
         if (currentFilters.containsKey("date_from")) etDateFrom.setText(currentFilters.get("date_from"));
         if (currentFilters.containsKey("date_to")) etDateTo.setText(currentFilters.get("date_to"));
 
-        String[] orderings = {"Más recientes", "Más antiguos", "Duración", "Actividad (A-Z)"};
-        String[] orderingValues = {"-created_at", "created_at", "activity__duration", "activity__name"};
+        attachDatePicker(etDate);
+        attachDatePicker(etDateFrom);
+        attachDatePicker(etDateTo);
+
+        String[] orderings = {"Más recientes", "Más antiguos", "Fecha de actividad (asc)", "Fecha de actividad (desc)", "Duración", "Actividad (A-Z)"};
+        String[] orderingValues = {"-created_at", "created_at", "activity_date_asc", "activity_date_desc", "activity__duration", "activity__name"};
         ArrayAdapter<String> orderAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, orderings);
         orderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerOrdering.setAdapter(orderAdapter);
