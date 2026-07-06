@@ -6,6 +6,7 @@ import com.example.xplorenow.data.model.ApiResponse;
 import com.example.xplorenow.data.model.Booking;
 import com.example.xplorenow.data.model.BookingRequest;
 import com.example.xplorenow.data.model.BookingsListResponse;
+import com.example.xplorenow.data.model.CheckInRequest;
 import com.example.xplorenow.data.model.CheckUsernameRequest;
 import com.example.xplorenow.data.model.HistoryListResponse;
 import com.example.xplorenow.data.model.News;
@@ -101,6 +102,9 @@ public interface ApiService {
 
     @POST("api/activities/bookings/{id}/cancel/")
     Call<ApiResponse<Booking>> cancelBooking(@Path("id") int id);
+
+    @POST("api/activities/bookings/checkin/")
+    Call<ApiResponse<Void>> checkInBooking(@Body CheckInRequest request);
 
     @GET("api/activities/history/")
     Call<HistoryListResponse> getHistory(@QueryMap Map<String, String> query);

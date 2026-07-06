@@ -64,6 +64,10 @@
             app:destination="@id/activityDetailFragment" />
 
         <action
+            android:id="@+id/action_myBookings_to_qrScanner"
+            app:destination="@id/qrScannerFragment" />
+      
+        <action
             android:id="@+id/action_myBookings_to_voucher"
             app:destination="@id/voucherFragment" />
     </fragment>
@@ -175,5 +179,12 @@
             android:id="@+id/action_newsDetail_to_activityDetail"
             app:destination="@id/activityDetailFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/qrScannerFragment"
+        android:name="com.example.xplorenow.bookings.QrScannerFragment"
+        android:label="Escanear QR"
+        tools:layout="@layout/fragment_qr_scanner" />
+
 
 </navigation>
