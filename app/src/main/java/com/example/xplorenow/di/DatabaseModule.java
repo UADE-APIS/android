@@ -15,6 +15,8 @@ import dagger.hilt.InstallIn;
 import dagger.hilt.android.qualifiers.ApplicationContext;
 import dagger.hilt.components.SingletonComponent;
 
+import com.example.xplorenow.data.local.CachedFavoriteDao;
+
 @Module
 @InstallIn(SingletonComponent.class)
 public class DatabaseModule {
@@ -31,5 +33,11 @@ public class DatabaseModule {
     @Singleton
     public CachedBookingDao provideCachedBookingDao(AppDatabase database) {
         return database.cachedBookingDao();
+    }
+
+    @Provides
+    @Singleton
+    public CachedFavoriteDao provideCachedFavoriteDao(AppDatabase database) {
+        return database.cachedFavoriteDao();
     }
 }

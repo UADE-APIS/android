@@ -31,8 +31,14 @@ public class Booking {
         this.status = status;
     }
 
+    @SerializedName("review")
+    private Review review;
+
     @SerializedName("created_at")
     private String createdAt;
+
+    @SerializedName("voucher_code")
+    private String voucherCode;
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
@@ -46,8 +52,17 @@ public class Booking {
     public void setAvailabilityDetail(ActivityAvailability availabilityDetail) { this.availabilityDetail = availabilityDetail; }
     public int getQuantity() { return quantity; }
     public void setQuantity(int quantity) { this.quantity = quantity; }
+    public Review getReview() { return review; }
+    public void setReview(Review review) { this.review = review; }
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+    public String getVoucherCode() {
+        if (voucherCode != null && !voucherCode.trim().isEmpty()) {
+            return voucherCode;
+        }
+        return id > 0 ? "VOUCHER-" + id : "";
+    }
+    public void setVoucherCode(String voucherCode) { this.voucherCode = voucherCode; }
     public String getDate() {
         if (availabilityDetail != null && availabilityDetail.getDate() != null) {
             return availabilityDetail.getDate();

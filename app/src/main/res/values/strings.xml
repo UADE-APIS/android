@@ -1,5 +1,19 @@
 <resources>
     <string name="app_name">XploreNow</string>
+    <string name="notification_channel_booking_reminders">Recordatorios de reservas</string>
+    <string name="notification_channel_booking_reminders_desc">Avisos 24 horas antes de una actividad reservada.</string>
+    <string name="notification_channel_activity_updates">Cambios en actividades</string>
+    <string name="notification_channel_activity_updates_desc">Cancelaciones y reprogramaciones enviadas por el backend.</string>
+    <string name="notification_booking_reminder_title">Recordatorio de reserva</string>
+    <string name="notification_booking_reminder_body">Mañana tenés tu actividad: %1$s. Tocá para ver el voucher.</string>
+    <string name="notification_activity_update_title">Aviso de actividad</string>
+    <string name="notification_activity_cancelled_body">La actividad %1$s fue cancelada.</string>
+    <string name="notification_activity_rescheduled_body">La actividad %1$s fue reprogramada.</string>
+    <string name="notification_activity_update_body">Hay novedades sobre la actividad %1$s.</string>
+    <string name="notification_default_activity">tu actividad</string>
+    <string name="booking_voucher_code">Voucher: %1$s</string>
+    <string name="booking_voucher_opened">Voucher %1$s</string>
+    <string name="booking_voucher_not_found">No encontramos esa reserva. Revisá tus reservas actualizadas.</string>
     <string name="logout">Cerrar sesión</string>
     <string name="filters">Filtros</string>
     <string name="home_subtitle">Hola mundo</string>
@@ -86,6 +100,14 @@
     <string name="history_review_comment_hint">Comentario (opcional)</string>
     <string name="history_review_submit">Enviar calificación</string>
     <string name="history_review_fill_ratings">Debés calificar tanto la actividad como el guía</string>
+    <string name="history_ver_calificacion">Ver calificación</string>
+    <string name="history_view_review_title">Calificación enviada</string>
+    <string name="history_view_review_activity_label">Actividad</string>
+    <string name="history_view_review_guide_label">Guía</string>
+    <string name="history_view_review_comment_label">Comentario</string>
+    <string name="history_view_review_no_comment">Sin comentario</string>
+    <string name="history_view_review_close">Cerrar</string>
+    <string name="history_view_review_error">No se pudo obtener la calificación</string>
     <string name="action_favorites">Mis Favoritos</string>
     <string name="favorites_title">Mis Favoritos</string>
     <string name="favorite_toggle">Favorito</string>
@@ -133,10 +155,25 @@
     <!-- Offline -->
     <string name="offline_banner">Sin conexión — mostrando datos guardados</string>
 
+    <string name="msg_review_success">¡Gracias por tu calificación!</string>
+    <string name="action_view_review">Ver calificación</string>
+
+    <!-- Voucher -->
+    <string name="action_view_voucher">Ver voucher</string>
+    <string name="voucher_booking_number">Reserva #%1$d</string>
+    <string name="voucher_label_date">Fecha</string>
+    <string name="voucher_label_meeting_point">Punto de encuentro</string>
+    <string name="voucher_label_guide">Guía</string>
+    <string name="voucher_label_participants">Participantes</string>
+    <string name="voucher_label_code">Código de reserva</string>
+    <string name="voucher_participants_value">%1$d personas</string>
+
     <!-- Navegación inferior -->
     <string name="nav_explore">Explorar</string>
     <string name="nav_bookings">Reservas</string>
     <string name="nav_favorites">Favoritos</string>
     <string name="nav_profile">Perfil</string>
 
+    <string name="favorite_news_price">¡Precio actualizado!</string>
+    <string name="favorite_news_slots">¡Hay nuevos cupos!</string>
 </resources>

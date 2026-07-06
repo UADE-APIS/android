@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.xplorenow.R;
 import com.example.xplorenow.data.model.Activity;
+import com.google.android.material.chip.Chip;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,13 +70,21 @@ public class ActivitiesAdapter extends RecyclerView.Adapter<ActivitiesAdapter.Ac
     @Override
     public void onBindViewHolder(@NonNull ActivityViewHolder holder, int position) {
         Activity activity = activities.get(position);
-        
+
         holder.tvTitle.setText(activity.getTitle());
         holder.tvLocation.setText(activity.getLocation());
         holder.tvCategory.setText(activity.getCategory().toUpperCase().replace("_", " "));
         holder.tvDuration.setText(holder.itemView.getContext().getString(R.string.item_duration_format, activity.getDuration()));
         holder.tvPrice.setText(holder.itemView.getContext().getString(R.string.item_price_format, activity.getPrice()));
         holder.tvSlots.setText(holder.itemView.getContext().getString(R.string.item_slots_format, activity.getAvailableSlots()));
+
+        // REQ 16: indicador visual de novedad en favoritos
+        if (activity.hasFavoriteNews()) {
+            holder.chipFavoriteNews.setText(activity.getFavoriteNewsText());
+            holder.chipFavoriteNews.setVisibility(View.VISIBLE);
+        } else {
+            holder.chipFavoriteNews.setVisibility(View.GONE);
+        }
 
         if (activity.getImages() != null && !activity.getImages().isEmpty()) {
             Glide.with(holder.itemView.getContext())
@@ -116,6 +125,9 @@ public class ActivitiesAdapter extends RecyclerView.Adapter<ActivitiesAdapter.Ac
         final TextView tvPrice;
         final TextView tvSlots;
 
+        // REQ 16
+        final Chip chipFavoriteNews;
+
         public ActivityViewHolder(@NonNull View itemView) {
             super(itemView);
             ivActivityImage = itemView.findViewById(R.id.ivActivityImage);
@@ -126,6 +138,9 @@ public class ActivitiesAdapter extends RecyclerView.Adapter<ActivitiesAdapter.Ac
             tvDuration = itemView.findViewById(R.id.tvDuration);
             tvPrice = itemView.findViewById(R.id.tvPrice);
             tvSlots = itemView.findViewById(R.id.tvSlots);
+
+            // REQ 16
+            chipFavoriteNews = itemView.findViewById(R.id.chipFavoriteNews);
         }
     }
 }

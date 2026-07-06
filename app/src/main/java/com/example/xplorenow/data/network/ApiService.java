@@ -20,6 +20,7 @@ import com.example.xplorenow.data.model.User;
 import com.example.xplorenow.data.model.VerifyOtpData;
 import com.example.xplorenow.data.model.VerifyOtpRequest;
 import com.example.xplorenow.data.network.dto.ChangePasswordRequest;
+import com.example.xplorenow.data.network.dto.FcmTokenRequest;
 import com.example.xplorenow.data.network.dto.LoginClassicRequest;
 import com.example.xplorenow.data.network.dto.LoginOtpRequest;
 import com.example.xplorenow.data.network.dto.LogoutRequest;
@@ -87,6 +88,9 @@ public interface ApiService {
     @POST("api/auth/change-password/")
     Call<WrappedResponse<Void>> changePassword(@Body ChangePasswordRequest request);
 
+    @POST("api/notifications/fcm-token/")
+    Call<WrappedResponse<Void>> registerFcmToken(@Body FcmTokenRequest request);
+
     @GET("api/activities/{id}/")
     Call<ApiResponse<Activity>> getActivity(@Path("id") int id);
 
@@ -104,6 +108,9 @@ public interface ApiService {
 
     @GET("api/activities/history/")
     Call<HistoryListResponse> getHistory(@QueryMap Map<String, String> query);
+
+    @GET("api/activities/history/{booking_id}/review/")
+    Call<ApiResponse<Review>> getReview(@Path("booking_id") int bookingId);
 
     @POST("api/activities/history/{booking_id}/review/")
     Call<ApiResponse<Review>> createReview(@Path("booking_id") int bookingId, @Body ReviewRequest body);

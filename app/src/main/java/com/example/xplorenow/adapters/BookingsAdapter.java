@@ -25,24 +25,31 @@ public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.Bookin
     private final OnBookingInteractionListener listener;
 
     public static class BookingViewHolder extends RecyclerView.ViewHolder {
-        TextView tvActivityTitle, tvDate, tvQuantity, tvStatus;
+        TextView tvActivityTitle, tvDate, tvQuantity, tvVoucher, tvStatus;
         ImageView ivActivityImage;
         Button btnCancel;
+        Button btnVoucher;
+        Button btnCalificar;
 
         public BookingViewHolder(@NonNull View itemView) {
             super(itemView);
             tvActivityTitle = itemView.findViewById(R.id.tvActivityTitle);
             tvDate = itemView.findViewById(R.id.tvDate);
             tvQuantity = itemView.findViewById(R.id.tvQuantity);
+            tvVoucher = itemView.findViewById(R.id.tvVoucher);
             tvStatus = itemView.findViewById(R.id.tvStatus);
             ivActivityImage = itemView.findViewById(R.id.ivActivityImage);
             btnCancel = itemView.findViewById(R.id.btnCancel);
+            btnVoucher = itemView.findViewById(R.id.btnVoucher);
+            btnCalificar = itemView.findViewById(R.id.btnCalificar);
         }
     }
 
     public interface OnBookingInteractionListener {
         void onCancelClick(Booking booking);
         void onItemClick(Booking booking);
+        void onVoucherClick(Booking booking);
+        void onCalificarClick(Booking booking);
     }
 
     public BookingsAdapter(OnBookingInteractionListener listener) {
@@ -87,6 +94,7 @@ public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.Bookin
 
         holder.tvActivityTitle.setText(title);
         holder.tvQuantity.setText("Participantes: " + booking.getQuantity());
+        holder.tvVoucher.setText(context.getString(R.string.booking_voucher_code, booking.getVoucherCode()));
 
         String date = booking.getDate() != null ? booking.getDate() : "-";
         holder.tvDate.setText("Fecha: " + date);
@@ -105,7 +113,31 @@ public class BookingsAdapter extends RecyclerView.Adapter<BookingsAdapter.Bookin
             holder.ivActivityImage.setImageResource(android.R.drawable.ic_menu_gallery);
         }
 
-        holder.btnCancel.setVisibility("CONFIRMED".equals(status) ? View.VISIBLE : View.GONE);
+        boolean isConfirmed = "CONFIRMED".equals(status);
+        boolean isFinished  = "FINISHED".equals(status);
+        boolean hasReview   = booking.getReview() != null && booking.getReview().getId() > 0;
+
+        holder.btnVoucher.setVisibility(isConfirmed || isFinished ? View.VISIBLE : View.GONE);
+        holder.btnCancel.setVisibility(isConfirmed ? View.VISIBLE : View.GONE);
+
+        if (isFinished) {
+            holder.btnCalificar.setVisibility(View.VISIBLE);
+            if (hasReview) {
+                holder.btnCalificar.setText(context.getString(R.string.action_view_review));
+            } else {
+                holder.btnCalificar.setText(context.getString(R.string.history_calificar));
+            }
+        } else {
+            holder.btnCalificar.setVisibility(View.GONE);
+        }
+
+        holder.btnVoucher.setOnClickListener(v -> {
+            if (listener != null) listener.onVoucherClick(booking);
+        });
+
+        holder.btnCalificar.setOnClickListener(v -> {
+            if (listener != null) listener.onCalificarClick(booking);
+        });
     }
 
     private String getStatusLabel(String status, Context context) {
