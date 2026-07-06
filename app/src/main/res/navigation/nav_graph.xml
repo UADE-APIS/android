@@ -54,6 +54,11 @@
         android:label="Mis Reservas"
         tools:layout="@layout/fragment_my_bookings">
 
+        <argument
+            android:name="bookingId"
+            app:argType="integer"
+            android:defaultValue="-1" />
+
         <action
             android:id="@+id/action_myBookings_to_activityDetail"
             app:destination="@id/activityDetailFragment" />

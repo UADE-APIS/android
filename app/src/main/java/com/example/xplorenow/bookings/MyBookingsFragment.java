@@ -64,6 +64,8 @@ public class MyBookingsFragment extends Fragment {
 
     private BookingsAdapter adapter;
     private final Map<String, String> currentFilters = new HashMap<>();
+    private int deepLinkedBookingId = -1;
+    private boolean deepLinkHandled = false;
 
     @Nullable
     @Override
@@ -81,6 +83,10 @@ public class MyBookingsFragment extends Fragment {
         TextView tvError = view.findViewById(R.id.tvError);
         RecyclerView rvBookings = view.findViewById(R.id.rvBookings);
         TextView tvOfflineMode = view.findViewById(R.id.tvOfflineMode);
+
+        if (getArguments() != null) {
+            deepLinkedBookingId = getArguments().getInt("bookingId", -1);
+        }
 
         // Req. 21: banner empieza oculto
         tvOfflineMode.setVisibility(View.GONE);
@@ -150,6 +156,7 @@ public class MyBookingsFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null) {
                     List<Booking> bookings = applyFilters(response.body().getResults());
                     adapter.setBookings(bookings);
+                    handleVoucherDeepLink(bookings);
                     if (tvEmpty != null) {
                         tvEmpty.setVisibility(bookings.isEmpty() ? View.VISIBLE : View.GONE);
                     }
@@ -188,12 +195,35 @@ public class MyBookingsFragment extends Fragment {
                     if (!isAdded()) return;
                     List<Booking> filtered = applyFilters(bookings);
                     adapter.setBookings(filtered);
+                    handleVoucherDeepLink(filtered);
                     if (tvEmpty != null) {
                         tvEmpty.setVisibility(filtered.isEmpty() ? View.VISIBLE : View.GONE);
                     }
                 });
             }
         }).start();
+    }
+
+    private void handleVoucherDeepLink(List<Booking> bookings) {
+        if (deepLinkHandled || deepLinkedBookingId <= 0 || getView() == null || bookings == null) {
+            return;
+        }
+
+        for (int i = 0; i < bookings.size(); i++) {
+            Booking booking = bookings.get(i);
+            if (booking != null && booking.getId() == deepLinkedBookingId) {
+                deepLinkHandled = true;
+                RecyclerView rvBookings = getView().findViewById(R.id.rvBookings);
+                rvBookings.scrollToPosition(i);
+                Snackbar.make(requireView(),
+                        getString(R.string.booking_voucher_opened, booking.getVoucherCode()),
+                        Snackbar.LENGTH_LONG).show();
+                return;
+            }
+        }
+
+        deepLinkHandled = true;
+        Snackbar.make(requireView(), R.string.booking_voucher_not_found, Snackbar.LENGTH_LONG).show();
     }
 
     private List<Booking> applyFilters(List<Booking> source) {

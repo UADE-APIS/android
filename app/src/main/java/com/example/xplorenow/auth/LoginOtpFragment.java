@@ -23,6 +23,7 @@ import com.example.xplorenow.data.network.dto.RequestOtpRequest;
 import com.example.xplorenow.data.network.dto.WrappedResponse;
 import com.example.xplorenow.data.network.dto.auth.AuthTokensResponse;
 import com.example.xplorenow.data.session.TokenManager;
+import com.example.xplorenow.notifications.FcmTokenRegistrar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
@@ -41,6 +42,8 @@ public class LoginOtpFragment extends Fragment {
     ApiService api;
     @Inject
     TokenManager tokenManager;
+    @Inject
+    FcmTokenRegistrar fcmTokenRegistrar;
 
     private static final long RESEND_COOLDOWN_MS = 30_000;
 
@@ -128,6 +131,7 @@ public class LoginOtpFragment extends Fragment {
                         }
                         AuthTokensResponse tokens = response.body().getData();
                         tokenManager.saveTokens(tokens.access, tokens.refresh);
+                        fcmTokenRegistrar.registerCurrentToken();
 
                         if (!tokenManager.hasAskedBiometric() && !tokenManager.isBiometricEnabled()) {
                             offerBiometricEnrollment(rootView);

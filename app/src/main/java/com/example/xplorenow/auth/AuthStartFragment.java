@@ -26,6 +26,7 @@ import com.example.xplorenow.data.network.dto.LoginClassicRequest;
 import com.example.xplorenow.data.network.dto.WrappedResponse;
 import com.example.xplorenow.data.network.dto.auth.AuthTokensResponse;
 import com.example.xplorenow.data.session.TokenManager;
+import com.example.xplorenow.notifications.FcmTokenRegistrar;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 
@@ -47,6 +48,8 @@ public class AuthStartFragment extends Fragment {
     ApiService api;
     @Inject
     TokenManager tokenManager;
+    @Inject
+    FcmTokenRegistrar fcmTokenRegistrar;
 
     private TextInputLayout tilEmail;
     private TextInputLayout tilPassword;
@@ -76,11 +79,13 @@ public class AuthStartFragment extends Fragment {
         progress = view.findViewById(R.id.progress);
 
         if (tokenManager.isLoggedIn() && tokenManager.isBiometricEnabled()) {
+            fcmTokenRegistrar.registerCurrentToken();
             tryBiometricLogin(view);
             return;
         }
 
         if (tokenManager.isLoggedIn()) {
+            fcmTokenRegistrar.registerCurrentToken();
             view.post(() -> {
                 if (!isAdded()) return;
                 Navigation.findNavController(view).navigate(R.id.action_authStart_to_home);
@@ -194,6 +199,7 @@ public class AuthStartFragment extends Fragment {
 
                         AuthTokensResponse tokens = response.body().getData();
                         tokenManager.saveTokens(tokens.access, tokens.refresh);
+                        fcmTokenRegistrar.registerCurrentToken();
 
                         if (!tokenManager.hasAskedBiometric() && !tokenManager.isBiometricEnabled()) {
                             offerBiometricEnrollment(rootView);

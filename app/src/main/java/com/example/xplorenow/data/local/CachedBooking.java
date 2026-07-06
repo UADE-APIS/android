@@ -53,6 +53,7 @@ public class CachedBooking {
         b.setQuantity(quantity);
         b.setStatus(status);
         b.setCreatedAt(date);
+        b.setVoucherCode(voucherCode);
 
         Activity activity = new Activity();
         activity.setId(activityId);

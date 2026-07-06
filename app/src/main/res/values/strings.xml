@@ -1,5 +1,19 @@
 <resources>
     <string name="app_name">XploreNow</string>
+    <string name="notification_channel_booking_reminders">Recordatorios de reservas</string>
+    <string name="notification_channel_booking_reminders_desc">Avisos 24 horas antes de una actividad reservada.</string>
+    <string name="notification_channel_activity_updates">Cambios en actividades</string>
+    <string name="notification_channel_activity_updates_desc">Cancelaciones y reprogramaciones enviadas por el backend.</string>
+    <string name="notification_booking_reminder_title">Recordatorio de reserva</string>
+    <string name="notification_booking_reminder_body">Mañana tenés tu actividad: %1$s. Tocá para ver el voucher.</string>
+    <string name="notification_activity_update_title">Aviso de actividad</string>
+    <string name="notification_activity_cancelled_body">La actividad %1$s fue cancelada.</string>
+    <string name="notification_activity_rescheduled_body">La actividad %1$s fue reprogramada.</string>
+    <string name="notification_activity_update_body">Hay novedades sobre la actividad %1$s.</string>
+    <string name="notification_default_activity">tu actividad</string>
+    <string name="booking_voucher_code">Voucher: %1$s</string>
+    <string name="booking_voucher_opened">Voucher %1$s</string>
+    <string name="booking_voucher_not_found">No encontramos esa reserva. Revisá tus reservas actualizadas.</string>
     <string name="logout">Cerrar sesión</string>
     <string name="filters">Filtros</string>
     <string name="home_subtitle">Hola mundo</string>

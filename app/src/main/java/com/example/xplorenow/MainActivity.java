@@ -1,9 +1,14 @@
 package com.example.xplorenow;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -15,6 +20,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.example.xplorenow.di.AuthEventBus;
+import com.example.xplorenow.notifications.NotificationHelper;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -28,6 +34,8 @@ import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class MainActivity extends AppCompatActivity {
+
+    private static final int REQUEST_POST_NOTIFICATIONS = 1001;
 
     @Inject
     AuthEventBus authEventBus;
@@ -59,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
         setupToolbar();
         setupBottomNavigation();
         observeSessionExpired();
+        NotificationHelper.ensureChannels(this);
+        requestNotificationPermissionIfNeeded();
     }
 
     private void applyWindowInsets() {
@@ -116,6 +126,21 @@ public class MainActivity extends AppCompatActivity {
                 navController.navigate(R.id.authStartFragment, null, options);
             }
         });
+    }
+
+    private void requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return;
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        ActivityCompat.requestPermissions(
+                this,
+                new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                REQUEST_POST_NOTIFICATIONS
+        );
     }
 
     @Override
