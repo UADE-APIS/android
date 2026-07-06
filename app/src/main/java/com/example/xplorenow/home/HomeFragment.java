@@ -89,6 +89,36 @@ public class HomeFragment extends Fragment implements ActivitiesAdapter.OnActivi
         setupRecyclerView(rvActivities, progressBar, view);
         fetchActivities(1, progressBar, view);
 
+        // Restaura el menú superior de la Toolbar
+        com.google.android.material.appbar.MaterialToolbar toolbar = requireActivity().findViewById(R.id.toolbar);
+        if (toolbar != null) {
+            toolbar.getMenu().clear();
+            toolbar.inflateMenu(R.menu.menu_home);
+            toolbar.setOnMenuItemClickListener(item -> {
+                if (item.getItemId() == R.id.action_profile) {
+                    Navigation.findNavController(view).navigate(R.id.action_home_to_profile);
+                    return true;
+                }
+                if (item.getItemId() == R.id.action_logout) {
+                    doLogout(view);
+                    return true;
+                }
+                if (item.getItemId() == R.id.action_history) {
+                    Navigation.findNavController(view).navigate(R.id.action_home_to_history);
+                    return true;
+                }
+                if (item.getItemId() == R.id.action_favorites) {
+                    Navigation.findNavController(view).navigate(R.id.action_home_to_favorites);
+                    return true;
+                }
+                if (item.getItemId() == R.id.action_news) {
+                    Navigation.findNavController(view).navigate(R.id.action_home_to_news);
+                    return true;
+                }
+                return false;
+            });
+        }
+
         RecommendedActivitiesAdapter recommendedAdapter = new RecommendedActivitiesAdapter(this);
         rvRecommended.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
         rvRecommended.setAdapter(recommendedAdapter);
